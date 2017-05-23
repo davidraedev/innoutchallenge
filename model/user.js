@@ -2,16 +2,14 @@ var mongoose = require( "mongoose" );
 var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-	twitter_oauth_token: { type: String, default: null },
-	twitter_oauth_secret: { type: String, default: null },
 	join_date: Date,
 	twitter_user: [{
-		twitter_oauth_token: { type: String, default: null },
-		twitter_oauth_secret: { type: String, default: null },
-		twitter_user: Mixed,
+		oauth_token: { type: String, default: null },
+		oauth_secret: { type: String, default: null },
+		user: Schema.Types.Mixed,
 	}],
 	tweets: [{
-		tweet: Mixed,
+		tweet: Schema.Types.Mixed,
 		parsed: Date,
 	}],
 	receipts: [{

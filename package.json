@@ -4,6 +4,9 @@
   "description": "Backend for the #innoutChallenge",
   "main": "index.js",
   "scripts": {
+    "setup": "node setup.js",
+    "startdb": "mongod --config mongo.conf",
+    "test": "mocha test/**.js",
     "start": "nodemon server.js"
   },
   "author": "daraeman",
@@ -12,8 +15,11 @@
     "express": "^4.15.2",
     "mongodb": "^2.2.25",
     "mongoose": "^4.9.7",
+    "mocha": "^3.3.0",
+    "chai": "^3.5.0",
     "node-env-file": "^0.1.8",
     "nodemon": "^1.11.0",
-    "twitter": "^1.7.0"
+    "twitter": "^1.7.0",
+    "bluebird": "^3.5.0"
   }
 }
