@@ -10,21 +10,6 @@ describe( "Create a new User", function(){
 		db.connect( null, function(){ done(); });
 	});
 
-	describe( "with bad data", function(){
-
-		var bad_test_user = new User({
-			name: "Fluffy",
-		});
-
-		it( "Should fail", function(){
-			var error = bad_test_user.validateSync();
-			console.log( "error >>" )
-			console.log( error )
-			expect( error ).to.not.be.an( "undefined" );
-		});
-
-	});
-
 	var good_test_user = new User({
 		join_date: new Date(),
 		twitter: [{
@@ -41,8 +26,11 @@ describe( "Create a new User", function(){
 	describe( "with good data", function(){
 
 		it( "Should not fail", function(){
-			var error = good_test_user.validateSync();
-			expect( error ).to.be.an( "undefined" );
+			good_test_user.validate().then(function( result ){
+				expect( result ).to.be.an( "undefined" );
+			}).catch(function( error ){
+				throw new Error( error );
+			});
 		});
 
 	});
