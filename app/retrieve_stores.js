@@ -136,6 +136,14 @@ db.connect().then( function( connection ){
 
 		data.data.forEach(function( d ){
 			let store = parseStore( d );
+			Model.update(
+				{ number: store.number }, 
+				store,
+				{ upsert: true, setDefaultsOnInsert: true },
+				function ( error ) {
+					if 
+				}
+			);
 			console.log( store );
 		});
 
