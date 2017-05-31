@@ -1,4 +1,3 @@
-var db = require( "../db" );
 var innoutLocations = require( "innout_locations" );
 var Store = require( "../../model/store" );
 
@@ -129,8 +128,6 @@ db.connect().then( function( connection ){
 
 	innoutLocations.get().then( function( json ){
 
-		var remaining = json.data.length;
-
 		json.data.forEach(function( d, index ){
 			let store = parseStore( d );
 			console.log( "store [%d]", store.number );
@@ -141,9 +138,6 @@ db.connect().then( function( connection ){
 				function ( error ) {
 					if ( error )
 						throw new Error( error );
-
-					if ( --remaining === 0 )
-						db.close();
 				}
 			);
 		});
@@ -151,11 +145,9 @@ db.connect().then( function( connection ){
 	}).catch( function( error ){
 		if ( error )
 			throw new Error( error );
-		db.close();
 	});
-
-
+	
 }).catch( function( error ){
-	throw new Error( error );
-	db.close();
+	if ( error )
+		throw new Error( error );
 });

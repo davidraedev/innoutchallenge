@@ -7,4 +7,4 @@ var TwitterUserSchema = new Schema({
 	user: Schema.Types.Mixed,
 });
 
-module.exports = TwitterUserSchema;
+module.exports = mongoose.model( "TwitterUser", TwitterUserSchema );//TwitterUserSchema;

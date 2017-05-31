@@ -10,4 +10,4 @@ var ReceiptSchema = new Schema({
 	tweet: { type: ObjectId, default: null },
 });
 
-module.exports = ReceiptSchema;
+module.exports = mongoose.model( "Receipt", ReceiptSchema );//ReceiptSchema;
