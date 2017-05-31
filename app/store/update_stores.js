@@ -1,13 +1,12 @@
-var db = require( "./db" );
+var db = require( "../db" );
 var innoutLocations = require( "innout_locations" );
-var Store = require( "../model/store" );
-
-var fs = require( "fs" );
-
+var Store = require( "../../model/store" );
 
 /*
 
-{
+Format of the In-N-Out JSON
+
+[ {
 	"StoreNumber": 303,
 	"Name": "Alameda",
 	"StreetAddress": "555 Willie Stargell Ave.",
@@ -33,7 +32,7 @@ var fs = require( "fs" );
 	"Directions": null,
 	"UnderRemodel": false,
 	"UseGPSCoordinatesForDirections": false
-},
+}, ]
 
 */
 
@@ -47,9 +46,10 @@ function left_pad( num, size, char ) {
 /*
 
 	The API does not list out the extended weekend hours.
-	Nor the full extend of non-standard hours,
-	we mark them as non-standard and will have to manually
-	grab them from http://locations.in-n-out.com/STORENUMBER
+	Nor the full extend of non-standard hours.
+
+	We mark them as non-standard and will have to manually
+	grab them from http://locations.in-n-out.com/STORENUMBER,
 	which does list out the full hours.
 
 */
@@ -106,7 +106,7 @@ function parseLocation( data ) {
 
 function parseStore( data ) {
 
-	let store = new Store();
+	let store = {};
 		store.number = data.StoreNumber;
 		store.name = data.Name;
 		store.location = parseLocation( data );
@@ -127,41 +127,35 @@ function parseStore( data ) {
 
 db.connect().then( function( connection ){
 
-	fs.readFile( "./stores.json", "utf8", function( error, data ){
+	innoutLocations.get().then( function( json ){
 
-		if ( error )
-			throw new Error( error );
+		var remaining = json.data.length;
 
-		data = JSON.parse( data );
-
-		data.data.forEach(function( d ){
+		json.data.forEach(function( d, index ){
 			let store = parseStore( d );
-			Model.update(
-				{ number: store.number }, 
-				store,
+			console.log( "store [%d]", store.number );
+			Store.update(
+				{ number: store.number },
+				{ "$set": store },
 				{ upsert: true, setDefaultsOnInsert: true },
 				function ( error ) {
-					if 
+					if ( error )
+						throw new Error( error );
+
+					if ( --remaining === 0 )
+						db.close();
 				}
 			);
-			console.log( store );
-		});
-
-	});
-/*
-	innoutLocations.get( ).then( function( json ){
-
-		json.data.forEach(function( val, index ){
-			console.log( val );
 		});
 
 	}).catch( function( error ){
-		if ( error == "Error: only absolute urls are supported" )
-		throw new Error( error );
+		if ( error )
+			throw new Error( error );
+		db.close();
 	});
-*/
-	db.close();
+
 
 }).catch( function( error ){
 	throw new Error( error );
+	db.close();
 });

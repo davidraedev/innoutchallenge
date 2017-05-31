@@ -61,7 +61,7 @@ var StoreSchema = new Schema({
 	dining_room: { type: Boolean, default: false },
 	drive_thru: { type: Boolean, default: false },
 	remote_image_url: { type: String, default: null },
-	popup: ObjectId,
+	//popup: ObjectId,
 });
 
 module.exports = mongoose.model( "Store", StoreSchema );
