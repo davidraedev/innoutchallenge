@@ -5,8 +5,6 @@ var ObjectId = mongoose.Schema.Types.ObjectId;
 
 var UserSchema = new Schema({
 	join_date: Date,
-	tweets: ObjectId,
-	receipts: ObjectId,
 	twitter_user: ObjectId,
 });
 

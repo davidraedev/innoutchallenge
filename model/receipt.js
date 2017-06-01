@@ -6,8 +6,9 @@ var ObjectId = mongoose.Schema.Types.ObjectId;
 var ReceiptSchema = new Schema({
 	number: Number,
 	date: Date,
-	location: { type: ObjectId, default: null },
-	tweet: { type: ObjectId, default: null },
+	location: ObjectId,
+	tweet: ObjectId,
+	user: ObjectId,
 });
 
 module.exports = mongoose.model( "Receipt", ReceiptSchema );//ReceiptSchema;

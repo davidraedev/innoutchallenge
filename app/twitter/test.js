@@ -1,4 +1,4 @@
-var controller = require( "../../controller/tweets" );
+var controller = require( "../../controller/tweet" );
 
 /*
 controller.search_tweets_app( function( error ){

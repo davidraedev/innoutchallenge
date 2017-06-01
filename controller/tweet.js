@@ -40,7 +40,7 @@ var search_tweets_app = function( callback ) {
 						return callback( error );
 
 					if ( tweet === null )
-						new Tweet( { data: tweet_data } ).save( callback );
+						new Tweet( { data: tweet_data, source: "search" } ).save( callback );
 
 					if ( --remaining === 0 && typeof callback == "function" )
 						callback( null );
@@ -93,7 +93,7 @@ var search_tweets_user = function( user, callback ) {
 							throw new Error( error );
 
 						if ( tweet === null )
-							new Tweet( { data: tweet_data } ).save();
+							new Tweet( { data: tweet_data, source: "user" } ).save();
 
 						if ( --remaining === 0 && typeof callback == "function" )
 							callback();
@@ -112,4 +112,4 @@ var search_tweets_user = function( user, callback ) {
 module.exports = {
 	search_tweets_app: search_tweets_app,
 	search_tweets_user: search_tweets_user,
-}
+};
