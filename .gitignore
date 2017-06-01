@@ -7,3 +7,5 @@ jspm_packages/
 data/*
 log/*
 !.gitkeep
+
+*.DS_Store
