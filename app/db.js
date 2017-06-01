@@ -4,13 +4,16 @@ mongoose.Promise = require( "bluebird" );
 
 var host = "mongodb://localhost/test";
 
-function connect( url, callback ) {
-	url = url || host;
-	return mongoose.connect( url )
+function connect( callback ) {
+	return mongoose.connect( host )
 		.then( function(){
 			if ( typeof callback == "function" )
-				callback();
-		});
+				callback( null );
+		})
+		.catch( function( error ){
+			if ( typeof callback == "function" )
+				callback( error );
+		});;
 }
 
 function close() {
