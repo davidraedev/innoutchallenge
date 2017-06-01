@@ -8,4 +8,4 @@ var TwitterUserSchema = new Schema({
 	data: Schema.Types.Mixed,
 });
 
-module.exports = mongoose.model( "TwitterUser", TwitterUserSchema );//TwitterUserSchema;
+module.exports = mongoose.model( "TwitterUser", TwitterUserSchema );
