@@ -1,6 +1,7 @@
 var Twitter = require( "twitter" );
 var Tweet = require( "../model/tweet" );
 var env = require( "node-env-file" )
+var TwitterUser = require( "../model/twitter_user" );
 var db = require( "../app/db" );
 env( ".env" );
 
@@ -57,13 +58,6 @@ var search_tweets_user = function( user, callback ) {
 	console.log( "search_tweets_user" );
 	console.log( user );
 
-	var client = new Twitter({
-		consumer_key: process.env.TWITTER_CONSUMER_KEY,
-		consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-		access_token_key: twitter_user.oauth_token,
-		access_token_secret: twitter_user.oauth_secret,
-	});
-
 	TwitterUser.findOne( { _id: user.twitter_user }, function( error, twitter_user ) {
 
 		if ( error )
@@ -72,6 +66,13 @@ var search_tweets_user = function( user, callback ) {
 		if ( twitter_user === null )
 			throw new Error( "Failed to find TwitterUser" );
 
+		var client = new Twitter({
+			consumer_key: process.env.TWITTER_CONSUMER_KEY,
+			consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+			access_token_key: twitter_user.oauth_token,
+			access_token_secret: twitter_user.oauth_secret,
+		});
+
 		client.get( "statuses/user_timeline", { user_id: twitter_user.data.id_str }, function( error, tweets, response ) {
 
 			if ( error )
@@ -79,10 +80,10 @@ var search_tweets_user = function( user, callback ) {
 
 			console.log( "tweets >>" );
 			console.log( tweets );
-/*
-			var remaining = tweets.statuses.length;
 
-			tweets.statuses.forEach(function( tweet_data ){
+			var remaining = tweets.length;
+
+			tweets.forEach(function( tweet_data ){
 
 				Tweet.findOne(
 					{ data: { id_str: tweet_data.id_str } },
@@ -101,7 +102,7 @@ var search_tweets_user = function( user, callback ) {
 				);
 
 			});
-*/
+
 		});
 
 	});
