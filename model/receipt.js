@@ -9,6 +9,7 @@ var ReceiptSchema = new Schema({
 	location: ObjectId,
 	tweet: ObjectId,
 	user: ObjectId,
+	type: String, // in, drive, popup, other
 });
 
 module.exports = mongoose.model( "Receipt", ReceiptSchema );//ReceiptSchema;

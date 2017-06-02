@@ -1,3 +1,3 @@
 exports.splash = function( req, res ) {
-	res.send( "Hello World!" );
+	res.render( "splash", { title: [ "ASDFDSFDSFASD",  "ASDFDSfasdfasdfFDSFASD" ] } );
 };

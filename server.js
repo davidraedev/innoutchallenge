@@ -11,6 +11,8 @@ app.use( session({
 
 app.set( "view engine", "pug" );
 app.set( "views", __dirname + "/view" );
+app.set( "view options", { layout: false } );
+app.use( express.static( "public" ) );
 
 
 app.use( "/", require( "./route/auth.js" ) );
