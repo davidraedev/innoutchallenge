@@ -1,12 +1,12 @@
+// use strict;
+
 var Receipt = require( "../model/receipt" );
 var Tweet = require( "../model/tweet" );
 var User = require( "../model/user" );
-//var env = require( "node-env-file" )
 var TwitterUser = require( "../model/twitter_user" );
 var db = require( "../app/db" );
-//env( ".env" );
-
-// could change new user join date to the tweet time
+var WordToNumber = require( "word-to-number-node" );
+var w2n = new WordToNumber();
 
 db.connect(function( error ){
 	if ( error )
@@ -148,7 +148,15 @@ function isRetweet( tweet ) {
 	return ( tweet.retweeted_status );
 }
 
+function isIgnoredTweet( tweet ) {
+	// ignore tweets containing hashbang "#!"
+	return /(?!\/)#\!(?!\/)/.test( tweet.text );
+}
+
 function toNumbers( word ) {
+
+	return w2n.parse( word );
+	/*
 	word = word.toLowerCase();
 	word = word.replace( "fourty", "forty" );
 	let numbers = {
@@ -219,24 +227,26 @@ function toNumbers( word ) {
 	}
 	
 	return false;
+	*/
 }
 
 function parseForInStoreReceipt( text ) {
 
 	text = text.toLowerCase();
+	var number = null;
 
 	let r = /(((one|two|three|four|five|six|seven|eight|nine) (thousand))|((one|two|three|four|five|six|seven|eight|nine)-(thousand)))/;
 	text = text.replace( r, "" );
 
-	// ignore tweets containing hashbang "#!"
-	if ( /(?!\/)#\!(?!\/)/.test( text ) )
-		return null;
 
 	// parse for digits
-	var matches = text.match( /((^| )[\d]{1,2})([\s!.]|$)/ );
-	if ( matches && matches[1] && matches[1] >= 1 && matches[1] <= 99 && matches[1] != 69)
-		return parseInt( matches[1] );
-
+	var matches = text.match( /(?:^|\s)(\d{1,2})(?:[\s\!\.]|$)/ );// /((^| )([\d]{1,2})([\s\!\.]|$)/
+	
+	if ( matches && matches[1] )
+		number = parseInt( matches[1] ) || null;
+//	if ( matches && matches[1] && matches[1] >= 1 && matches[1] <= 99 && matches[1] != 69)
+//		return parseInt( matches[1] );
+/*
 	r = [
 		/((twenty|thirty|forty|fourty|fifty|sixty|seventy|eighty|ninety)-(one|two|three|four|five|six|seven|eight|nine))/,
 		/((twenty|thirty|forty|fourty|fifty|sixty|seventy|eighty|ninety) (one|two|three|four|five|six|seven|eight|nine))/,
@@ -250,6 +260,32 @@ function parseForInStoreReceipt( text ) {
 		if ( matches && matches[0] )
 			return parseInt( toNumbers( matches[0] ) );
 	}
+*/
+
+	if ( ! number )
+		number = parseInt( w2n.parse( text ) );
+
+	if ( ( number > 0 && number < 69 ) || ( number > 69 && number < 99 ) )
+		return number;
+
+	return null;
+
+}
+
+function parseForDriveThruReceipt( text ) {
+
+	text = text.toLowerCase();
+
+	var matches = text.match( /!\#4\d{3}/ );
+	console.log( "matches >>" );
+	console.log( matches );
+	if ( matches.length )
+		return matches[0];
+
+	var number = w2n.parse( text );
+
+	if ( number > 3999 && number < 5000 )
+		return number;
 
 	return null;
 
@@ -283,12 +319,22 @@ var parse_tweets_for_receipts = function( callback ) {
 				return;
 			}
 
-			if ( isRetweet( tweet.toObject().data ) ) {
+			if ( isRetweet( data ) ) {
 				console.log( "Is Retweet" );
 				return;
 			}
 
+			if ( isIgnoredTweet( data ) ) {
+				console.log( "Tweet Ignored" );
+				return;
+			}
+
 			let receipt_number = parseForInStoreReceipt( data.text );
+			let receipt_type = "instore";
+			if ( ! receipt_number ) {
+				receipt_number = parseForDriveThruReceipt( data.text );
+				receipt_type = "drivethru";
+			}
 			if ( receipt_number ) {
 
 				getUser( data, function( error, user ){
@@ -300,7 +346,7 @@ var parse_tweets_for_receipts = function( callback ) {
 						date: new Date( data.created_at ),
 						tweet: tweet._id,
 						user: user._id,
-						type: "in",
+						type: receipt_type,
 					});
 
 					receipt.save( function( error ){
