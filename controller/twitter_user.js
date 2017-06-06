@@ -52,6 +52,7 @@ var refresh_user = function( twitter_user, callback ) {
 			twitter_user.data = twitter_user_object;
 			twitter_user.last_update = new Date();
 			twitter_user.not_found = false;
+			twitter_user.suspended = false;
 			twitter_user.save( function( error ){
 
 				if ( error )
