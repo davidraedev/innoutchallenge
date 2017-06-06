@@ -6,7 +6,7 @@ var user_controller = require( "../controller/user" );
 var store_controller = require( "../controller/store" );
 
 // Views
-router.get( "/", view_controller.splash );
+router.get( "/", user_controller.user_list );
 
 // Users
 router.get( "/challengers", user_controller.user_list );

@@ -1,29 +1,27 @@
 var Twitter = require( "twitter" );
 var TwitterUser = require( "../model/twitter_user" );
+var User = require( "../model/user" );
 var env = require( "node-env-file" );
 var db = require( "../app/db" );
 env( ".env" );
 
 db.connect( function( error ) {
 	if ( error )
-		throw new Error( error );
+		throw error;
 });
 
 // need to add in rate limiting
 
 // this won't exit immediately if it error in the foreach, it'll continue the loop
-var refresh_user = function( user, callback ) {
+var refresh_user = function( twitter_user, callback ) {
 
-	TwitterUser.findOne( { _id: user.twitter_user }, function( error, twitter_user ) {
-
-		console.log( "twitter_user" );
-		console.log( twitter_user );
+	User.findOne( { twitter_user: twitter_user._id }, function( error, user ) {
 
 		if ( error )
-			throw new Error( error );
+			throw error;
 
-		if ( twitter_user === null )
-			throw new Error( "Failed to find Twitter user ["+ user.twitter_user + "]" );
+		if ( user === null )
+			return console.log( "no user found matching that twitter user" );
 
 		if ( twitter_user.oauth_token && twitter_user.oauth_secret ) {
 			console.log( "using saved twitter user credentials" );
@@ -35,7 +33,7 @@ var refresh_user = function( user, callback ) {
 			});
 		}
 		else {
-			console.log( "no user credentials found, using ap bearer token" );
+			console.log( "no user credentials found, using app bearer token" );
 			var client = new Twitter({
 				consumer_key: process.env.TWITTER_CONSUMER_KEY,
 				consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
@@ -53,6 +51,7 @@ var refresh_user = function( user, callback ) {
 
 			twitter_user.data = twitter_user_object;
 			twitter_user.last_update = new Date();
+			twitter_user.not_found = false;
 			twitter_user.save( function( error ){
 
 				if ( error )
