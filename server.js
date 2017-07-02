@@ -11,8 +11,6 @@ app.use( session({
 
 app.set( "view engine", "pug" );
 app.set( "views", __dirname + "/view" );
-app.set( "view options", { layout: false } );
-app.use( express.static( "public" ) );
 
 
 app.use( "/", require( "./route/auth.js" ) );
@@ -21,6 +19,8 @@ app.use( "/", require( "./route/all.js" ) );
 db.connect(function( error ){
 	if ( error )
 		throw new Error( error );
-	app.listen( 3000 );
+	app.listen( 3000, function(){
+		console.log( "Server started at http://127.0.0.1:3000" );
+	});
 });
 

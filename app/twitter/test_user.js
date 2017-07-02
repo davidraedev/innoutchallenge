@@ -1,4 +1,4 @@
-var controller = require( "../../controller/tweet" );
+var controller = require( "../../controller/twitter_user" );
 
 var User = require( "../../model/user" );
 User.findOne( {}, function( error, user ){
@@ -10,7 +10,7 @@ User.findOne( {}, function( error, user ){
 		throw new Error( "User not found" );
 
 	console.log( user );
-	controller.search_tweets_user( user, function( error ){
+	controller.refresh_user( user, function( error ){
 		if ( error )
 			throw new Error( error );
 		console.log( "Success!" );
