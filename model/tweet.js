@@ -2,9 +2,10 @@ var mongoose = require( "mongoose" );
 var Schema = mongoose.Schema;
 
 var TweetSchema = new Schema({
-	// filled with raw twitter Tweet object
 	parsed: { type: Boolean, default: false },
-	source: { type: String, default: "" },
-}, { strict: false } );
+	fetched: { type: Boolean, default: false },
+	source: { type: String, default: "" }, // old_site, twitter_search, twitter_auth, manual
+	data: Schema.Types.Mixed,
+});
 
-module.exports = mongoose.model( "Tweet", TweetSchema );//TweetSchema;
+module.exports = mongoose.model( "Tweet", TweetSchema );
