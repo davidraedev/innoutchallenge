@@ -5,6 +5,7 @@ jspm_packages/
 .env
 
 data/database/*
+data/old_site/*
 log/*
 !.gitkeep
 

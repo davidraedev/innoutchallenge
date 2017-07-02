@@ -2,6 +2,7 @@ const db = require( "../db" );
 const axios = require( "axios" );
 const https = require( "https" );
 const fs = require( "fs" );
+require( "dotenv" ).config()
 
 const User = require( "../../model/user" );
 const TwitterUser = require( "../../model/twitter_user" );
@@ -17,8 +18,8 @@ const agent = new https.Agent({
 
 const use_cache = true;
 
-const data_url = "https://innoutchallenge.com/export_data.php?key=dfy8w3br423nr78moqrykqunzo8ztb786cbtrnxmiqr3qcv";
-const data_path = "data/old_site.json"
+const data_url = "https://innoutchallenge.com/export_data.php?key="+ process.env.INNOUTCHALLENGE_OLD_KEY;
+const data_path = "data//old_site.json"
 
 function getRemote( path, callback ) {
 
@@ -121,7 +122,6 @@ function processUser( user_data, data, callback ) {
 								throw error;
 
 							if ( ! tweet_data.receipt.length ) {
-								console.log( "tweet_count [%s]", ( tweet_count - 1 ) )
 								if ( --tweet_count === 0 )
 									callback();
 								return;
@@ -138,7 +138,6 @@ function processUser( user_data, data, callback ) {
 
 								if ( error )
 									throw error;
-								console.log( "tweet_count [%s]", ( tweet_count - 1 ) )
 								if ( --tweet_count === 0 )
 									callback();
 
