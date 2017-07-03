@@ -12,14 +12,14 @@ const Receipt = require( "../../model/receipt" );
 
 const ObjectId = require( "mongoose" ).Types.ObjectId;
 
-const agent = new https.Agent({  
+const agent = new https.Agent({
 	rejectUnauthorized: false
 });
 
-const use_cache = true;
-
 const data_url = "https://innoutchallenge.com/export_data.php?key="+ process.env.INNOUTCHALLENGE_OLD_KEY;
 const data_path = "data//old_site.json"
+const clear_data = true;
+const use_cache = true;
 
 function getRemote( path, callback ) {
 
@@ -58,16 +58,48 @@ function getLocal( path, callback ) {
 	});
 }
 
+function resetData( callback ) {
+
+	if ( ! clear_data )
+		callback();
+
+	//console.log( "resetting data" )
+
+	let collection_names = [
+		"tweets",
+		"receipts",
+		"twitterusers",
+		"users"
+	];
+	let count = collection_names.length;
+	collection_names.forEach( ( collection_name ) => {
+		db.mongoose.connection.db.dropCollection( collection_name, ( error, result ) => {
+			
+			// mongo throws an error when droppng a non-existent collection, so ignore that
+			if ( error && error != "MongoError: ns not found" )
+				throw error;
+
+		//	console.log( "dropped collection [%s]", collection_name )
+			if ( --count === 0 )
+				callback();
+		});
+	})
+}
+
 db.connect().then( () => {
 
-	if ( ! use_cache )
-		return getRemote( data_url, importData );
+	resetData( () => {
 
-	getLocal( data_path, ( error, data ) => {
-		if ( error )
-			return getRemote( data_url, importData )
-		importData( null, data );
-	});
+		if ( ! use_cache )
+			return getRemote( data_url, importData );
+
+		getLocal( data_path, ( error, data ) => {
+			if ( error )
+				return getRemote( data_url, importData )
+			importData( null, data );
+		});
+
+	})
 
 }).catch( ( error ) => {
 	throw error;
@@ -103,46 +135,66 @@ function processUser( user_data, data, callback ) {
 
 				if ( error )
 					throw error;
-			
-				
+
+
 				let tweets = data.tweets.filter( function( tweet_data ) {
 					return ( tweet_data.user_id === twitter_user.data.id_str );
 				});
 				let tweet_count = tweets.length;
 				tweets.forEach( ( tweet_data ) => {
-						Tweet.create({
-							source: "old_site",
-							data: {
-								id_str: tweet_data.tweet_id,
-								text: tweet_data.tweet_text,
-							}
-						}, ( error, tweet ) => {
+
+					if ( ! tweet_data.tweet_id.length ) {
+						Receipt.create({
+							number: tweet_data.receipt,
+							date: new Date( tweet_data.tweet_date ),
+						//      location: ObjectId,
+						//	tweet: new ObjectId( tweet._id ),
+							user: new ObjectId( user._id ),
+							approved: tweet_data.approved,
+						}, ( error, receipt ) => {
 
 							if ( error )
 								throw error;
+							if ( --tweet_count === 0 )
+								callback();
 
-							if ( ! tweet_data.receipt.length ) {
-								if ( --tweet_count === 0 )
-									callback();
-								return;
-							}
-
-							Receipt.create({
-								number: tweet_data.receipt,
-								date: new Date( tweet_data.tweet_date ),
-							//	location: ObjectId,
-								tweet: new ObjectId( tweet._id ),
-								user: new ObjectId( user._id ),
-								approved: tweet_data.approved,
-							}, ( error, receipt ) => {
-
-								if ( error )
-									throw error;
-								if ( --tweet_count === 0 )
-									callback();
-
-							})
 						})
+						return;
+					}
+
+					Tweet.create({
+						source: "old_site",
+						data: {
+							id_str: tweet_data.tweet_id,
+							text: tweet_data.tweet_text,
+						}
+					}, ( error, tweet ) => {
+
+						if ( error )
+							throw error;
+
+						if ( ! tweet_data.receipt.length ) {
+							if ( --tweet_count === 0 )
+								callback();
+							return;
+						}
+
+						Receipt.create({
+							number: tweet_data.receipt,
+							date: new Date( tweet_data.tweet_date ),
+						//      location: ObjectId,
+							tweet: new ObjectId( tweet._id ),
+							user: new ObjectId( user._id ),
+							approved: tweet_data.approved,
+						}, ( error, receipt ) => {
+
+							if ( error )
+								throw error;
+							if ( --tweet_count === 0 )
+								callback();
+
+						})
+					})
 				})
 			})
 		})
@@ -156,12 +208,49 @@ function importData( error, data ) {
 
 	let user_count = data.users.length;
 	data.users.forEach( ( user_data ) => {
-		console.log( user_data.user_id )
+		//console.log( user_data.user_id )
 
 		processUser( user_data, data, () => {
-			console.log( "user_count [%s]", ( user_count - 1 ) )
-			if ( --user_count === 0 )
-				db.close();
+		//	console.log( "user_count [%s]", ( user_count - 1 ) )
+
+			if ( --user_count === 0 ) {
+
+				Receipt.find({}).count(( error, count ) => {
+
+					if ( error )
+						throw error;
+
+					console.log( "Receipts [%s]", count )
+
+					Tweet.find({}).count(( error, count ) => {
+
+						if ( error )
+							throw error;
+
+						console.log( "Tweets [%s]", count )
+
+						TwitterUser.find({}).count(( error, count ) => {
+
+							if ( error )
+								throw error;
+
+							console.log( "TwitterUsers [%s]", count )
+
+							User.find({}).count(( error, count ) => {
+
+								if ( error )
+									throw error;
+
+								console.log( "Users [%s]", count )
+
+
+								db.close();
+
+							})
+						})
+					})
+				})
+			}
 		});
 	})
 }

@@ -5,11 +5,6 @@ var TwitterUser = require( "../model/twitter_user" );
 var db = require( "../app/db" );
 env( ".env" );
 
-db.connect(function( error ){
-	if ( error )
-		throw new Error( error );
-});
-
 // this won't exit immediately if it error in the foreach, it'll continue the loop
 var search_tweets_app = function( callback ) {
 
@@ -33,7 +28,7 @@ var search_tweets_app = function( callback ) {
 			console.log( i )
 
 			Tweet.findOne(
-				{ data: { id_str: tweet_data.id_str } },
+				{ "data.id_str": tweet_data.id_str },
 				function( error, tweet ){
 
 					if ( error )
@@ -86,7 +81,7 @@ var search_tweets_user = function( user, callback ) {
 			tweets.forEach(function( tweet_data ){
 
 				Tweet.findOne(
-					{ data: { id_str: tweet_data.id_str } },
+					{ "data.id_str": tweet_data.id_str },
 					function( error, tweet ){
 
 						if ( error )
@@ -109,7 +104,31 @@ var search_tweets_user = function( user, callback ) {
 
 };
 
+var get_statuses_app = function( status_ids_array, callback ) {
+
+	console.log( "get_statuses_app" );
+
+	var client = new Twitter({
+		consumer_key: process.env.TWITTER_CONSUMER_KEY,
+		consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+		bearer_token: process.env.TWITTER_BEARER_TOKEN,
+	});
+
+	const ids = status_ids_array.join( "," );
+
+	client.get( "statuses/lookup", { id: ids, map: true }, function( error, tweets, response ) {
+
+		if ( error )
+			return callback( error );
+
+		console.log( tweets );
+
+		callback( null, tweets );
+	});
+};
+
 module.exports = {
 	search_tweets_app: search_tweets_app,
 	search_tweets_user: search_tweets_user,
+	get_statuses_app: get_statuses_app,
 };
