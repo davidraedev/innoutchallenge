@@ -15,6 +15,7 @@ router.get( "/", view_controller.splash );
 
 // User
 router.post( "/api/users/list", jsonParser, user_controller.users_list );
+router.post( "/api/user/receipts", jsonParser, user_controller.user_receipts );
 
 // Store
 router.get( "/stores", store_controller.store_list );

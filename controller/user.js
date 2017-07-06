@@ -14,7 +14,7 @@ exports.users_list = function( request, response ) {
 	if ( page < 0 || isNaN( page ) )
 		return response.status( 500 ).send( "Invalid page" );
 
-	User.find( { state: 1 }, "name", { skip: ( amount * page ), limit: amount  }, ( error, users ) => {
+	User.find( { state: 1 }, "name", { skip: ( amount * page ), limit: amount }, ( error, users ) => {
 
 		if ( error )
 			return response.status( 500 ).send( error );
@@ -24,7 +24,6 @@ exports.users_list = function( request, response ) {
 
 		let users_left = users.length;
 
-		// might ned to .bind() here
 		users.forEach( ( user, i ) => {
 			Receipt.count( { user: new ObjectId( user._id ), approved: 1 }, ( error, count ) => {
 
@@ -41,8 +40,58 @@ exports.users_list = function( request, response ) {
 	
 };
 
-exports.user_info = function( req, res ) {
-	res.send( "NOT IMPLEMENTED: User Info: " + req.params.id );
+exports.user_receipts = function( request, response ) {
+
+	const name = request.body.name
+
+	if ( ! name )
+		return response.status( 500 ).send( "Invalid name" );
+
+	User.findOne( { state: 1, name: { $regex : new RegExp( name, "i") } }, "name", ( error, user ) => {
+
+		if ( error )
+			return response.status( 500 ).send( error );
+
+		if ( error )
+			return response.status( 404 ).send( "User Not Found" );
+
+		Receipt.find( { user: new ObjectId( user._id ), approved: 1 }, ( error, receipts ) => {
+
+			if ( error )
+				return response.status( 500 ).send( error );
+
+			user.totals = {
+				receipts: {
+					unique: 0,
+					total: 0,
+					remaining: 98,
+				}
+			};
+
+			let receipts_list = {};
+			for ( let i = 1; i <= 99; i++ ) {
+				if ( i !== 69 )
+					receipts_list[ i ] = { amount: 0 }
+			}
+
+			receipts.forEach( ( receipt ) => {
+				if ( receipts_list[ receipt.number ].amount === 0 ) {
+					user.totals.receipts.unique++;
+					user.totals.receipts.remaining--;
+				}
+				user.totals.receipts.total++;
+				receipts_list[ receipt.number ].amount++;
+			})
+
+			user.receipts = receipts_list
+
+			console.log( "server user >> ", user )
+
+			return response.send( JSON.stringify( user ) );
+
+		}).sort({ "data.created_at": "asc" }).lean()
+
+	}).lean()
 };
 
 exports.user_create_get = function( req, res ) {
