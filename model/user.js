@@ -11,7 +11,8 @@ var UserSchema = new Schema({
 	/*
 		0 = not approved
 		1 = approved
-		2 = banned / removed
+		2 = banned
+		3 = temp_ignored
 	*/
 });
 
