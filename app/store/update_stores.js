@@ -130,13 +130,17 @@ function parseStore( data ) {
 
 db.connect().then( function( connection ){
 
-//	innoutLocations.get().then( function( json ){
-	fs.readFile( "./data/stores.json", ( e, contents ) => {
+	innoutLocations.get().then( function( json ){
+		fs.writeFile( "./data/stores.json", JSON.stringify( json ), ( error ) => {
+			if ( error )
+				console.error( "Failed to save json to local" );
+		})
+//	fs.readFile( "./data/stores.json", ( e, contents ) => {
 
-		if ( e )
-			throw e;
+//		if ( e )
+//			throw e;
 
-		let json = JSON.parse( contents );
+//		let json = JSON.parse( contents );
 
 		let remaining = json.data.length;
 		json.data.forEach(function( d, index ){
@@ -154,14 +158,14 @@ db.connect().then( function( connection ){
 				}
 			);
 		});
-	 })
+//	 })
 
-/*
+
 	}).catch( function( error ){
 		if ( error )
 			throw error;
 	});
-*/
+
 }).catch( function( error ){
 	if ( error )
 		throw error;

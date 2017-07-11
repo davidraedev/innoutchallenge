@@ -6,7 +6,7 @@ var ObjectId = mongoose.Schema.Types.ObjectId;
 var UserSchema = new Schema({
 	name: String,
 	join_date: Date,
-	twitter_user: ObjectId,
+	twitter_user: { type: ObjectId, ref: "TwitterUser" },
 	state: { type: Number, default: 0 },
 	/*
 		0 = not approved

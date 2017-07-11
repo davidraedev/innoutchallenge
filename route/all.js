@@ -19,9 +19,4 @@ router.post( "/api/user/receipts", jsonParser, user_controller.user_instore_rece
 router.post( "/api/user/stores", jsonParser, user_controller.user_stores );
 router.post( "/api/user/drivethru", jsonParser, user_controller.user_drivethru_receipts );
 
-// Store
-router.get( "/stores", store_controller.store_list );
-router.get( "/store/:id", store_controller.store_info );
-router.get( "/store/refresh", store_controller.store_refresh );
-
 module.exports = router;

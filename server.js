@@ -12,7 +12,7 @@ app.use( session({
 app.set( "view engine", "pug" );
 app.set( "views", __dirname + "/view" );
 
-app.use( function( request, response, next ) {
+app.use( ( request, response, next ) => {
 	response.header( "Access-Control-Allow-Origin", "*" );
 	response.header( "Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept" );
 	next();
@@ -21,14 +21,13 @@ app.use( function( request, response, next ) {
 app.use( "/", require( "./route/auth.js" ) );
 app.use( "/", require( "./route/all.js" ) );
 
-db.connect(function( error ){
-
-	if ( error )
-		throw new Error( error );
+db.connect().then( () => {
 
 	app.listen( 3000, function(){
 		console.log( "Server started at http://127.0.0.1:3000" );
 	});
 
+}).catch( ( error ) => {
+	throw error;
 });
 

@@ -6,9 +6,9 @@ var ObjectId = mongoose.Schema.Types.ObjectId;
 var ReceiptSchema = new Schema({
 	number: Number,
 	date: Date,
-	store: ObjectId,
-	tweet: ObjectId,
-	user: ObjectId,
+	store: { type: ObjectId, ref: "Store" },
+	tweet: { type: ObjectId, ref: "Tweet" },
+	user: { type: ObjectId, ref: "User" },
 	approved: { type: Number, default: 0 },
 	/*
 		0: not yet approved,

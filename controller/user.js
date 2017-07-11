@@ -124,7 +124,7 @@ exports.user_stores = function( request, response ) {
 				}
 			};
 
-			Receipt.find( { user: new ObjectId( user._id ), approved: 1, store: { $exists: true }, type: { $in: [ 1, 2, 3 ] } }, ( error, receipts ) => {
+			Receipt.find( { user: new ObjectId( user._id ), approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } }, ( error, receipts ) => {
 
 				if ( error )
 					return response.status( 500 ).send( error );
@@ -143,14 +143,19 @@ exports.user_stores = function( request, response ) {
 							return true;
 						}
 					});
+					console.log( "Store >> ", store )
 					return store;
 				}
 
 				receipts.map( ( receipt ) => {
-					receipt.store = getStore( receipt.store );
+					if ( receipt.store )
+						receipt.store = getStore( receipt.store );
 				});
 
 				receipts.forEach( ( receipt ) => {
+					if ( ! receipt.store )
+						return;
+					console.log( "receipt >> ", receipt )
 					if ( stores_list[ receipt.store.number ].amount === 0 ) {
 						user.totals.stores.unique++;
 						user.totals.stores.remaining--;

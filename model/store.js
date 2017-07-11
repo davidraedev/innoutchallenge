@@ -38,7 +38,7 @@ var StoreSchema = new Schema({
 	number: { type: Number, default: null },
 	loc: {
 		type: [ Number ],
-		index: "2d",
+		index: "2dsphere",
 	},
 	location: {
 		latitude: { type: Number, default: null },
@@ -48,7 +48,7 @@ var StoreSchema = new Schema({
 		state: { type: String, default: null },
 		zipcode: { type: String, default: null },
 		country: { type: String, default: null },
-		twitter_place: { type: ObjectId, default: null },
+		twitter_place: { type: ObjectId, default: null, ref: "TwitterPlace" },
 	},
 	name: { type: String, default: null },
 	dining_room_hours: {
@@ -73,7 +73,7 @@ var StoreSchema = new Schema({
 	dining_room: { type: Boolean, default: false },
 	drive_thru: { type: Boolean, default: false },
 	remote_image_url: { type: String, default: null },
-	popup: ObjectId,
+	popup: { type: ObjectId, ref: "Popup" },
 });
 
 module.exports = mongoose.model( "Store", StoreSchema );

@@ -29,7 +29,7 @@ function updateUserTotals( user, callback ) {
 	};
 
 
-	// receipts
+	// in-storea and drivethru totals
 	Receipt.find( { user: new ObjectId( user._id ), type: { $in: [ 1, 2 ] }, approved: 1 }, ( error, receipts ) => {
 		console.log( "user receipts" );
 
@@ -70,9 +70,9 @@ function updateUserTotals( user, callback ) {
 
 	});
 
-	// stores
+	// store and popup totals
 	Store.find({}, ( error, stores ) => {
-		console.log( "user stores" );
+	//	console.log( "user stores" );
 
 		if ( error )
 			throw error;
@@ -84,32 +84,67 @@ function updateUserTotals( user, callback ) {
 
 		totals.stores.remaining = stores.length;
 
+	//	console.log( "stores.length = [%s]", stores.length )
+
+		let stores_list = {};
+		stores.forEach( ( store ) => {
+			if ( ! store.popup && store.number )
+				stores_list[ store.number ] = { amount: 0 };
+			else if ( store.popup )
+				stores_list[ store._id ] = { amount: 0 };
+		});
+
 		// if we vet our data input correctly, we can take out the store/popup check and rely only on the { type } check
-		Receipt.find( { user: new ObjectId( user._id ), approved: 1, $or: [ { store: { $exists: true } }, { store: { $exists: true } } ], type: { $in: [ 1, 2, 3 ] } }, ( error, receipts ) => {
+		Receipt.find( { user: new ObjectId( user._id ), approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } }, ( error, receipts ) => {
 
 			if ( error )
 				throw error;
 
-			let stores_list = {};
-			stores.forEach( ( store ) => {
-				if ( ! store.popup && store.number )
-					stores_list[ store.number ] = { amount: 0 };
-				else if ( store.popup )
-					stores_list[ store._id ] = { amount: 0 };
-			});
+			//console.log( "stores >> ", stores )
+
+			// for some odd reason, straight up "==" matching the ids was not working, so had to add this beast in 
+			function charMatch( stra, strb ) {
+				for ( let i = 0; i < stra.length; i++ )
+					if ( stra.charCodeAt( i ) != strb.charCodeAt( i ) )
+						return false;
+				return true;
+			}
 
 			function getStore( id ) {
-				let store = null;
+				let store = false;
+			//	console.log( "id >> ", id )
+				let keys = Object.keys( stores );
+				for ( i = 0; i < keys.length; i++ ) {
+					let key = keys[i];
+					let this_id = stores[ key ]._id;
+					console.log( stores[ key ] )
+					console.log( "[%s] == [%s]", this_id, id )
+					console.log( this_id )
+					console.log( id )
+
+					if ( charMatch( this_id, id ) ) {
+						console.log( "assigning" )
+						store = stores[ key ];
+						break;
+					}
+				}
+				if ( store === false )
+					throw new Error( "Store not found" )
+				/*
 				Object.keys( stores ).some( ( key ) => {
+					console.log( "[%s] === [%s]", stores[ key ]._id, id )
 					if ( stores[ key ]._id === id ) {
 						store = stores[ key ];
 						return true;
 					}
 				});
+				*/
+			//	console.log( "store >> ", store )
 				return store;
 			}
 
-			receipts.map( ( receipt ) => {
+			receipts.map( ( receipt, key ) => {
+//				console.log( "ress >> ", receipt )
 				receipt.store = getStore( receipt.store );
 			});
 
@@ -122,6 +157,7 @@ function updateUserTotals( user, callback ) {
 
 				// stores
 				else {
+//					console.log( "receipt >> ", receipt )
 
 					if ( stores_list[ receipt.store.number ].amount === 0 ) {
 						totals.stores.unique++;
@@ -177,7 +213,7 @@ db.connect().then( () => {
 
 	updateAllUsersTotals();
 /*
-	User.findOne({ name: "daraeman" }, ( error, user ) => {
+	User.findOne({ name: "stuballew" }, ( error, user ) => {
 		
 		if ( error )
 			throw error;
