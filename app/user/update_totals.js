@@ -78,6 +78,7 @@ function updateUserTotals( user, callback ) {
 
 	});
 
+
 	// store and popup totals
 	Store.find({}, ( error, stores ) => {
 
@@ -93,10 +94,7 @@ function updateUserTotals( user, callback ) {
 
 		let stores_list = {};
 		stores.forEach( ( store ) => {
-			if ( ! store.popup && store.number )
-				stores_list[ store.number ] = { amount: 0 };
-			else if ( store.popup )
-				stores_list[ store._id ] = { amount: 0 };
+			stores_list[ store._id ] = { amount: 0 };
 		});
 
 		// if we vet our data input correctly, we can take out the store/popup check and rely only on the { type } check
@@ -107,13 +105,25 @@ function updateUserTotals( user, callback ) {
 
 			// for some odd reason, straight up "==" matching the ids was not working, so had to add this beast in 
 			function charMatch( stra, strb ) {
+				if ( stra.length != strb.length )
+					return false;
 				for ( let i = 0; i < stra.length; i++ )
-					if ( stra.charCodeAt( i ) != strb.charCodeAt( i ) )
+					if ( stra.charCodeAt( i ) !== strb.charCodeAt( i ) )
 						return false;
 				return true;
 			}
 
 			function getStore( id ) {
+				let store = false;
+				stores.some( ( temp_store ) => {
+					console.log( temp_store._id +" == "+ id );
+					if ( charMatch( temp_store._id, id ) ) {
+						store = temp_store;
+						return true;
+					}
+				});
+				return store;
+				/*
 				let store = false;
 				let keys = Object.keys( stores );
 				for ( i = 0; i < keys.length; i++ ) {
@@ -128,12 +138,14 @@ function updateUserTotals( user, callback ) {
 				if ( store === false )
 					throw new Error( "Store not found" )
 
-				return store;
+				return store;*/
 			}
 
-			receipts.map( ( receipt, key ) => {
-				receipt.store = getStore( receipt.store );
-			});
+		//	receipts.map( ( receipt ) => {
+		//		receipt.store = getStore( receipt.store );
+		//	});
+
+		console.log( stores_list )
 
 			receipts.forEach( ( receipt ) => {
 
@@ -144,20 +156,20 @@ function updateUserTotals( user, callback ) {
 
 				// stores
 				else {
+					console.log( "store >> [%s]", stores_list[ receipt.store ] );
 
-					if ( stores_list[ receipt.store.number ].amount === 0 ) {
-						console.log( "store_number >> [%s]", receipt.store.number )
+					if ( stores_list[ receipt.store ].amount === 0 ) {
 						totals.stores.unique++;
 						totals.stores.remaining--;
 					}
 
 					totals.stores.total++;
-					stores_list[ receipt.store.number ].amount++;
+					stores_list[ receipt.store ].amount++;
 				}
 
 			});
 
-			console.log( stores_list[303] )
+			//console.log( stores_list )
 
 			user.totals = totals;
 			user.save( ( error ) => {
@@ -199,8 +211,8 @@ function updateAllUsersTotals() {
 
 db.connect().then( () => {
 
-	// /updateAllUsersTotals();
-
+	updateAllUsersTotals();
+/*
 	User.findOne({ name: "stuballew" }, ( error, user ) => {
 		
 		if ( error )
@@ -213,5 +225,5 @@ db.connect().then( () => {
 			db.close();
 		});
 	});
-
+*/
 });
