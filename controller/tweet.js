@@ -1,9 +1,11 @@
 var Twitter = require( "twitter" );
 var Tweet = require( "../model/tweet" );
-var env = require( "node-env-file" )
+require( "dotenv" ).config()
 var TwitterUser = require( "../model/twitter_user" );
+var TwitterPlace = require( "../model/twitter_place" );
 var db = require( "../app/db" );
-env( ".env" );
+var wordToNumber = require( "word-to-number-node" );
+var w2n = new wordToNumber();
 
 // this won't exit immediately if it error in the foreach, it'll continue the loop
 var search_tweets_app = function( callback ) {
@@ -104,9 +106,9 @@ var search_tweets_user = function( user, callback ) {
 
 };
 
-var get_statuses_app = function( status_ids_array, callback ) {
+var get_tweets_app = function( status_ids_array, callback ) {
 
-	console.log( "get_statuses_app" );
+	console.log( "get_tweets_app" );
 
 	var client = new Twitter({
 		consumer_key: process.env.TWITTER_CONSUMER_KEY,
@@ -127,8 +129,100 @@ var get_statuses_app = function( status_ids_array, callback ) {
 	});
 };
 
+function parseForInStoreReceipt( text ) {
+	let number = parseForInStoreDigits( text ) || w2n.parse( text );
+	if ( number && number !== 69 && number > 0 && number < 100 )
+		return number;
+	return false;
+}
+
+function parseForDriveThruReceipt( text ) {
+	let number = parseForDriveThruDigits( text ) || w2n.parse( text );
+	if ( number && number > 3999 && number < 5000 )
+		return number;
+	return false;
+}
+
+function parseForStore( tweet ) {
+
+	if ( ! tweet.location )
+		return false;
+
+	if ( /in( |-)n( |-)out( |-)/i.test( tweet.location.name ) ) {
+		// get twitter place coords
+		// geosearch the database for matching stores
+		// add twitter place to store
+		// add store to receipt
+	}
+
+}
+
+function isRetweet( tweet ) {
+	if ( tweet.retweet || /^rt\s/i.test( tweet.data.text ) )
+		return true;
+	return false
+}
+
+function hasIgnoreFlag( tweet ) {
+	if ( /\#\!/i.test( tweet.data.text ) )
+		return true;
+	return false
+}
+
+function isIgnoredUser( tweet ) {
+	if ( tweet.data.user.id_str === "584408608" || tweet.data.user.id_str === "1487483659" )
+		return true;
+	return false
+}
+
+function parseForInStoreDigits( text ) {
+	let matches = text.match( /((^| )[\d]{1,2})([\s!.]|$)/ );
+	if ( matches )
+		return matches[1].trim();
+	return false;
+}
+
+function parseForDriveThruDigits( text ) {
+	let matches = text.match( /((^| )4[\d]{3})([\s!.]|$)/ );
+	if ( matches )
+		return matches[1].trim();
+	return false;
+}
+
+var parseTweets = function( callback ) {
+
+	console.log( "parseTweets" );
+
+	db.connect().then( () => {
+
+		Tweet.find({ fetched: true, parsed: false }, ( error, tweets ) => {
+
+			if ( error )
+				return callback( error );
+
+			if ( ! tweets.length )
+				return callback( "no tweets found" );
+
+			let remaining = tweets.length;
+			tweets.forEach( ( tweet ) => {
+				console.log( "tweet.data.text >> ", tweet.data.text )
+				
+				if ( isRetweet( tweet ) || hasIgnoreFlag( tweet ) || isIgnoredUser( tweet ) )
+					// no receipt
+				
+				if (  )
+				let number = w2n.parse( tweet.data.text );
+				console.log( "number [%s]", number );
+				if ( --remaining === 0 )
+					db.close()
+			})
+		})
+	})
+};
+
 module.exports = {
 	search_tweets_app: search_tweets_app,
 	search_tweets_user: search_tweets_user,
-	get_statuses_app: get_statuses_app,
+	get_tweets_app: get_tweets_app,
+	parse_tweets: parse_tweets,
 };

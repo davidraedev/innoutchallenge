@@ -4,11 +4,6 @@ var env = require( "node-env-file" );
 var db = require( "../app/db" );
 env( ".env" );
 
-db.connect( function( error ) {
-	if ( error )
-		throw new Error( error );
-});
-
 // need to add in rate limiting
 
 // this won't exit immediately if it error in the foreach, it'll continue the loop
@@ -20,7 +15,7 @@ var refresh_user = function( user, callback ) {
 		console.log( twitter_user );
 
 		if ( error )
-			throw new Error( error );
+			throw error;
 
 		if ( twitter_user === null )
 			throw new Error( "Failed to find Twitter user ["+ user.twitter_user + "]" );
@@ -56,7 +51,7 @@ var refresh_user = function( user, callback ) {
 			twitter_user.save( function( error ){
 
 				if ( error )
-					throw new Error( error );
+					throw error;
 
 				console.log( "successfully updated twitter user" );
 

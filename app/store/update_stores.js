@@ -1,5 +1,8 @@
 var innoutLocations = require( "innout_locations" );
 var Store = require( "../../model/store" );
+var db = require( "../db.js" );
+
+var fs = require( "fs" )
 
 /*
 
@@ -112,22 +115,30 @@ function parseStore( data ) {
 		store.dining_room_hours = parseHours( data.DiningRoomHours, "dining_room" );
 		store.drive_thru_hours = parseHours( data.DriveThruHours, "drive_thru" );
 
-		// stores without an open date aren't open yet
-		let open_date = data.OpenDate || "1900-01-01";
-		store.opened = Date.parse( open_date.substring( 0, 10 ) );
-		store.popup = false;
-		store.under_remodel = data.UnderRemodel;
-		store.dining_room = data.HasDiningRoom;
-		store.drive_thru = data.HasDriveThru;
-		store.remote_image_url = data.ImageUrl;
+	// stores without an open date aren't open yet
+	let open_date = data.OpenDate || "1900-01-01";
+	store.opened = Date.parse( open_date.substring( 0, 10 ) );
+	store.under_remodel = data.UnderRemodel;
+	store.dining_room = data.HasDiningRoom;
+	store.drive_thru = data.HasDriveThru;
+	store.remote_image_url = data.ImageUrl;
+
+	store.loc = [ store.location.longitude, store.location.latitude ];
 
 	return store;
 }
 
 db.connect().then( function( connection ){
 
-	innoutLocations.get().then( function( json ){
+//	innoutLocations.get().then( function( json ){
+	fs.readFile( "./data/stores.json", ( e, contents ) => {
 
+		if ( e )
+			throw e;
+
+		let json = JSON.parse( contents );
+
+		let remaining = json.data.length;
 		json.data.forEach(function( d, index ){
 			let store = parseStore( d );
 			console.log( "store [%d]", store.number );
@@ -137,17 +148,21 @@ db.connect().then( function( connection ){
 				{ upsert: true, setDefaultsOnInsert: true },
 				function ( error ) {
 					if ( error )
-						throw new Error( error );
+						throw error;
+					if ( --remaining === 0 )
+						db.close();
 				}
 			);
 		});
+	 })
 
+/*
 	}).catch( function( error ){
 		if ( error )
-			throw new Error( error );
+			throw error;
 	});
-	
+*/
 }).catch( function( error ){
 	if ( error )
-		throw new Error( error );
+		throw error;
 });

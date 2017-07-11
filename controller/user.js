@@ -1,13 +1,29 @@
 var User = require( "../model/user" );
 var Receipt = require( "../model/receipt" );
+var Store = require( "../model/store" );
 const ObjectId = require( "mongoose" ).Types.ObjectId;
 
+function findUser( name, response, callback ) {
+
+	User.findOne( { state: 1, name: { $regex : new RegExp( name, "i") } }, "name", ( error, user ) => {
+
+		if ( error )
+			return response.status( 500 ).send( error );
+
+		if ( error )
+			return response.status( 404 ).send( "User Not Found" );
+
+		callback( user );
+
+	}).lean();
+
+}
 exports.users_list = function( request, response ) {
 
 	// { search, amount, page } = request.body
-	const search = request.body.search
-	const amount = parseInt( request.body.amount )
-	const page = parseInt( request.body.page )
+//	const search = request.body.search;
+	const amount = parseInt( request.body.amount );
+	const page = parseInt( request.body.page );
 
 	if ( ! amount )
 		return response.status( 500 ).send( "Invalid amount" );
@@ -24,7 +40,7 @@ exports.users_list = function( request, response ) {
 
 		let users_left = users.length;
 
-		users.forEach( ( user, i ) => {
+		users.forEach( ( user ) => {
 			Receipt.count( { user: new ObjectId( user._id ), approved: 1 }, ( error, count ) => {
 
 				if ( error )
@@ -33,29 +49,23 @@ exports.users_list = function( request, response ) {
 				user.totals = { receipts: { unique: count } };
 				if ( -- users_left === 0 )
 					return response.send( JSON.stringify( users ) );
-			})
-		})
+			});
+		});
 
-	}).lean()
-	
+	}).sort({ in_store_unique: "desc" }).lean();
+
 };
 
-exports.user_receipts = function( request, response ) {
+exports.user_instore_receipts = function( request, response ) {
 
-	const name = request.body.name
+	const name = request.body.name;
 
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
-	User.findOne( { state: 1, name: { $regex : new RegExp( name, "i") } }, "name", ( error, user ) => {
+	findUser( name, response, ( user ) => {
 
-		if ( error )
-			return response.status( 500 ).send( error );
-
-		if ( error )
-			return response.status( 404 ).send( "User Not Found" );
-
-		Receipt.find( { user: new ObjectId( user._id ), approved: 1 }, ( error, receipts ) => {
+		Receipt.find( { user: new ObjectId( user._id ), type: 1, approved: 1 }, ( error, receipts ) => {
 
 			if ( error )
 				return response.status( 500 ).send( error );
@@ -71,7 +81,7 @@ exports.user_receipts = function( request, response ) {
 			let receipts_list = {};
 			for ( let i = 1; i <= 99; i++ ) {
 				if ( i !== 69 )
-					receipts_list[ i ] = { amount: 0 }
+					receipts_list[ i ] = { amount: 0 };
 			}
 
 			receipts.forEach( ( receipt ) => {
@@ -81,39 +91,124 @@ exports.user_receipts = function( request, response ) {
 				}
 				user.totals.receipts.total++;
 				receipts_list[ receipt.number ].amount++;
-			})
+			});
 
-			user.receipts = receipts_list
-
-			console.log( "server user >> ", user )
+			user.receipts = receipts_list;
 
 			return response.send( JSON.stringify( user ) );
 
-		}).sort({ "data.created_at": "asc" }).lean()
+		}).sort({ "data.created_at": "asc" }).lean();
 
-	}).lean()
+	});
 };
 
-exports.user_create_get = function( req, res ) {
-	res.send( "NOT IMPLEMENTED: User Create GET" );
+exports.user_stores = function( request, response ) {
+
+	const name = request.body.name;
+
+	if ( ! name )
+		return response.status( 500 ).send( "Invalid name" );
+
+	findUser( name, response, ( user ) => {
+
+		Store.find({}, ( error, stores ) => {
+
+			if ( error )
+				return response.status( 500 ).send( error );
+
+			user.totals = {
+				stores: {
+					unique: 0,
+					total: 0,
+					remaining: stores.length,
+				}
+			};
+
+			Receipt.find( { user: new ObjectId( user._id ), approved: 1, store: { $exists: true }, type: { $in: [ 1, 2, 3 ] } }, ( error, receipts ) => {
+
+				if ( error )
+					return response.status( 500 ).send( error );
+
+				let stores_list = {};
+				stores.forEach( ( store ) => {
+					if ( ! store.popup && store.number )
+						stores_list[ store.number ] = { amount: 0 };
+				});
+
+				function getStore( id ) {
+					let store = null;
+					Object.keys( stores ).some( ( key ) => {
+						if ( stores[ key ]._id === id ) {
+							store = stores[ key ];
+							return true;
+						}
+					});
+					return store;
+				}
+
+				receipts.map( ( receipt ) => {
+					receipt.store = getStore( receipt.store );
+				});
+
+				receipts.forEach( ( receipt ) => {
+					if ( stores_list[ receipt.store.number ].amount === 0 ) {
+						user.totals.stores.unique++;
+						user.totals.stores.remaining--;
+					}
+					user.totals.stores.total++;
+					stores_list[ receipt.number ].amount++;
+				});
+
+				user.stores = stores_list;
+
+				return response.send( JSON.stringify( user ) );
+
+			}).sort({ "data.created_at": "asc" }).lean();
+
+		}).lean();
+
+	});
 };
 
-exports.user_create_post = function( req, res ) {
-	res.send( "NOT IMPLEMENTED: User Create POST" );
-};
+exports.user_drivethru_receipts = function( request, response ) {
 
-exports.user_delete_get = function( req, res ) {
-	res.send( "NOT IMPLEMENTED: User Delete GET" );
-};
+	const name = request.body.name;
 
-exports.user_delete_post = function( req, res ) {
-	res.send( "NOT IMPLEMENTED: User Delete POST" );
-};
+	if ( ! name )
+		return response.status( 500 ).send( "Invalid name" );
 
-exports.user_update_get = function( req, res ) {
-	res.send( "NOT IMPLEMENTED: User Update GET" );
-};
+	findUser( name, response, ( user ) => {
 
-exports.user_update_post = function( req, res ) {
-	res.send( "NOT IMPLEMENTED: User Update POST" );
+		Receipt.find( { user: new ObjectId( user._id ), type: 3, approved: 1 }, ( error, receipts ) => {
+
+			if ( error )
+				return response.status( 500 ).send( error );
+
+			user.totals = {
+				drivethru: {
+					unique: 0,
+					total: 0,
+					remaining: 999,
+				}
+			};
+
+			let receipts_list = {};
+
+			receipts.forEach( ( receipt ) => {
+				if ( ! receipts_list[ receipt.number ] ) {
+					receipts_list[ receipt.number ] = { amount: 0 };
+					user.totals.drivethru.unique++;
+					user.totals.drivethru.remaining--;
+				}
+				user.totals.drivethru.total++;
+				receipts_list[ receipt.number ].amount++;
+			});
+
+			user.drivethru = receipts_list;
+
+			return response.send( JSON.stringify( user ) );
+
+		}).sort({ "data.created_at": "asc" }).lean();
+
+	});
 };

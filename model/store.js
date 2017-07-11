@@ -2,7 +2,6 @@ var mongoose = require( "mongoose" );
 var Schema = mongoose.Schema;
 
 var Hours = require( "./hours" );
-var Location = require( "./location" );
 var ObjectId = mongoose.Schema.Types.ObjectId;
 
 /*
@@ -37,7 +36,20 @@ var ObjectId = mongoose.Schema.Types.ObjectId;
 
 var StoreSchema = new Schema({
 	number: { type: Number, default: null },
-	location: [ Location ],
+	loc: {
+		type: [ Number ],
+		index: "2d",
+	},
+	location: {
+		latitude: { type: Number, default: null },
+		longitude: { type: Number, default: null },
+		address: { type: String, default: null },
+		city: { type: String, default: null },
+		state: { type: String, default: null },
+		zipcode: { type: String, default: null },
+		country: { type: String, default: null },
+		twitter_place: { type: ObjectId, default: null },
+	},
 	name: { type: String, default: null },
 	dining_room_hours: {
 		sunday: { type: Hours, default: null },
@@ -61,7 +73,7 @@ var StoreSchema = new Schema({
 	dining_room: { type: Boolean, default: false },
 	drive_thru: { type: Boolean, default: false },
 	remote_image_url: { type: String, default: null },
-	//popup: ObjectId,
+	popup: ObjectId,
 });
 
 module.exports = mongoose.model( "Store", StoreSchema );

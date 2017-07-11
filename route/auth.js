@@ -85,7 +85,7 @@ router.get( "/auth/twitter/callback",
 							function( error, twitter_user ){
 
 								if ( error )
-									throw new Error( error );
+									throw error;
 								else if ( twitter_user === null ) {
 									console.log( "No User, creating" )
 									new TwitterUser( {
@@ -101,7 +101,7 @@ router.get( "/auth/twitter/callback",
 										console.log( twitter_user );
 
 										if ( error )
-											throw new Error( error );
+											throw error;
 
 										console.log( "Finding User [%s]", twitter_user._id );
 
@@ -111,7 +111,7 @@ router.get( "/auth/twitter/callback",
 											console.log( user );
 
 											if ( error )
-												throw new Error( error );
+												throw error;
 
 											if ( user === null ) {
 
@@ -123,7 +123,7 @@ router.get( "/auth/twitter/callback",
 												}).save( function( error ){
 
 													if ( error )
-														throw new Error( error );
+														throw error;
 
 													console.log( "Created New User" );
 
@@ -138,6 +138,12 @@ router.get( "/auth/twitter/callback",
 									});
 								}
 								else {
+									twitter_user.oauth_token = req.session.oauth.access_token;
+									twitter_user.oauth_secret = req.session.oauth.access_token_secret;
+									twitter_user.save( ( error ) => {
+										if ( error )
+											throw error
+									})
 									console.log( "TwitterUser found >>" )
 									console.log( twitter_user );
 								}

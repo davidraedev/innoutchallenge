@@ -6,7 +6,7 @@ var ObjectId = mongoose.Schema.Types.ObjectId;
 var ReceiptSchema = new Schema({
 	number: Number,
 	date: Date,
-	location: ObjectId,
+	store: ObjectId,
 	tweet: ObjectId,
 	user: ObjectId,
 	approved: { type: Number, default: 0 },
@@ -15,6 +15,13 @@ var ReceiptSchema = new Schema({
 		1: approved,
 		5: admin ignored
 	*/
+	type: { type: Number, default: 0 },
+	/*
+		0: unknown
+		1: in-store,
+		2: drive-thru,
+		3: popup
+	*/
 });
 
-module.exports = mongoose.model( "Receipt", ReceiptSchema );//ReceiptSchema;
+module.exports = mongoose.model( "Receipt", ReceiptSchema );
