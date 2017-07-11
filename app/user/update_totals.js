@@ -50,21 +50,30 @@ function updateUserTotals( user, callback ) {
 		receipts.forEach( ( receipt ) => {
 
 			// in_store
-			if ( receipts_list[ receipt.number ].amount === 0 ) {
-				totals.receipts.unique++;
-				totals.receipts.remaining--;
+			if ( receipt.type === 1 ) {
+			
+				if ( receipts_list[ receipt.number ].amount === 0 ) {
+					totals.receipts.unique++;
+					totals.receipts.remaining--;
+				}
+				totals.receipts.total++;
+				receipts_list[ receipt.number ].amount++;
+
 			}
-			totals.receipts.total++;
-			receipts_list[ receipt.number ].amount++;
 
 			// drive_thru
-			if ( ! drive_thru_list[ receipt.number ] ) {
-				drive_thru_list[ receipt.number ] = { amount: 0 };
-				totals.drivethru.unique++;
-				totals.drivethru.remaining--;
+			if ( receipt.type === 2 ) {
+			
+				if ( ! drive_thru_list[ receipt.number ] ) {
+					drive_thru_list[ receipt.number ] = { amount: 0 };
+					totals.drivethru.unique++;
+					totals.drivethru.remaining--;
+				}
+				totals.drivethru.total++;
+				drive_thru_list[ receipt.number ].amount++;
+
 			}
-			totals.drivethru.total++;
-			drive_thru_list[ receipt.number ].amount++;
+
 		});
 
 	});
@@ -137,15 +146,18 @@ function updateUserTotals( user, callback ) {
 				else {
 
 					if ( stores_list[ receipt.store.number ].amount === 0 ) {
+						console.log( "store_number >> [%s]", receipt.store.number )
 						totals.stores.unique++;
 						totals.stores.remaining--;
 					}
 
 					totals.stores.total++;
-					stores_list[ receipt.number ].amount++;
+					stores_list[ receipt.store.number ].amount++;
 				}
 
 			});
+
+			console.log( stores_list[303] )
 
 			user.totals = totals;
 			user.save( ( error ) => {
@@ -187,6 +199,19 @@ function updateAllUsersTotals() {
 
 db.connect().then( () => {
 
-	updateAllUsersTotals();
+	// /updateAllUsersTotals();
+
+	User.findOne({ name: "stuballew" }, ( error, user ) => {
+		
+		if ( error )
+			throw error;
+
+		if ( ! user )
+			throw new Error( "Could not find user" );
+
+		updateUserTotals( user, () => {
+			db.close();
+		});
+	});
 
 });

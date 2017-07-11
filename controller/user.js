@@ -5,7 +5,7 @@ const ObjectId = require( "mongoose" ).Types.ObjectId;
 
 function findUser( name, response, callback ) {
 
-	User.findOne( { state: 1, name: { $regex : new RegExp( name, "i") } }, "name", ( error, user ) => {
+	User.findOne( { state: 1, name: { $regex : new RegExp( name, "i") } }, [ "name", "totals" ], ( error, user ) => {
 
 		if ( error )
 			return response.status( 500 ).send( error );
@@ -70,14 +70,6 @@ exports.user_instore_receipts = function( request, response ) {
 			if ( error )
 				return response.status( 500 ).send( error );
 
-			user.totals = {
-				receipts: {
-					unique: 0,
-					total: 0,
-					remaining: 98,
-				}
-			};
-
 			let receipts_list = {};
 			for ( let i = 1; i <= 99; i++ ) {
 				if ( i !== 69 )
@@ -85,11 +77,6 @@ exports.user_instore_receipts = function( request, response ) {
 			}
 
 			receipts.forEach( ( receipt ) => {
-				if ( receipts_list[ receipt.number ].amount === 0 ) {
-					user.totals.receipts.unique++;
-					user.totals.receipts.remaining--;
-				}
-				user.totals.receipts.total++;
 				receipts_list[ receipt.number ].amount++;
 			});
 
@@ -115,14 +102,6 @@ exports.user_stores = function( request, response ) {
 
 			if ( error )
 				return response.status( 500 ).send( error );
-
-			user.totals = {
-				stores: {
-					unique: 0,
-					total: 0,
-					remaining: stores.length,
-				}
-			};
 
 			Receipt.find( { user: new ObjectId( user._id ), approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } }, ( error, receipts ) => {
 
@@ -155,12 +134,6 @@ exports.user_stores = function( request, response ) {
 				receipts.forEach( ( receipt ) => {
 					if ( ! receipt.store )
 						return;
-					console.log( "receipt >> ", receipt )
-					if ( stores_list[ receipt.store.number ].amount === 0 ) {
-						user.totals.stores.unique++;
-						user.totals.stores.remaining--;
-					}
-					user.totals.stores.total++;
 					stores_list[ receipt.number ].amount++;
 				});
 
@@ -184,36 +157,16 @@ exports.user_drivethru_receipts = function( request, response ) {
 
 	findUser( name, response, ( user ) => {
 
-		Receipt.find( { user: new ObjectId( user._id ), type: 3, approved: 1 }, ( error, receipts ) => {
+		Receipt.find( { user: new ObjectId( user._id ), type: 3, approved: 1 }, [ "number" ], ( error, receipts ) => {
 
 			if ( error )
 				return response.status( 500 ).send( error );
 
-			user.totals = {
-				drivethru: {
-					unique: 0,
-					total: 0,
-					remaining: 999,
-				}
-			};
-
-			let receipts_list = {};
-
-			receipts.forEach( ( receipt ) => {
-				if ( ! receipts_list[ receipt.number ] ) {
-					receipts_list[ receipt.number ] = { amount: 0 };
-					user.totals.drivethru.unique++;
-					user.totals.drivethru.remaining--;
-				}
-				user.totals.drivethru.total++;
-				receipts_list[ receipt.number ].amount++;
-			});
-
-			user.drivethru = receipts_list;
+			user.drivethru = receipts;
 
 			return response.send( JSON.stringify( user ) );
 
-		}).sort({ "data.created_at": "asc" }).lean();
+		}).lean();
 
 	});
 };

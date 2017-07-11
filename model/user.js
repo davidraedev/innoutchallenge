@@ -1,7 +1,8 @@
 var mongoose = require( "mongoose" );
-var Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
-var ObjectId = mongoose.Schema.Types.ObjectId;
+const ObjectId = Schema.Types.ObjectId;
+const Mixed = Schema.Types.Mixed;
 
 var UserSchema = new Schema({
 	name: String,
@@ -14,6 +15,7 @@ var UserSchema = new Schema({
 		2 = banned
 		3 = temp_ignored
 	*/
+	totals: Mixed,
 });
 
 module.exports = mongoose.model( "User", UserSchema );
