@@ -6,7 +6,6 @@ var Store = require( "../../model/store" );
 const ObjectId = require( "mongoose" ).Types.ObjectId;
 
 function updateUserTotals( user, callback ) {
-	console.log( "user >> ", user.name );
 
 	let totals = {
 		receipts: {
@@ -72,7 +71,6 @@ function updateUserTotals( user, callback ) {
 
 	// store and popup totals
 	Store.find({}, ( error, stores ) => {
-	//	console.log( "user stores" );
 
 		if ( error )
 			throw error;
@@ -83,8 +81,6 @@ function updateUserTotals( user, callback ) {
 		}
 
 		totals.stores.remaining = stores.length;
-
-	//	console.log( "stores.length = [%s]", stores.length )
 
 		let stores_list = {};
 		stores.forEach( ( store ) => {
@@ -100,8 +96,6 @@ function updateUserTotals( user, callback ) {
 			if ( error )
 				throw error;
 
-			//console.log( "stores >> ", stores )
-
 			// for some odd reason, straight up "==" matching the ids was not working, so had to add this beast in 
 			function charMatch( stra, strb ) {
 				for ( let i = 0; i < stra.length; i++ )
@@ -112,39 +106,23 @@ function updateUserTotals( user, callback ) {
 
 			function getStore( id ) {
 				let store = false;
-			//	console.log( "id >> ", id )
 				let keys = Object.keys( stores );
 				for ( i = 0; i < keys.length; i++ ) {
 					let key = keys[i];
 					let this_id = stores[ key ]._id;
-					console.log( stores[ key ] )
-					console.log( "[%s] == [%s]", this_id, id )
-					console.log( this_id )
-					console.log( id )
 
 					if ( charMatch( this_id, id ) ) {
-						console.log( "assigning" )
 						store = stores[ key ];
 						break;
 					}
 				}
 				if ( store === false )
 					throw new Error( "Store not found" )
-				/*
-				Object.keys( stores ).some( ( key ) => {
-					console.log( "[%s] === [%s]", stores[ key ]._id, id )
-					if ( stores[ key ]._id === id ) {
-						store = stores[ key ];
-						return true;
-					}
-				});
-				*/
-			//	console.log( "store >> ", store )
+
 				return store;
 			}
 
 			receipts.map( ( receipt, key ) => {
-//				console.log( "ress >> ", receipt )
 				receipt.store = getStore( receipt.store );
 			});
 
@@ -157,7 +135,6 @@ function updateUserTotals( user, callback ) {
 
 				// stores
 				else {
-//					console.log( "receipt >> ", receipt )
 
 					if ( stores_list[ receipt.store.number ].amount === 0 ) {
 						totals.stores.unique++;
@@ -171,7 +148,6 @@ function updateUserTotals( user, callback ) {
 			});
 
 			user.totals = totals;
-			console.log( "totals >> ", totals );
 			user.save( ( error ) => {
 				if ( error )
 					throw error;
@@ -212,18 +188,5 @@ function updateAllUsersTotals() {
 db.connect().then( () => {
 
 	updateAllUsersTotals();
-/*
-	User.findOne({ name: "stuballew" }, ( error, user ) => {
-		
-		if ( error )
-			throw error;
 
-		if ( ! user )
-			throw new Error( "Could not find user" );
-
-		updateUserTotals( user, () => {
-			db.close();
-		});
-	});
-*/
 });
