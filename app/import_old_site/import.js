@@ -163,7 +163,7 @@ function processUser( user_data, data, callback ) {
 					}
 
 					Tweet.create({
-						source: "old_site",
+						source: 0,
 						data: {
 							id_str: tweet_data.tweet_id,
 							text: tweet_data.tweet_text,

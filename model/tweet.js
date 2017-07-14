@@ -6,12 +6,12 @@ var TweetSchema = new Schema({
 	fetched: { type: Boolean, default: false },
 	fetch_date: { type: Date, default: null },
 	missing: { type: Boolean, default: false },
-	source: { type: String, default: "" },
+	source: { type: Number, default: null },
 	/*
-		old_site,
-		twitter_search,
-		twitter_auth,
-		manual
+		0: old_site,
+		1: twitter_search,
+		2: twitter_auth,
+		3: manual
 	*/
 	data: Schema.Types.Mixed,
 });

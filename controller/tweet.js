@@ -1,131 +1,197 @@
 var Twitter = require( "twitter" );
 var Tweet = require( "../model/tweet" );
-require( "dotenv" ).config()
+var User = require( "../model/user" );
+var Receipt = require( "../model/receipt" );
+require( "dotenv" ).config();
 var TwitterUser = require( "../model/twitter_user" );
-var TwitterPlace = require( "../model/twitter_place" );
-var db = require( "../app/db" );
 var wordToNumber = require( "word-to-number-node" );
 var w2n = new wordToNumber();
+var storeController = require( "./store" );
 
 // this won't exit immediately if it error in the foreach, it'll continue the loop
-var search_tweets_app = function( callback ) {
+var get_tweets_from_search_app = function() {
 
-	console.log( "search_tweets_app" );
+	return new Promise( ( resolve, reject ) => {
 
-	var client = new Twitter({
-		consumer_key: process.env.TWITTER_CONSUMER_KEY,
-		consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-		bearer_token: process.env.TWITTER_BEARER_TOKEN,
-	});
+		get_latest_search_tweet_from_db()
+			.then( ( tweet ) => {
 
-	client.get( "search/tweets", { q: "innoutchallenge" }, function( error, tweets, response ) {
+				let search_params = { q: "innoutchallenge", count: 100 };
 
-		if ( error )
-			return callback( error );
+				if ( tweet )
+					search_params.since_id = tweet.data.id_str;
 
-		var remaining = tweets.statuses.length;
+				let client = new Twitter({
+					consumer_key: process.env.TWITTER_CONSUMER_KEY,
+					consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+					bearer_token: process.env.TWITTER_BEARER_TOKEN,
+				});
 
-		tweets.statuses.forEach( function( tweet_data, i ){
-
-			console.log( i )
-
-			Tweet.findOne(
-				{ "data.id_str": tweet_data.id_str },
-				function( error, tweet ){
+				client.get( "search/tweets", search_params, function( error, tweets ) {
 
 					if ( error )
-						return callback( error );
+						return reject( error );
 
-					if ( tweet === null )
-						new Tweet( { data: tweet_data, source: "search" } ).save( callback );
+					let resolve_val = {
+						found: tweets.statuses.length,
+						saved: 0,
+					};
 
-					if ( --remaining === 0 && typeof callback == "function" )
-						callback( null );
+					if ( ! tweets.statuses.length )
+						return resolve( resolve_val );
 
-				}
-			);
+					let remaining = tweets.statuses.length;
 
-		});
+					let stop;
+					tweets.statuses.forEach( ( tweet_data ) => {
+
+						if ( stop )
+							return;
+
+						Tweet.findOne(
+							{ "data.id_str": tweet_data.id_str },
+							function( error, tweet ) {
+
+								if ( error ) {
+									stop = true;
+									return reject( error );
+								}
+
+								if ( tweet === null ) {
+
+									new Tweet( { data: tweet_data, source: 1, fetched: true, fetch_date: new Date() } )
+										.save( ( error ) => {
+
+											if ( error ) {
+												stop = true;
+												return reject( error );
+											}
+
+											resolve_val.saved++;
+
+											if ( --remaining === 0 )
+												resolve( resolve_val );
+
+										});
+								}
+								else {
+									if ( --remaining === 0 )
+										resolve( resolve_val );
+								}
+							}
+						);
+					});
+				});
+			})
+			.catch( ( error ) => {
+				throw error;
+			});
 
 	});
 };
 
-var search_tweets_user = function( user, callback ) {
+function get_latest_search_tweet_from_db() {
+	return new Promise( ( resolve, reject ) => {
+		Tweet.findOne( { source: 1 }, ( error, tweet ) => {
 
-	console.log( "search_tweets_user" );
-	console.log( user );
+			if ( error )
+				return reject( error );
 
-	TwitterUser.findOne( { _id: user.twitter_user }, function( error, twitter_user ) {
+			return resolve( tweet );
 
-		if ( error )
-			throw new Error( error );
+		}).sort({ "data.created_at": "desc" });
+	});
+}
 
-		if ( twitter_user === null )
-			throw new Error( "Failed to find TwitterUser" );
+var get_tweets_from_search_user = function( user ) {
+
+	console.log( "get_tweets_from_search_user [%s]", user.name );
+
+	return new Promise( ( resolve, reject ) => {
+
+		TwitterUser.findOne( { _id: user.twitter_user }, ( error, twitter_user ) => {
+
+			if ( error )
+				return reject( error );
+
+			if ( twitter_user === null )
+				return reject( "Failed to find TwitterUser" );
+
+			var client = new Twitter({
+				consumer_key: process.env.TWITTER_CONSUMER_KEY,
+				consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+				access_token_key: twitter_user.oauth_token,
+				access_token_secret: twitter_user.oauth_secret,
+			});
+
+			client.get( "statuses/user_timeline", { user_id: twitter_user.data.id_str }, ( error, tweets ) => {
+
+				if ( error )
+					return reject( error );
+
+				console.log( "tweets >>" );
+				console.log( tweets );
+
+				var remaining = tweets.length;
+
+				let stop;
+				tweets.forEach( ( tweet_data ) => {
+
+					if ( stop )
+						return;
+
+					Tweet.findOne(
+						{ "data.id_str": tweet_data.id_str },
+						( error, tweet ) => {
+
+							if ( error )
+								return reject( error );
+
+							if ( tweet === null ) {
+								new Tweet( { data: tweet_data, source: 2 } ).save( ( error ) => {
+
+									if ( error )
+										return reject();
+
+									if ( --remaining === 0 )
+										resolve();
+								});
+							}
+							else {
+								if ( --remaining === 0 )
+									resolve();
+							}
+						}
+					);
+				});
+			});
+		});
+	});
+};
+
+var get_tweets_from_lookup_app = function( status_ids_array ) {
+
+	console.log( "get_tweets_from_lookup_app" );
+
+	return new Promise( ( resolve, reject ) => {
 
 		var client = new Twitter({
 			consumer_key: process.env.TWITTER_CONSUMER_KEY,
 			consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-			access_token_key: twitter_user.oauth_token,
-			access_token_secret: twitter_user.oauth_secret,
+			bearer_token: process.env.TWITTER_BEARER_TOKEN,
 		});
 
-		client.get( "statuses/user_timeline", { user_id: twitter_user.data.id_str }, function( error, tweets, response ) {
+		const ids = status_ids_array.join( "," );
+
+		client.get( "statuses/lookup", { id: ids, map: true }, function( error, tweets ) {
 
 			if ( error )
-				throw error;
+				return reject( error );
 
-			console.log( "tweets >>" );
 			console.log( tweets );
 
-			var remaining = tweets.length;
-
-			tweets.forEach(function( tweet_data ){
-
-				Tweet.findOne(
-					{ "data.id_str": tweet_data.id_str },
-					function( error, tweet ){
-
-						if ( error )
-							throw new Error( error );
-
-						if ( tweet === null )
-							new Tweet( { data: tweet_data, source: "user" } ).save();
-
-						if ( --remaining === 0 && typeof callback == "function" )
-							callback();
-
-					}
-				);
-
-			});
-
+			resolve( tweets );
 		});
-
-	});
-
-};
-
-var get_tweets_app = function( status_ids_array, callback ) {
-
-	console.log( "get_tweets_app" );
-
-	var client = new Twitter({
-		consumer_key: process.env.TWITTER_CONSUMER_KEY,
-		consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-		bearer_token: process.env.TWITTER_BEARER_TOKEN,
-	});
-
-	const ids = status_ids_array.join( "," );
-
-	client.get( "statuses/lookup", { id: ids, map: true }, function( error, tweets, response ) {
-
-		if ( error )
-			return callback( error );
-
-		console.log( tweets );
-
-		callback( null, tweets );
 	});
 };
 
@@ -143,36 +209,22 @@ function parseForDriveThruReceipt( text ) {
 	return false;
 }
 
-function parseForStore( tweet ) {
-
-	if ( ! tweet.location )
-		return false;
-
-	if ( /in( |-)n( |-)out( |-)/i.test( tweet.location.name ) ) {
-		// get twitter place coords
-		// geosearch the database for matching stores
-		// add twitter place to store
-		// add store to receipt
-	}
-
-}
-
 function isRetweet( tweet ) {
 	if ( tweet.retweet || /^rt\s/i.test( tweet.data.text ) )
 		return true;
-	return false
+	return false;
 }
 
 function hasIgnoreFlag( tweet ) {
 	if ( /\#\!/i.test( tweet.data.text ) )
 		return true;
-	return false
+	return false;
 }
 
 function isIgnoredUser( tweet ) {
 	if ( tweet.data.user.id_str === "584408608" || tweet.data.user.id_str === "1487483659" )
 		return true;
-	return false
+	return false;
 }
 
 function parseForInStoreDigits( text ) {
@@ -193,41 +245,133 @@ function parseForDriveThruDigits( text ) {
 	return false;
 }
 
-var parseTweets = function( callback ) {
+var parseTweets = function() {
 
 	console.log( "parseTweets" );
 
-	db.connect().then( () => {
+	return new Promise( ( resolve, reject ) => {
 
 		Tweet.find({ fetched: true, parsed: false }, ( error, tweets ) => {
 
 			if ( error )
-				return callback( error );
+				return reject( error );
+
+			let resolve_val = {
+				found: tweets.length,
+				parsed: 0,
+			};
 
 			if ( ! tweets.length )
-				return callback( "no tweets found" );
+				return resolve( resolve_val );
 
 			let remaining = tweets.length;
+ 			let stop;
 			tweets.forEach( ( tweet ) => {
-				console.log( "tweet.data.text >> ", tweet.data.text )
-				
-	//			if ( isRetweet( tweet ) || hasIgnoreFlag( tweet ) || isIgnoredUser( tweet ) )
-					// no receipt
-				
-	//			if (  )
-				let number = w2n.parse( tweet.data.text );
-				console.log( "number [%s]", number );
-				if ( --remaining === 0 )
-					db.close()
-			})
-		})
-	})
+
+				if ( stop )
+					return;
+
+				parseTweet( tweet )
+					.then(() => {
+						++resolve_val.parsed;
+						if ( --remaining === 0 )
+							resolve( resolve_val );
+					})
+					.catch( ( error ) => {
+						stop = true;
+						throw error;
+					});
+			});
+		});
+	});
+};
+
+var parseTweet = function( tweet ) {
+
+	console.log( "parseTweet" );
+
+	return new Promise( ( resolve, reject ) => {
+
+		function saveTweet() {
+			tweet.parsed = true;
+			tweet.save( ( error ) => {
+				if ( error )
+					return reject( error );
+				return resolve();
+			});
+		}
+
+		if ( isRetweet( tweet ) || hasIgnoreFlag( tweet ) || isIgnoredUser( tweet ) ) {
+			saveTweet();
+		}
+		else {
+			let number = parseForInStoreReceipt( tweet.data.text );
+			let receipt = new Receipt();
+			receipt.date = new Date( tweet.data.created_at );
+			receipt.tweet = tweet._id;
+
+			if ( number ) {
+				receipt.type = 1;
+			}
+			else {
+				number = parseForDriveThruReceipt( tweet.data.text );
+				receipt.type = 2;
+			}
+
+			if ( number ) {
+
+				receipt.number = number;
+
+				TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str }, ( error, twitter_user ) => {
+
+					if ( error )
+						return reject( error );
+
+					if ( ! twitter_user )
+						return reject( "TwitterUser not found ["+ tweet.data.user.id_str +"]" );
+
+					User.findOne( { twitter_user: twitter_user._id }, ( error, user ) => {
+
+						if ( error )
+							return reject( error );
+
+						if ( ! user )
+							return reject( "User not found ["+ twitter_user._id +"]" );
+
+						receipt.user = user._id;
+
+						storeController.parseTweetForStore( tweet )
+							.then( ( store ) => {
+
+								if ( store )
+									receipt.store = store._id;
+
+								receipt.save( ( error ) => {
+
+									if ( error )
+										return reject( error );
+
+									saveTweet();
+
+								});
+
+							}).catch( ( error ) => {
+								return reject( error );
+							});
+					});
+				});
+			}
+			else {
+				saveTweet();
+			}
+		}
+	});
 };
 
 module.exports = {
-	search_tweets_app: search_tweets_app,
-	search_tweets_user: search_tweets_user,
-	get_tweets_app: get_tweets_app,
+	get_tweets_from_search_app: get_tweets_from_search_app,
+	get_tweets_from_search_user: get_tweets_from_search_user,
+	get_tweets_from_lookup_app: get_tweets_from_lookup_app,
 	parseTweets: parseTweets,
-	parseForInStoreReceipt: parseForInStoreReceipt,
+	parseTweet: parseTweet,
 };

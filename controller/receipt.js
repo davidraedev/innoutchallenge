@@ -1,18 +1,7 @@
-var Twitter = require( "twitter" );
 var Receipt = require( "../model/receipt" );
 var Tweet = require( "../model/tweet" );
 var User = require( "../model/user" );
-//var env = require( "node-env-file" )
 var TwitterUser = require( "../model/twitter_user" );
-var db = require( "../app/db" );
-//env( ".env" );
-
-// could change new user join date to the tweet time
-
-db.connect(function( error ){
-	if ( error )
-		throw new Error( error );
-});
 
 function parseTweet( text ) {
 	var has_hashtag = /\#innoutchallenge/i.test( text );
@@ -35,7 +24,7 @@ function getUser( tweet_object, callback ){
 
 		if ( ! twitter_user ) {
 			console.log( "TwitterUser not found, creating" );
-			var twitter_user = new TwitterUser({
+			twitter_user = new TwitterUser({
 				data: tweet_object.user,
 			});
 			twitter_user.save(function( error ){
