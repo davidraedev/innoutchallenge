@@ -130,7 +130,7 @@ var get_tweets_app = function( status_ids_array, callback ) {
 };
 
 function parseForInStoreReceipt( text ) {
-	let number = parseForInStoreDigits( text ) || w2n.parse( text );
+	let number = parseForInStoreDigits( text ) || w2n.parse( text )[0];
 	if ( number && number !== 69 && number > 0 && number < 100 )
 		return number;
 	return false;
@@ -176,14 +176,18 @@ function isIgnoredUser( tweet ) {
 }
 
 function parseForInStoreDigits( text ) {
-	let matches = text.match( /((^| )[\d]{1,2})([\s!.]|$)/ );
+	let matches = text.match( /number\s+(\d{1,2})/i );
+	if ( ! matches )
+		matches = text.match( /(?:^|[\s!.,])(\d{1,2})(?:[\s!.,]|$)/ );
 	if ( matches )
 		return matches[1].trim();
 	return false;
 }
 
 function parseForDriveThruDigits( text ) {
-	let matches = text.match( /((^| )4[\d]{3})([\s!.]|$)/ );
+	let matches = text.match( /number\s+(4\d{3})/i );
+	if ( ! matches )
+		matches = text.match( /(?:^|[\s!.,])(4\d{3})(?:[\s!.,]|$)/ );
 	if ( matches )
 		return matches[1].trim();
 	return false;
@@ -207,10 +211,10 @@ var parseTweets = function( callback ) {
 			tweets.forEach( ( tweet ) => {
 				console.log( "tweet.data.text >> ", tweet.data.text )
 				
-				if ( isRetweet( tweet ) || hasIgnoreFlag( tweet ) || isIgnoredUser( tweet ) )
+	//			if ( isRetweet( tweet ) || hasIgnoreFlag( tweet ) || isIgnoredUser( tweet ) )
 					// no receipt
 				
-				if (  )
+	//			if (  )
 				let number = w2n.parse( tweet.data.text );
 				console.log( "number [%s]", number );
 				if ( --remaining === 0 )
@@ -224,5 +228,6 @@ module.exports = {
 	search_tweets_app: search_tweets_app,
 	search_tweets_user: search_tweets_user,
 	get_tweets_app: get_tweets_app,
-	parse_tweets: parse_tweets,
+	parseTweets: parseTweets,
+	parseForInStoreReceipt: parseForInStoreReceipt,
 };

@@ -1,27 +1,29 @@
-var User = require( "../model/user" );
-var Receipt = require( "../model/receipt" );
-var Store = require( "../model/store" );
+const User = require( "../model/user" );
+const Receipt = require( "../model/receipt" );
+const Store = require( "../model/store" );
 const ObjectId = require( "mongoose" ).Types.ObjectId;
 
-function findUser( name, response, callback ) {
+function findUser( name, response ) {
 
-	User.findOne( { state: 1, name: { $regex : new RegExp( name, "i") } }, [ "name", "totals" ], ( error, user ) => {
+	return new Promise( ( resolve, reject ) => {
 
-		if ( error )
-			return response.status( 500 ).send( error );
+		User.findOne( { state: 1, name: { $regex : new RegExp( name, "i" ) } }, [ "name", "totals" ], ( error, user ) => {
 
-		if ( error )
-			return response.status( 404 ).send( "User Not Found" );
+			if ( error )
+				reject( error );
 
-		callback( user );
+			if ( error )
+				reject( "User Not Found" );
 
-	}).lean();
+			resolve( user );
+
+		}).lean();
+	})
 
 }
+
 exports.users_list = function( request, response ) {
 
-	// { search, amount, page } = request.body
-//	const search = request.body.search;
 	const amount = parseInt( request.body.amount );
 	const page = parseInt( request.body.page );
 
@@ -30,7 +32,10 @@ exports.users_list = function( request, response ) {
 	if ( page < 0 || isNaN( page ) )
 		return response.status( 500 ).send( "Invalid page" );
 
-	User.find( { state: 1 }, "name", { skip: ( amount * page ), limit: amount }, ( error, users ) => {
+	const skip = ( ( page - 1 ) * amount );
+	const limit = ( amount + 1 );
+
+	User.find( { state: 1 }, [ "name", "totals" ], { skip: skip, limit: limit }, ( error, users ) => {
 
 		if ( error )
 			return response.status( 500 ).send( error );
@@ -38,21 +43,20 @@ exports.users_list = function( request, response ) {
 		if ( ! users.length )
 			return response.send( JSON.stringify( [] ) );
 
-		let users_left = users.length;
+		const has_next_page = ( users.length === limit )
 
-		users.forEach( ( user ) => {
-			Receipt.count( { user: new ObjectId( user._id ), approved: 1 }, ( error, count ) => {
+		users.splice( [ users.length - 1 ], 1 );
 
-				if ( error )
-					return response.status( 500 ).send( error );
+		const data = {
+			users: users,
+			currentPage: page,
+			hasNextPage: has_next_page,
+			hasPreviousPage: ( page > 1 ),
+		}
 
-				user.totals = { receipts: { unique: count } };
-				if ( -- users_left === 0 )
-					return response.send( JSON.stringify( users ) );
-			});
-		});
+		return response.send( JSON.stringify( data ) );
 
-	}).sort({ in_store_unique: "desc" }).lean();
+	}).sort({ "totals.receipts.unique": "desc" }).lean();
 
 };
 
@@ -63,7 +67,7 @@ exports.user_instore_receipts = function( request, response ) {
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
-	findUser( name, response, ( user ) => {
+	findUser( name, response ).then( ( user ) => {
 
 		Receipt.find( { user: new ObjectId( user._id ), type: 1, approved: 1 }, ( error, receipts ) => {
 
@@ -86,6 +90,8 @@ exports.user_instore_receipts = function( request, response ) {
 
 		}).sort({ "data.created_at": "asc" }).lean();
 
+	}).catch( ( error ) => {
+		return response.status( 404 ).send( error );
 	});
 };
 
@@ -96,55 +102,76 @@ exports.user_stores = function( request, response ) {
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
-	findUser( name, response, ( user ) => {
+	findUser( name, response ).then( ( user ) => {
 
-		Store.find({}, ( error, stores ) => {
+		// store and popup totals
+		Store.find({ popup: { $exists: false } }, ( error, stores ) => {
 
 			if ( error )
-				return response.status( 500 ).send( error );
+				throw error;
 
+			if ( ! stores.length ) {
+				console.log( "No Stores found" );
+				return;
+			}
+
+			let stores_list = {};
+			stores.forEach( ( store ) => {
+				stores_list[ store._id ] = { amount: 0 };
+			});
+
+			// if we vet our data input correctly, we can take out the store/popup check and rely only on the { type } check
 			Receipt.find( { user: new ObjectId( user._id ), approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } }, ( error, receipts ) => {
 
 				if ( error )
-					return response.status( 500 ).send( error );
-
-				let stores_list = {};
-				stores.forEach( ( store ) => {
-					if ( ! store.popup && store.number )
-						stores_list[ store.number ] = { amount: 0 };
-				});
+					throw error;
 
 				function getStore( id ) {
-					let store = null;
-					Object.keys( stores ).some( ( key ) => {
-						if ( stores[ key ]._id === id ) {
-							store = stores[ key ];
+					let store = false;
+					stores.some( ( temp_store ) => {
+						console.log( temp_store._id +" == "+ id );
+						if ( temp_store._id == id ) {
+							store = temp_store;
 							return true;
 						}
 					});
-					console.log( "Store >> ", store )
 					return store;
 				}
 
-				receipts.map( ( receipt ) => {
-					if ( receipt.store )
-						receipt.store = getStore( receipt.store );
-				});
-
 				receipts.forEach( ( receipt ) => {
-					if ( ! receipt.store )
-						return;
-					stores_list[ receipt.number ].amount++;
+
+				//	if ( receipt.popup ) {}
+				//	else {
+						stores_list[ receipt.store ].amount++;
+				//	}
+
 				});
 
-				user.stores = stores_list;
+				let final_stores = {};
+	/*			let keys = Object.keys( stores_list );
+				for ( let i = 0; i < keys.length; i++ ) {
+					let number = getStore( keys[ i ] ).number;
+					Object.defineProperty( stores_list, number, Object.getOwnPropertyDescriptor( stores_list, keys[ i ] ) );
+					delete stores_list[ keys[ i ] ];
+				}
+*/
+
+				let keys = Object.keys( stores_list );
+				keys.forEach( ( key ) => {
+					let number = getStore( key ).number;
+					console.log( number )
+					final_stores[ number ] = stores_list[ key ];
+				});
+				user.stores = final_stores;//stores_list;
 
 				return response.send( JSON.stringify( user ) );
 
-			}).sort({ "data.created_at": "asc" }).lean();
+			}).lean();
 
 		}).lean();
 
+	}).catch( ( error ) => {
+		return response.status( 404 ).send( error );
 	});
 };
 
@@ -155,7 +182,7 @@ exports.user_drivethru_receipts = function( request, response ) {
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
-	findUser( name, response, ( user ) => {
+	findUser( name, response ).then( ( user ) => {
 
 		Receipt.find( { user: new ObjectId( user._id ), type: 3, approved: 1 }, [ "number" ], ( error, receipts ) => {
 
@@ -168,5 +195,8 @@ exports.user_drivethru_receipts = function( request, response ) {
 
 		}).lean();
 
+	}).catch( ( error ) => {
+		return response.status( 404 ).send( error );
 	});
+
 };

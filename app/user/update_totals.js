@@ -123,29 +123,7 @@ function updateUserTotals( user, callback ) {
 					}
 				});
 				return store;
-				/*
-				let store = false;
-				let keys = Object.keys( stores );
-				for ( i = 0; i < keys.length; i++ ) {
-					let key = keys[i];
-					let this_id = stores[ key ]._id;
-
-					if ( charMatch( this_id, id ) ) {
-						store = stores[ key ];
-						break;
-					}
-				}
-				if ( store === false )
-					throw new Error( "Store not found" )
-
-				return store;*/
 			}
-
-		//	receipts.map( ( receipt ) => {
-		//		receipt.store = getStore( receipt.store );
-		//	});
-
-		console.log( stores_list )
 
 			receipts.forEach( ( receipt ) => {
 
@@ -168,8 +146,6 @@ function updateUserTotals( user, callback ) {
 				}
 
 			});
-
-			//console.log( stores_list )
 
 			user.totals = totals;
 			user.save( ( error ) => {
