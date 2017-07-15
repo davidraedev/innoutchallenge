@@ -22,9 +22,9 @@ var get_tweets_from_search_app = function() {
 					search_params.since_id = tweet.data.id_str;
 
 				let client = new Twitter({
-					consumer_key: process.env.TWITTER_CONSUMER_KEY,
-					consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-					bearer_token: process.env.TWITTER_BEARER_TOKEN,
+					consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
+					consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
+					bearer_token: process.env.TWITTER_BEARER_TOKEN_USER,
 				});
 
 				client.get( "search/tweets", search_params, function( error, tweets ) {
@@ -118,8 +118,8 @@ var get_tweets_from_search_user = function( user ) {
 				return reject( "Failed to find TwitterUser" );
 
 			var client = new Twitter({
-				consumer_key: process.env.TWITTER_CONSUMER_KEY,
-				consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+				consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
+				consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
 				access_token_key: twitter_user.oauth_token,
 				access_token_secret: twitter_user.oauth_secret,
 			});

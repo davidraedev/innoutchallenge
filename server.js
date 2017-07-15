@@ -19,6 +19,7 @@ app.use( ( request, response, next ) => {
 });
 
 app.use( "/", require( "./route/auth.js" ) );
+app.use( "/", require( "./route/admin.js" ) );
 app.use( "/", require( "./route/all.js" ) );
 
 db.connect().then( () => {

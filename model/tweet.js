@@ -11,7 +11,8 @@ var TweetSchema = new Schema({
 		0: old_site,
 		1: twitter_search,
 		2: twitter_auth,
-		3: manual
+		3: manual,
+		4: sent_tweet // like when we send welcome / new receipt tweets
 	*/
 	data: Schema.Types.Mixed,
 });

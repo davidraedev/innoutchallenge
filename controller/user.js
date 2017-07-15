@@ -42,7 +42,7 @@ exports.users_list = function( request, response ) {
 
 		if ( ! users.length )
 			return response.send( JSON.stringify( [] ) );
-
+     
 		const has_next_page = ( users.length === limit )
 
 		users.splice( [ users.length - 1 ], 1 );
@@ -104,7 +104,6 @@ exports.user_stores = function( request, response ) {
 
 	findUser( name, response ).then( ( user ) => {
 
-		// store and popup totals
 		Store.find({ popup: { $exists: false } }, ( error, stores ) => {
 
 			if ( error )
@@ -120,8 +119,12 @@ exports.user_stores = function( request, response ) {
 				stores_list[ store._id ] = { amount: 0 };
 			});
 
-			// if we vet our data input correctly, we can take out the store/popup check and rely only on the { type } check
-			Receipt.find( { user: new ObjectId( user._id ), approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } }, ( error, receipts ) => {
+			Receipt.find( {
+				user: new ObjectId( user._id ),
+				approved: 1,
+				store: { $ne: null },
+				type: { $in: [ 1, 2, 3 ] }
+			}, ( error, receipts ) => {
 
 				if ( error )
 					throw error;
@@ -139,22 +142,10 @@ exports.user_stores = function( request, response ) {
 				}
 
 				receipts.forEach( ( receipt ) => {
-
-				//	if ( receipt.popup ) {}
-				//	else {
-						stores_list[ receipt.store ].amount++;
-				//	}
-
+					stores_list[ receipt.store ].amount++;
 				});
 
 				let final_stores = {};
-	/*			let keys = Object.keys( stores_list );
-				for ( let i = 0; i < keys.length; i++ ) {
-					let number = getStore( keys[ i ] ).number;
-					Object.defineProperty( stores_list, number, Object.getOwnPropertyDescriptor( stores_list, keys[ i ] ) );
-					delete stores_list[ keys[ i ] ];
-				}
-*/
 
 				let keys = Object.keys( stores_list );
 				keys.forEach( ( key ) => {
@@ -162,7 +153,7 @@ exports.user_stores = function( request, response ) {
 					console.log( number )
 					final_stores[ number ] = stores_list[ key ];
 				});
-				user.stores = final_stores;//stores_list;
+				user.stores = final_stores;
 
 				return response.send( JSON.stringify( user ) );
 
