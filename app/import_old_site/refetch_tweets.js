@@ -1,101 +1,108 @@
 const db = require( "../db" );
-const https = require( "https" );
-require( "dotenv" ).config()
-
-const tweet_controller = require( "../../controller/tweet" );
-
-//const User = require( "../../model/user" );
-//const TwitterUser = require( "../../model/twitter_user" );
-const Tweet = require( "../../model/tweet" );
-//const Store = require( "../../model/store" );
-//const Receipt = require( "../../model/receipt" );
-
-const ObjectId = require( "mongoose" ).Types.ObjectId;
-
+require( "dotenv" ).config();
+const tweetController = require( "../../controller/tweet" );
+//const Tweet = require( "../../model/tweet" );
 
 function main( callback ) {
 
-	Tweet.find( { fetched: false }, ( error, tweets ) => {
+	return new Promise( ( resolve, reject ) => {
 
-		if ( error )
-			throw error;
+		tweetController.findTweets( { fetched: false, missing: 0 }, null, { limit: 100 } )
+			.then( ( tweets_to_fetch ) => {
 
-		if ( ! tweets || ! tweets.length ) {
-			console.log( "no tweets needing fetching found" );
-			callback( true );
-			return;
-		}
+				if ( ! tweets_to_fetch || ! tweets_to_fetch.length ) {
+					console.log( "no tweets needing fetching found" );
+					resolve( true );
+					return;
+				}
 
-		let status_ids_array = [];
-		tweets.forEach( ( tweet ) => {
-			status_ids_array.push( tweet.data.id_str );
-		});
+				let status_ids_array = [];
+				tweets_to_fetch.forEach( ( tweet ) => {
+					status_ids_array.push( tweet.data.id_str );
+				});
 
-		console.log( "status_ids_array >>", status_ids_array )
+				console.log( "status_ids_array >>", status_ids_array );
 
-		tweet_controller.get_statuses_app( status_ids_array, ( error, tweets ) => {
+				return tweetController.getTweetsFromLookupApp( status_ids_array );
 
-			if ( error )
-				throw error;
+			})
+			.then( ( tweets ) => {
 
-			//console.log( "tweets >>", tweets )
+				console.log( "tweets >>", tweets );
 
-			let remaining = Object.keys( tweets.id ).length;
+				let keys = Object.keys( tweets.id );
+				let remaining = keys.length;
 
-			Object.keys( tweets.id ).forEach( ( tweet_id, i ) => {
+				if ( ! keys.length )
+					return resolve( true );
 
-				let tweet_data = tweets.id[ tweet_id ];
+				keys.forEach( ( tweet_id ) => {
 
-			//	let index = i;
-			//	let tweet_id = tweet_data.id_str
+					console.log( "tweet_id >>", tweet_id );
 
-				Tweet.findOne(
-					{ "data.id_str": tweet_id },
-					( error, tweet ) => {
+					let tweet_data = tweets.id[ tweet_id ];
 
-						if ( error )
-							throw error
+					console.log( "tweet_data >>", tweet_data );
 
-						if ( tweet === null )
-							throw new Error( "Existing Tweet was not found [%s]", tweet_data.id_str )
+					tweetController.findTweet( { "data.id_str": tweet_id } )
+						.then( ( tweet ) => {
 
-						if ( tweet_data )
-							tweet.data = tweet_data;
-						else
-							tweet.missing = true;
-						tweet.fetched = true;
-						tweet.fetch_date = new Date();
-						tweet.save( ( error ) => {
+							if ( tweet === null )
+								throw new Error( "Existing Tweet was not found [%s]", tweet_data.id_str );
 
-							if ( error )
-								throw error;
+							if ( tweet_data ) {
+								tweet.data = tweet_data;
+								tweet.fetched = true;
+							}
+							else {
+								tweet.missing = 3;
+							}
+							tweet.fetch_date = new Date();
+							tweet.save( ( error ) => {
 
-							if ( --remaining === 0 )
-								main( callback );
+								if ( error )
+									throw error;
+
+								if ( --remaining === 0 )
+									resolve( true );
+								else
+									resolve( false );
+							});
 						})
-					}
-				);
+						.catch( ( error ) => {
+							throw error;
+						});
+				});
+			})
+			.catch( ( error ) => {
+				reject( error );
 			});
-		})
 
-	}).limit( 100 );
+	});
 }
 
+function loop( is_done ) {
+
+	console.log( "counter [%s]", counter );
+
+	if ( is_done || --counter === 0 ) {
+		db.close();
+		return;
+	}
+
+	setTimeout( () => {
+		main().then( ( is_done_val ) => {
+			loop( is_done_val )
+		});
+	}, 10000 );
+
+}
+
+let counter = 10;
 db.connect().then( () => {
 
-	let counter = 10;
-	main( ( is_done ) => {
-		console.log( "counter [%s]", counter )
-
-		if ( is_done || --counter === 0 ) {
-			db.close();
-			return;
-		}
-
-		setTimeout( () => {
-			main();
-		}, 700 );
-
+	main().then( ( is_done_val ) => {
+		loop( is_done_val )
 	});
 
 }).catch( ( error ) => {

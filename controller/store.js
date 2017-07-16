@@ -4,7 +4,7 @@ const db = require( "../app/db" );
 
 const ObjectId = db.mongoose.Schema.Types.ObjectId;
 
-function findStoreNearCoords( latitude, longitude ) {
+const findStoreNearCoords = function( latitude, longitude ) {
 
 	return new Promise( ( resolve, reject ) => {
 		
@@ -108,7 +108,7 @@ function findStoreFromTwitterPlace( tweet ) {
 	});
 }
 
-function parseTweetForStore( tweet, ignore_hashtag ) {
+const parseTweetForStore = function( tweet, ignore_hashtag ) {
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -153,33 +153,96 @@ function parseTweetForStore( tweet, ignore_hashtag ) {
 
 	});
 }
-
 /*
-db.connect().then( () => {
+const createReceipt = function( receipt_data ) {
 
-	Tweet.findOne({ "data.coordinates": { $ne: null } }, ( error, tweet ) => {
+	return new Promise( ( resolve, reject ) => {
 
-		if ( error )
-			throw error;
+		let data = {};
+		data.number = receipt_data.number;
+		data.user = receipt_data.user;
+		data.type = receipt_data.type;
 
-		if ( ! tweet )
-			throw new Error( "NO TWEET" )
+		if ( receipt_data.date )
+			data.date = receipt_data.date;
 
-		console.log( "tweet.data.coordinates.coordinates >> ", tweet.data.coordinates.coordinates )
+		if ( receipt_data.store )
+			data.store = receipt_data.store;
 
-		findStoreNearCoords( tweet.data.coordinates.coordinates[1], tweet.data.coordinates.coordinates[0] )
-			.then( ( store ) => {
-				console.log( "store found >> ", store );
-				db.close()
+		if ( receipt_data.approved )
+			data.approved = receipt_data.approved;
+
+		Receipt.create( data, ( error, receipt ) => {
+
+			if ( error )
+				return reject( error );
+
+			return resolve( receipt );
+
+		});
+
+	});
+};
+*/
+
+const findStores = function( query, lean ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		let callback = function( error, stores ) {
+			if ( error )
+				return reject( error );
+			resolve( stores );
+		};
+
+		if ( lean )
+			Store.find( query, callback ).lean();
+		else
+			Store.find( query, callback );
+	});
+};
+
+const findStore = function( query, lean ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		let callback = function( error, store ) {
+			if ( error )
+				return reject( error );
+			resolve( store );
+		};
+
+		if ( lean )
+			Store.findOne( query, callback ).lean();
+		else
+			Store.findOne( query, callback );
+	});
+};
+/*
+const findOrCreateReceipt = function( query, data ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		findReceipt( query )
+			.then( ( receipt ) => {
+				if ( ! receipt )
+					return createReceipt( data );
+				return receipt;
+			})
+			.then( ( receipt ) => {
+				resolve( receipt );
 			})
 			.catch( ( error ) => {
-				console.error( "Error >> ", error );
-				db.close()
+				reject( error );
 			});
+
 	});
-});
+};
 */
+
 module.exports = {
 	findStoreNearCoords: findStoreNearCoords,
 	parseTweetForStore: parseTweetForStore,
+	findStore: findStore,
+	findStores: findStores,
 };

@@ -1,19 +1,28 @@
-var Twitter = require( "twitter" );
-var Tweet = require( "../model/tweet" );
-var User = require( "../model/user" );
-var Receipt = require( "../model/receipt" );
+const Twitter = require( "twitter" );
+const TwitterPlace = require( "../model/twitter_place" );
+const Tweet = require( "../model/tweet" );
+const Store = require( "../model/store" );
+const Receipt = require( "../model/receipt" );
+const User = require( "../model/user" );
 require( "dotenv" ).config();
-var TwitterUser = require( "../model/twitter_user" );
-var wordToNumber = require( "word-to-number-node" );
-var w2n = new wordToNumber();
-var storeController = require( "./store" );
+const TwitterUser = require( "../model/twitter_user" );
+const wordToNumber = require( "word-to-number-node" );
+const w2n = new wordToNumber();
+const storeController = require( "./store" );
+const twitterUserController = require( "./twitter_user" );
+const receiptController = require( "./receipt" );
+const userController = require( "./user" );
+const ObjectId = require( "mongoose" ).Schema.Types.ObjectId;
+const utils = require( "../app/utils" );
+
+
 
 // this won't exit immediately if it error in the foreach, it'll continue the loop
-var get_tweets_from_search_app = function() {
+const getTweetsFromSearchApp = function() {
 
 	return new Promise( ( resolve, reject ) => {
 
-		get_latest_search_tweet_from_db()
+		getLatestSearchTweetFromDb()
 			.then( ( tweet ) => {
 
 				let search_params = { q: "innoutchallenge", count: 100 };
@@ -90,7 +99,7 @@ var get_tweets_from_search_app = function() {
 	});
 };
 
-function get_latest_search_tweet_from_db() {
+const getLatestSearchTweetFromDb = function() {
 	return new Promise( ( resolve, reject ) => {
 		Tweet.findOne( { source: 1 }, ( error, tweet ) => {
 
@@ -101,11 +110,11 @@ function get_latest_search_tweet_from_db() {
 
 		}).sort({ "data.created_at": "desc" });
 	});
-}
+};
 
-var get_tweets_from_search_user = function( user ) {
+const getTweetsFromSearchUser = function( user ) {
 
-	console.log( "get_tweets_from_search_user [%s]", user.name );
+	console.log( "getTweetsFromSearchUser [%s]", user.name );
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -117,7 +126,7 @@ var get_tweets_from_search_user = function( user ) {
 			if ( twitter_user === null )
 				return reject( "Failed to find TwitterUser" );
 
-			var client = new Twitter({
+			let client = new Twitter({
 				consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
 				consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
 				access_token_key: twitter_user.oauth_token,
@@ -132,7 +141,7 @@ var get_tweets_from_search_user = function( user ) {
 				console.log( "tweets >>" );
 				console.log( tweets );
 
-				var remaining = tweets.length;
+				let remaining = tweets.length;
 
 				let stop;
 				tweets.forEach( ( tweet_data ) => {
@@ -169,16 +178,16 @@ var get_tweets_from_search_user = function( user ) {
 	});
 };
 
-var get_tweets_from_lookup_app = function( status_ids_array ) {
+const getTweetsFromLookupApp = function( status_ids_array ) {
 
-	console.log( "get_tweets_from_lookup_app" );
+	console.log( "getTweetsFromLookupApp" );
 
 	return new Promise( ( resolve, reject ) => {
 
-		var client = new Twitter({
-			consumer_key: process.env.TWITTER_CONSUMER_KEY,
-			consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-			bearer_token: process.env.TWITTER_BEARER_TOKEN,
+		let client = new Twitter({
+			consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
+			consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
+			bearer_token: process.env.TWITTER_BEARER_TOKEN_USER,
 		});
 
 		const ids = status_ids_array.join( "," );
@@ -203,7 +212,7 @@ function parseForInStoreReceipt( text ) {
 }
 
 function parseForDriveThruReceipt( text ) {
-	let number = parseForDriveThruDigits( text ) || w2n.parse( text );
+	let number = parseForDriveThruDigits( text ) || w2n.parse( text )[0];
 	if ( number && number > 3999 && number < 5000 )
 		return number;
 	return false;
@@ -245,48 +254,64 @@ function parseForDriveThruDigits( text ) {
 	return false;
 }
 
-var parseTweets = function() {
+const parseTweets = function( query_params ) {
 
 	console.log( "parseTweets" );
 
 	return new Promise( ( resolve, reject ) => {
 
-		Tweet.find({ fetched: true, parsed: false }, ( error, tweets ) => {
+		let query = { fetched: true, parsed: false };
 
-			if ( error )
-				return reject( error );
-
-			let resolve_val = {
-				found: tweets.length,
-				parsed: 0,
-			};
-
-			if ( ! tweets.length )
-				return resolve( resolve_val );
-
-			let remaining = tweets.length;
- 			let stop;
-			tweets.forEach( ( tweet ) => {
-
-				if ( stop )
+		// merge in extra query params
+		if ( query_params ) {
+			let keys = Object.keys( query_params );
+			keys.forEach( ( key ) => {
+				if ( ! query_params.hasOwnProperty( key ) )
 					return;
-
-				parseTweet( tweet )
-					.then(() => {
-						++resolve_val.parsed;
-						if ( --remaining === 0 )
-							resolve( resolve_val );
-					})
-					.catch( ( error ) => {
-						stop = true;
-						throw error;
-					});
+				query[ key ] = query_params[ key ];
 			});
-		});
+		}
+
+		console.log( "query >> ", query );
+		findTweets( query )
+			.then( ( tweets ) => {
+
+				console.log( "tweets >> ", tweets );
+
+				let resolve_val = {
+					found: tweets.length,
+					parsed: 0,
+				};
+
+				if ( ! tweets.length )
+					return resolve( resolve_val );
+
+				let remaining = tweets.length;
+	 			let stop;
+				tweets.forEach( ( tweet ) => {
+
+					if ( stop )
+						return;
+
+					parseTweet( tweet )
+						.then(() => {
+							++resolve_val.parsed;
+							if ( --remaining === 0 )
+								resolve( resolve_val );
+						})
+						.catch( ( error ) => {
+							stop = true;
+							throw error;
+						});
+				});
+			})
+			.catch( ( error ) => {
+				return reject( error );
+			});
 	});
 };
 
-var parseTweet = function( tweet ) {
+const parseTweet = function( tweet ) {
 
 	console.log( "parseTweet" );
 
@@ -322,44 +347,60 @@ var parseTweet = function( tweet ) {
 
 				receipt.number = number;
 
-				TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str }, ( error, twitter_user ) => {
+				twitterUserController.findOrCreateTwitterUser(
+						{ "data.id_str": tweet.data.user.id_str, },
+						{
+							twitter_id: tweet.data.user.id_str,
+							screen_name: tweet.data.user.screen_name,
+						}
+					).then( ( twitter_user ) => {
+						return userController.findOrCreateUser(
+							{ twitter_user: twitter_user._id },
+							{
+								name: twitter_user.data.screen_name,
+								twitter_user: twitter_user._id,
+								state: 0,
 
-					if ( error )
-						return reject( error );
-
-					if ( ! twitter_user )
-						return reject( "TwitterUser not found ["+ tweet.data.user.id_str +"]" );
-
-					User.findOne( { twitter_user: twitter_user._id }, ( error, user ) => {
-
-						if ( error )
-							return reject( error );
-
-						if ( ! user )
-							return reject( "User not found ["+ twitter_user._id +"]" );
+							},
+							tweet
+						);
+					})
+					.then( ( user ) => {
 
 						receipt.user = user._id;
 
-						storeController.parseTweetForStore( tweet )
-							.then( ( store ) => {
+						return storeController.parseTweetForStore( tweet );
 
-								if ( store )
-									receipt.store = store._id;
+					})
+					.then( ( store ) => {
 
-								receipt.save( ( error ) => {
+						if ( store )
+							receipt.store = store._id;
 
-									if ( error )
-										return reject( error );
+						return receiptController.findReceipt({
+							number: receipt.number,
+							date: receipt.date,
+							user: receipt.user,
+						});
 
-									saveTweet();
+					})
+					.then( ( found_receipt ) => {
 
-								});
+						if ( ! found_receipt ) {
 
-							}).catch( ( error ) => {
-								return reject( error );
+							receipt.save( ( error ) => {
+
+								if ( error )
+									return reject( error );
+
+								saveTweet();
+
 							});
+						}
+					})
+					.catch( ( error ) => {
+						reject( error );
 					});
-				});
 			}
 			else {
 				saveTweet();
@@ -368,10 +409,214 @@ var parseTweet = function( tweet ) {
 	});
 };
 
+
+const sendTweet = function( twitter_user, tweet ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		if ( ! twitter_user.oauth_token_admin || ! twitter_user.oauth_secret_admin )
+			return reject( "Invalid credentials" );
+
+		let client = new Twitter({
+			consumer_key: process.env.TWITTER_CONSUMER_KEY_ADMIN,
+			consumer_secret: process.env.TWITTER_CONSUMER_SECRET_ADMIN,
+			access_token_key: twitter_user.oauth_token_admin,
+			access_token_secret: twitter_user.oauth_secret_admin,
+		});
+
+		client.post( "statuses/update", tweet, ( error, tweet ) => {
+
+			if ( error )
+				return reject( error );
+
+			return resolve( tweet );
+		});
+	});
+};
+
+const createNewReceiptTweetText = function( screen_name, number, remaining ) {
+
+	const phrases = [
+		"Congrats",
+		"Nice",
+		"Sweet",
+		"Cool",
+		"Great Scott",
+		"Perfect",
+		"Good Going",
+		"Awesome",
+		"Stupendous",
+		"Woot",
+		"Yo",
+		"Yeehaw",
+		"Hey Hey Hey",
+		"WutWut",
+		"Yeehaw",
+		"Awesome"
+	];
+
+	const key = utils.rand( 0, ( phrases.length - 1 ) );
+	const intro = phrases[ key ];
+
+	return "@"+ screen_name +" "+ intro +"! You just got "+ number +". Now you only have "+ remaining +" to go!";
+};
+
+const createNewUserTweetText = function( screen_name ) {
+
+	const phrases = [
+		"Sweet Whole Grilled Onions",
+		"Chopped Chili Chili Bang Bang",
+		"Neopolitan Nebulas",
+		"Three By Meat Madness",
+		"Fantastic Root Beer Floatations",
+		"Fabulous Animal Fries",
+	];
+
+	const key = utils.rand( 0, ( phrases.length - 1 ) );
+	const intro = phrases[ key ];
+
+	const user_url = utils.createUserUrl( screen_name );
+
+	return intro +"! @"+ screen_name +" has joined the #innoutChallenge! "+ user_url;
+};
+
+const createNewUserTweetParams = function( screen_name, originating_tweet ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		if ( ! screen_name )
+			return reject( "invalid screen_name ["+ screen_name +"]" );
+
+		let params = {
+			status: createNewUserTweetText( screen_name ),
+		};
+
+		if ( originating_tweet )
+			params.in_reply_to_status_id = originating_tweet.data._id;
+
+		if ( originating_tweet.store ) {
+			Store.findOne( { _id: originating_tweet.store }, ( error, store ) => {
+
+				if ( error )
+					return;
+
+				if ( ! store )
+					return;
+
+				params.lat = store.location.latitude;
+				params.long = store.location.longitude;
+
+				if ( store.location.twitter_place ) {
+
+					TwitterPlace.findOne( { _id: store.location.twitter_place }, ( error, twitter_place ) => {
+
+						if ( error )
+							return; // logerror
+
+						if ( ! twitter_place )
+							return;
+
+						params.place = twitter_place.data.id;
+
+						resolve( params );
+
+					});
+				}
+				else {
+					resolve( params );
+				}
+			});
+		}
+		else {
+			resolve( params );
+		} 
+	});
+};
+
+const sendNewUserTweet = function( params ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		TwitterUser.findOne({ "data.screen_name": process.env.NEW_USER_TWEET_SCREEN_NAME }, ( error, twitter_user ) => {
+
+			if ( error )
+				return reject( error );
+
+			if ( ! twitter_user )
+				return reject( "Unable to find twitter_user" );
+
+			sendTweet( twitter_user, params )
+				.then( ( tweet ) => {
+					resolve( tweet );
+				})
+				.catch( ( error ) => {
+					reject( error );
+				});
+
+		});
+	});
+};
+
+const getUnfetchedTweets = function() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		Tweet.find({ fetched: { $eq: false } }, ( error, tweets ) => {
+
+			if ( error )
+				return reject( error );
+
+			if ( ! tweets )
+				return reject( "Unable to find any tweets" );
+
+			resolve( tweets );
+		});
+	});
+};
+
+const findTweet = function( query, fields ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		Tweet.findOne( query, fields, ( error, tweet ) => {
+
+			if ( error )
+				return reject( error );
+
+			resolve( tweet );
+
+		});
+	});
+};
+
+const findTweets = function( query, fields, options ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		Tweet.find( query, fields, options, ( error, tweets ) => {
+
+			if ( error )
+				return reject( error );
+
+			resolve( tweets );
+
+		});
+	});
+};
+
 module.exports = {
-	get_tweets_from_search_app: get_tweets_from_search_app,
-	get_tweets_from_search_user: get_tweets_from_search_user,
-	get_tweets_from_lookup_app: get_tweets_from_lookup_app,
+	getTweetsFromSearchApp: getTweetsFromSearchApp,
+	getLatestSearchTweetFromDb: getLatestSearchTweetFromDb,
+	getTweetsFromSearchUser: getTweetsFromSearchUser,
+	getTweetsFromLookupApp: getTweetsFromLookupApp,
 	parseTweets: parseTweets,
 	parseTweet: parseTweet,
+	sendTweet: sendTweet,
+	createNewReceiptTweetText: createNewReceiptTweetText,
+	createNewUserTweetText: createNewUserTweetText,
+	createNewUserTweetParams: createNewUserTweetParams,
+	sendNewUserTweet: sendNewUserTweet,
+	getUnfetchedTweets: getUnfetchedTweets,
+	findTweet: findTweet,
+	findTweets: findTweets,
 };

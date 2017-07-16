@@ -1,5 +1,5 @@
 
-throw new Error( "Twitter's geo-search does not appear to return anything smaller than a city, as such we can't pre-fetch the twitter locations of the stores" )
+throw new Error( "Twitter's geo-search does not appear to return anything smaller than a city, as such we can't pre-fetch the twitter locations of the stores atm" )
 
 
 var Store = require( "../../model/store" );

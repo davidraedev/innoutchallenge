@@ -3,7 +3,7 @@ var router = express.Router();
 var bodyParser = require( "body-parser" );
 
 var view_controller = require( "../controller/view" );
-var user_controller = require( "../controller/user" );
+var user_controller = require( "../controller/user_view" );
 var store_controller = require( "../controller/store" );
 
 var urlEncodedParser = bodyParser.urlencoded({ extended: false })

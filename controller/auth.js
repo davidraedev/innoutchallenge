@@ -298,7 +298,7 @@ const admin_login_3 = function( request, response ) {
 		response.redirect( "/login" ); // Redirect to login page
 	}
 };
-
+/*
 const admin_test_tweet = function( request, response ) {
 
 	User.find( { "data.screen_name": "genericwinner" }, ( error, user ) => {
@@ -326,12 +326,9 @@ const admin_test_tweet = function( request, response ) {
 			client.get( "search/tweets", search_params, function( error, tweets ) {
 
 		});
-
 	});
-
-	
 };
-
+*/
 module.exports = {
 	user_login: user_login,
 	user_login_2: user_login_2,
@@ -340,5 +337,5 @@ module.exports = {
 	admin_login_2: admin_login_2,
 	admin_login_3: admin_login_3,
 
-	admin_test_tweet: admin_test_tweet,
+//	admin_test_tweet: admin_test_tweet,
 };

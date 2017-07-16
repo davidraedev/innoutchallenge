@@ -1,13 +1,14 @@
 var db = require( "../db" );
 var TwitterUser = require( "../../model/twitter_user" );
 var controller = require( "../../controller/admin" );
+require( "dotenv" ).config();
 
 console.log( "twitter.js" )
 
 db.connect().then( () => {
 	console.log( "twitter.js a" )
 
-	TwitterUser.findOne( { "data.screen_name": "genericwinner" }, ( error, twitter_user ) => {
+	TwitterUser.findOne( { "data.screen_name": process.env.NEW_USER_TWEET_SCREEN_NAME }, ( error, twitter_user ) => {
 		console.log( "twitter.js b" )
 
 		if ( error )

@@ -3,7 +3,7 @@ var db = require( "../db" );
 
 db.connect().then(() => {
 
-	controller.get_tweets_from_search_app()
+	controller.getTweetsFromSearchApp()
 		.then( ( vals ) => {
 
 			console.log( "[%s] tweets retrieved, [%s] tweets saved", vals.found, vals.saved );

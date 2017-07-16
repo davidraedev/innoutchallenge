@@ -1,9 +1,12 @@
 const User = require( "../model/user" );
-const Receipt = require( "../model/receipt" );
-const Store = require( "../model/store" );
-const ObjectId = require( "mongoose" ).Types.ObjectId;
+const tweetController = require( "./tweet" );
+const tweetQueueController = require( "./tweet_queue" );
+const receiptController = require( "./receipt" );
+const storeController = require( "./store" );
+var mongoose = require( "mongoose" );
+var ObjectId = mongoose.Schema.Types.ObjectId;
 
-function findUser( name, response ) {
+const searchUser = function( name ) {
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -18,176 +21,269 @@ function findUser( name, response ) {
 			resolve( user );
 
 		}).lean();
-	})
-
-}
-
-exports.users_list = function( request, response ) {
-
-	const amount = parseInt( request.body.amount );
-	const page = parseInt( request.body.page );
-
-	if ( ! amount )
-		return response.status( 500 ).send( "Invalid amount" );
-	if ( page < 0 || isNaN( page ) )
-		return response.status( 500 ).send( "Invalid page" );
-
-	const skip = ( ( page - 1 ) * amount );
-	const limit = ( amount + 1 );
-
-	User.find( { state: 1 }, [ "name", "totals" ], { skip: skip, limit: limit }, ( error, users ) => {
-
-		if ( error )
-			return response.status( 500 ).send( error );
-
-		if ( ! users.length )
-			return response.send( JSON.stringify( [] ) );
-     
-		const has_next_page = ( users.length === limit )
-
-		users.splice( [ users.length - 1 ], 1 );
-
-		const data = {
-			users: users,
-			currentPage: page,
-			hasNextPage: has_next_page,
-			hasPreviousPage: ( page > 1 ),
-		}
-
-		return response.send( JSON.stringify( data ) );
-
-	}).sort({ "totals.receipts.unique": "desc" }).lean();
+		
+	});
 
 };
 
-exports.user_instore_receipts = function( request, response ) {
+const createUser = function( user_data, new_user_tweet ) {
 
-	const name = request.body.name;
+	return new Promise( ( resolve, reject ) => {
 
-	if ( ! name )
-		return response.status( 500 ).send( "Invalid name" );
+		let data = {};
+		data.name = user_data.name;
+		data.state = user_data.state;
 
-	findUser( name, response ).then( ( user ) => {
+		if ( user_data.join_date )
+			data.join_date = user_data.join_date;
 
-		Receipt.find( { user: new ObjectId( user._id ), type: 1, approved: 1 }, ( error, receipts ) => {
+		if ( user_data.twitter_user )
+			data.twitter_user = user_data.twitter_user;
+
+		User.create( data, ( error, user ) => {
 
 			if ( error )
-				return response.status( 500 ).send( error );
+				return reject( error );
 
-			let receipts_list = {};
-			for ( let i = 1; i <= 99; i++ ) {
-				if ( i !== 69 )
-					receipts_list[ i ] = { amount: 0 };
+			if ( new_user_tweet ) {
+				tweetController.createNewUserTweetParams( data.name, new_user_tweet )
+					.then( ( params ) => {
+						return tweetQueueController.addTweetToQueue( params );
+					})
+					.then(() => {
+						resolve( user );
+					})
+					.catch( ( error ) => {
+						reject( error );
+					});
+			}
+			else {
+				return resolve( user );
 			}
 
-			receipts.forEach( ( receipt ) => {
-				receipts_list[ receipt.number ].amount++;
-			});
+		});
 
-			user.receipts = receipts_list;
-
-			return response.send( JSON.stringify( user ) );
-
-		}).sort({ "data.created_at": "asc" }).lean();
-
-	}).catch( ( error ) => {
-		return response.status( 404 ).send( error );
 	});
 };
 
-exports.user_stores = function( request, response ) {
+const findUser = function( query ) {
 
-	const name = request.body.name;
+	return new Promise( ( resolve, reject ) => {
 
-	if ( ! name )
-		return response.status( 500 ).send( "Invalid name" );
-
-	findUser( name, response ).then( ( user ) => {
-
-		Store.find({ popup: { $exists: false } }, ( error, stores ) => {
+		User.findOne( query, ( error, user ) => {
 
 			if ( error )
-				throw error;
+				return reject( error );
 
-			if ( ! stores.length ) {
-				console.log( "No Stores found" );
-				return;
-			}
+			resolve( user );
 
-			let stores_list = {};
-			stores.forEach( ( store ) => {
-				stores_list[ store._id ] = { amount: 0 };
+		});
+	});
+};
+
+const findUsers = function( query ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		User.find( query, ( error, users ) => {
+
+			if ( error )
+				return reject( error );
+
+			resolve( users );
+
+		});
+	});
+};
+
+const findOrCreateUser = function( query, data, new_user_tweet ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		findUser( query )
+			.then( ( user ) => {
+				if ( ! user )
+					return createUser( data, new_user_tweet );
+				return user;
+			})
+			.then( ( user ) => {
+				resolve( user );
+			})
+			.catch( ( error ) => {
+				reject( error );
 			});
 
-			Receipt.find( {
-				user: new ObjectId( user._id ),
-				approved: 1,
-				store: { $ne: null },
-				type: { $in: [ 1, 2, 3 ] }
-			}, ( error, receipts ) => {
+	});
+};
 
-				if ( error )
-					throw error;
+const updateUserTotals = function( user ) {
 
-				function getStore( id ) {
-					let store = false;
-					stores.some( ( temp_store ) => {
-						console.log( temp_store._id +" == "+ id );
-						if ( temp_store._id == id ) {
-							store = temp_store;
-							return true;
-						}
-					});
-					return store;
+	return new Promise( ( resolve, reject ) => {
+
+		let totals = {
+			receipts: {
+				unique: 0,
+				total: 0,
+				remaining: 98,
+			},
+			drivethru: {
+				unique: 0,
+				total: 0,
+				remaining: 999,
+			},
+			stores: {
+				unique: 0,
+				total: 0,
+			},
+			popups: {
+				total: 0
+			}
+		};
+
+
+		// in-storea and drivethru totals
+		let stores_list = {};
+		let user_id = user._id.toString();
+		receiptController.findReceipts( { user: user_id, type: { $in: [ 1, 2 ] }, approved: 1 } )
+			.then( ( receipts ) => {
+
+				if ( ! receipts.length ) {
+					console.log( "no receipts found [%s]", user.name );
+					return;
+				}
+
+				let receipts_list = {};
+				let drive_thru_list = {};
+				for ( let i = 1; i <= 99; i++ ) {
+					if ( i !== 69 )
+						receipts_list[ i ] = { amount: 0 };
 				}
 
 				receipts.forEach( ( receipt ) => {
-					stores_list[ receipt.store ].amount++;
+
+					// in_store
+					if ( receipt.type === 1 ) {
+					
+						if ( receipts_list[ receipt.number ].amount === 0 ) {
+							totals.receipts.unique++;
+							totals.receipts.remaining--;
+						}
+						totals.receipts.total++;
+						receipts_list[ receipt.number ].amount++;
+
+					}
+
+					// drive_thru
+					if ( receipt.type === 2 ) {
+					
+						if ( ! drive_thru_list[ receipt.number ] ) {
+							drive_thru_list[ receipt.number ] = { amount: 0 };
+							totals.drivethru.unique++;
+							totals.drivethru.remaining--;
+						}
+						totals.drivethru.total++;
+						drive_thru_list[ receipt.number ].amount++;
+
+					}
+
 				});
 
-				let final_stores = {};
+				return;
 
-				let keys = Object.keys( stores_list );
-				keys.forEach( ( key ) => {
-					let number = getStore( key ).number;
-					console.log( number )
-					final_stores[ number ] = stores_list[ key ];
+			})
+			.then( () => {
+				return storeController.findStores( {}, true );
+			})
+			.then( ( stores ) => {
+
+				if ( ! stores.length ) {
+					console.log( "No Stores found" );
+					return;
+				}
+
+				totals.stores.remaining = stores.length;
+
+				stores.forEach( ( store ) => {
+					stores_list[ store._id ] = { amount: 0 };
 				});
-				user.stores = final_stores;
 
-				return response.send( JSON.stringify( user ) );
+				// if we vet our data input correctly, we can take out the store/popup check and rely only on the { type } check
+				return receiptController.findReceipts( { user: user._id, approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } }, true );
+					
+			})
+			.then( ( receipts ) => {
 
-			}).lean();
+				receipts.forEach( ( receipt ) => {
 
-		}).lean();
+					// popups
+					if ( receipt.popup ) {
+						totals.popups.total++;
+					}
 
-	}).catch( ( error ) => {
-		return response.status( 404 ).send( error );
+					// stores
+					else {
+						if ( stores_list[ receipt.store ].amount === 0 ) {
+							totals.stores.unique++;
+							totals.stores.remaining--;
+						}
+
+						totals.stores.total++;
+						stores_list[ receipt.store ].amount++;
+					}
+
+				});
+
+				user.totals = totals;
+				user.save( ( error ) => {
+					if ( error )
+						throw error;
+					resolve();
+				});
+
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
 	});
 };
 
-exports.user_drivethru_receipts = function( request, response ) {
+const updateAllUsersTotals = function(){
 
-	const name = request.body.name;
+	return new Promise( ( resolve, reject ) => {
 
-	if ( ! name )
-		return response.status( 500 ).send( "Invalid name" );
+		findUsers( { state: 1 } )
+			.then( ( users ) => {
 
-	findUser( name, response ).then( ( user ) => {
+				if ( ! users.length ) {
+					console.log( "no users to update" );
+					resolve();
+				}
 
-		Receipt.find( { user: new ObjectId( user._id ), type: 3, approved: 1 }, [ "number" ], ( error, receipts ) => {
+				let users_remaining = users.length;
 
-			if ( error )
-				return response.status( 500 ).send( error );
-
-			user.drivethru = receipts;
-
-			return response.send( JSON.stringify( user ) );
-
-		}).lean();
-
-	}).catch( ( error ) => {
-		return response.status( 404 ).send( error );
+				users.forEach( ( user ) => {
+					
+					updateUserTotals( user )
+						.then( () => {
+							if ( --users_remaining === 0 )
+								resolve();
+						})
+						.catch( ( error ) => {
+							throw error;
+						});
+				});
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
 	});
+};
 
+module.exports = {
+	searchUser: searchUser,
+	createUser: createUser,
+	findUser: findUser,
+	findOrCreateUser: findOrCreateUser,
+	updateUserTotals: updateUserTotals,
+	updateAllUsersTotals: updateAllUsersTotals,
 };

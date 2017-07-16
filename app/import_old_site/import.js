@@ -2,12 +2,12 @@ const db = require( "../db" );
 const axios = require( "axios" );
 const https = require( "https" );
 const fs = require( "fs" );
-require( "dotenv" ).config()
+require( "dotenv" ).config();
 
 const User = require( "../../model/user" );
 const TwitterUser = require( "../../model/twitter_user" );
 const Tweet = require( "../../model/tweet" );
-const Store = require( "../../model/store" );
+//const Store = require( "../../model/store" );
 const Receipt = require( "../../model/receipt" );
 
 const ObjectId = require( "mongoose" ).Types.ObjectId;
@@ -17,7 +17,7 @@ const agent = new https.Agent({
 });
 
 const data_url = "https://innoutchallenge.com/export_data.php?key="+ process.env.INNOUTCHALLENGE_OLD_KEY;
-const data_path = "data//old_site.json"
+const data_path = "data/old_site.json";
 const clear_data = true;
 const use_cache = true;
 
@@ -73,7 +73,7 @@ function resetData( callback ) {
 	];
 	let count = collection_names.length;
 	collection_names.forEach( ( collection_name ) => {
-		db.mongoose.connection.db.dropCollection( collection_name, ( error, result ) => {
+		db.mongoose.connection.db.dropCollection( collection_name, ( error ) => {
 			
 			// mongo throws an error when droppng a non-existent collection, so ignore that
 			if ( error && error != "MongoError: ns not found" )
@@ -83,7 +83,7 @@ function resetData( callback ) {
 			if ( --count === 0 )
 				callback();
 		});
-	})
+	});
 }
 
 db.connect().then( () => {
@@ -95,11 +95,11 @@ db.connect().then( () => {
 
 		getLocal( data_path, ( error, data ) => {
 			if ( error )
-				return getRemote( data_url, importData )
+				return getRemote( data_url, importData );
 			importData( null, data );
 		});
 
-	})
+	});
 
 }).catch( ( error ) => {
 	throw error;
@@ -147,58 +147,60 @@ function processUser( user_data, data, callback ) {
 						Receipt.create({
 							number: tweet_data.receipt,
 							date: new Date( tweet_data.tweet_date ),
-						//      location: ObjectId,
-						//	tweet: new ObjectId( tweet._id ),
+							type: 1,
 							user: new ObjectId( user._id ),
 							approved: tweet_data.approved,
-						}, ( error, receipt ) => {
+						}, ( error ) => {
 
 							if ( error )
 								throw error;
 							if ( --tweet_count === 0 )
 								callback();
 
-						})
-						return;
+						});
+
+
 					}
+					else {
 
-					Tweet.create({
-						source: 0,
-						data: {
-							id_str: tweet_data.tweet_id,
-							text: tweet_data.tweet_text,
-						}
-					}, ( error, tweet ) => {
-
-						if ( error )
-							throw error;
-
-						if ( ! tweet_data.receipt.length ) {
-							if ( --tweet_count === 0 )
-								callback();
-							return;
-						}
-
-						Receipt.create({
-							number: tweet_data.receipt,
-							date: new Date( tweet_data.tweet_date ),
-						//      location: ObjectId,
-							tweet: new ObjectId( tweet._id ),
-							user: new ObjectId( user._id ),
-							approved: tweet_data.approved,
-						}, ( error, receipt ) => {
+						Tweet.create({
+							source: 0,
+							data: {
+								id_str: tweet_data.tweet_id,
+								text: tweet_data.tweet_text,
+							}
+						}, ( error, tweet ) => {
 
 							if ( error )
 								throw error;
-							if ( --tweet_count === 0 )
-								callback();
 
-						})
-					})
-				})
-			})
-		})
-	})
+							if ( ! tweet_data.receipt.length ) {
+								if ( --tweet_count === 0 )
+									callback();
+								return;
+							}
+
+							Receipt.create({
+								number: tweet_data.receipt,
+								date: new Date( tweet_data.tweet_date ),
+								type: 1,
+								tweet: new ObjectId( tweet._id ),
+								user: new ObjectId( user._id ),
+								approved: tweet_data.approved,
+							}, ( error ) => {
+
+								if ( error )
+									throw error;
+								if ( --tweet_count === 0 )
+									callback();
+
+							});
+						});
+					}
+				});
+			});
+		});
+	});
 }
 
 function importData( error, data ) {
@@ -220,37 +222,36 @@ function importData( error, data ) {
 					if ( error )
 						throw error;
 
-					console.log( "Receipts [%s]", count )
+					console.log( "Receipts [%s]", count );
 
 					Tweet.find({}).count(( error, count ) => {
 
 						if ( error )
 							throw error;
 
-						console.log( "Tweets [%s]", count )
+						console.log( "Tweets [%s]", count );
 
 						TwitterUser.find({}).count(( error, count ) => {
 
 							if ( error )
 								throw error;
 
-							console.log( "TwitterUsers [%s]", count )
+							console.log( "TwitterUsers [%s]", count );
 
 							User.find({}).count(( error, count ) => {
 
 								if ( error )
 									throw error;
 
-								console.log( "Users [%s]", count )
-
+								console.log( "Users [%s]", count );
 
 								db.close();
 
-							})
-						})
-					})
-				})
+							});
+						});
+					});
+				});
 			}
 		});
-	})
+	});
 }

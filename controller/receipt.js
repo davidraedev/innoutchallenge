@@ -1,134 +1,89 @@
-var Receipt = require( "../model/receipt" );
-var Tweet = require( "../model/tweet" );
-var User = require( "../model/user" );
-var TwitterUser = require( "../model/twitter_user" );
+const Receipt = require( "../model/receipt" );
 
-function parseTweet( text ) {
-	var has_hashtag = /\#innoutchallenge/i.test( text );
-	if ( ! has_hashtag )
-		return false;
-	else {
-		return {
-			receipt: 1,
-			date: new Date(),
-		};
-	}
-}
+const createReceipt = function( receipt_data ) {
 
-function getUser( tweet_object, callback ){
+	return new Promise( ( resolve, reject ) => {
 
-	TwitterUser.findOne( { "data.id_str": tweet_object.user.id_str }, function( error, twitter_user ){
+		let data = {};
+		data.number = receipt_data.number;
+		data.user = receipt_data.user;
+		data.type = receipt_data.type;
 
-		if ( error )
-			return callback( error );
+		if ( receipt_data.date )
+			data.date = receipt_data.date;
 
-		if ( ! twitter_user ) {
-			console.log( "TwitterUser not found, creating" );
-			twitter_user = new TwitterUser({
-				data: tweet_object.user,
-			});
-			twitter_user.save(function( error ){
+		if ( receipt_data.store )
+			data.store = receipt_data.store;
 
-				if ( error )
-					throw new Error( error );
+		if ( receipt_data.approved )
+			data.approved = receipt_data.approved;
 
-				console.log( "Creating User from TwitterUser" );
+		Receipt.create( data, ( error, receipt ) => {
 
-				var user = new User({
-					join_date: new Date( tweet_object.created_at ),
-					twitter_user: twitter_user._id,
-				});
-				user.save(function( error ){
-					if ( error )
-						throw new Error( error );
-					console.log( "New User created" );
-				});
+			if ( error )
+				return reject( error );
 
-			});
-		}
-		else {
+			return resolve( receipt );
 
-			console.log( "TwitterUser found" );
-			console.log( twitter_user );
-
-			User.findOne( { twitter_user: twitter_user._id }, function( error, user ){
-
-				if ( error )
-					return callback( error );
-
-				if ( ! user )
-					return callback( "Failed to find User via twitter_user objectid ["+ twitter_user._id +"]" );
-
-				console.log( "User found" );
-				console.log( user );
-				callback( null, user );
-
-			});
-		}
-
-	});
-}
-
-// this throws an error in the foreach, instead of dropping ot callback
-var get_unparsed_tweets = function( callback ) {
-
-	console.log( "get_unparsed_tweets" );
-
-	Tweet.find( { parsed: false }, function( error, tweets ){
-
-		if ( error )
-			callback( error );
-
-		if ( tweets === null ) {
-			console.log( "No unparsed Tweets found" );
-			callback();
-		}
-
-		tweets.forEach(function( tweet ){
-			console.log( tweet );
-			var text = tweet.toObject().data.text;
-			var tweet_object = tweet.toObject().data;
-			var parse = parseTweet( text );
-			if ( ! parse ) {
-				console.log( "Tweet did not contain innoutchallenge [%s]", text );
-				tweet.update( { parsed: true }, function( error ){
-					if ( error )
-						throw new Error( error );
-					console.log( "tweet updated, no change" );
-				});
-			}
-			else {
-				console.log( "Tweet contains innoutchallenge [%s]", text );
-				tweet.update( { parsed: true }, function( error ){
-					if ( error )
-						throw new Error( error );
-					console.log( "tweet updated, has receipt" );
-				});
-				getUser( tweet_object, function( error, user ){
-
-					if ( error )
-						throw new Error( error );
-
-					console.log( user );
-
-					var receipt = new Receipt({
-						number: parse.number,
-						date: parse.date,
-						user: user._id,
-					});
-
-					receipt.save(function( error ){
-						if ( error )
-							throw new Error( error );
-						console.log( "New Receipt Created" );
-					});
-				});
-			}
 		});
 
 	});
 };
 
+const findReceipts = function( query ) {
+
+	return new Promise( ( resolve, reject ) => {
+		
+		Receipt.find( query, ( error, receipts ) => {
+
+			if ( error )
+				return reject( error );
+
+			resolve( receipts );
+
+		});
+	});
+};
+
+const findReceipt = function( query ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		Receipt.findOne( query, ( error, receipt ) => {
+
+			if ( error )
+				return reject( error );
+
+			resolve( receipt );
+
+		});
+	});
+};
+
+const findOrCreateReceipt = function( query, data ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		findReceipt( query )
+			.then( ( receipt ) => {
+				if ( ! receipt )
+					return createReceipt( data );
+				return receipt;
+			})
+			.then( ( receipt ) => {
+				resolve( receipt );
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
+
+	});
+};
+
+
 module.exports = {
-	get_unparsed_tweets: get_unparsed_tweets,
+	createReceipt: createReceipt,
+	findReceipt: findReceipt,
+	findReceipts: findReceipts,
+	findOrCreateReceipt: findOrCreateReceipt,
 };
