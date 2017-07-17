@@ -49,12 +49,16 @@ exports.user_instore_receipts = function( request, response ) {
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
-	userController.searchUser( name ).then( ( user ) => {
-
-		Receipt.find( { user: new ObjectId( user._id ), type: 1, approved: 1 }, ( error, receipts ) => {
-
-			if ( error )
-				return response.status( 500 ).send( error );
+	let this_user;
+	userController.searchUser( name )
+		.catch( ( error ) => {
+			return response.status( 404 ).send( error );
+		})
+		.then( ( user ) => {
+			this_user = user;
+			return Receipt.find({ user: user._id, type: 1, approved: { $in: [ 1, 2 ] } }).sort( { date: "desc" } ).lean();
+		})
+		.then( ( receipts ) => {
 
 			let receipts_list = {};
 			for ( let i = 1; i <= 99; i++ ) {
@@ -66,15 +70,14 @@ exports.user_instore_receipts = function( request, response ) {
 				receipts_list[ receipt.number ].amount++;
 			});
 
-			user.receipts = receipts_list;
+			this_user.receipts = receipts_list;
 
-			return response.send( JSON.stringify( user ) );
+			return response.send( JSON.stringify( this_user ) );
 
-		}).sort({ "data.created_at": "asc" }).lean();
-
-	}).catch( ( error ) => {
-		return response.status( 404 ).send( error );
-	});
+		})
+		.catch( ( error ) => {
+			return response.status( 500 ).send( error );
+		});
 };
 
 exports.user_stores = function( request, response ) {
@@ -158,8 +161,6 @@ exports.user_drivethru_receipts = function( request, response ) {
 	userController.searchUser( name )
 		.then( ( user ) => {
 
-			console.log( "user >> ", user )
-
 			Receipt.find( { user: new ObjectId( user._id ), type: 3, approved: 1 }, [ "number" ], ( error, receipts ) => {
 
 				if ( error )
@@ -169,8 +170,6 @@ exports.user_drivethru_receipts = function( request, response ) {
 					receipts = [];
 
 				user.drivethru = receipts;
-
-				console.log( "user2 >> ", user )
 
 				return response.send( JSON.stringify( user ) );
 

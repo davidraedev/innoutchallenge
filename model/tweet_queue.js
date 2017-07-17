@@ -14,6 +14,9 @@ const TweetQueueSchema = new Schema({
 		2: new receipt
 	*/
 	params: { type: Mixed, default: null },
+	/*
+		the straight tweet params we pass to twitter
+	*/
 	done: { type: Boolean, default: false },
 	failed: { type: Boolean, default: false },
 	fail_date: { type: Date, default: null },

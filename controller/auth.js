@@ -3,10 +3,6 @@ const User = require( "../model/user" );
 const OAuth = require( "oauth" ).OAuth;
 require( "dotenv" ).config();
 
-const mongoose = require( "mongoose" );
-const ObjectId = mongoose.Schema.Types.ObjectId;
-var Twitter = require( "twitter" );
-
 function makeOauth( type ) {
 
 	let oauth_key;
@@ -150,8 +146,8 @@ const user_login_3 = function( request, response ) {
 								twitter_user.oauth_secret = request.session.oauth.access_token_secret;
 								twitter_user.save( ( error ) => {
 									if ( error )
-										throw error
-								})
+										throw error;
+								});
 							}
 						}
 					);
@@ -282,8 +278,8 @@ const admin_login_3 = function( request, response ) {
 								
 								twitter_user.save( ( error ) => {
 									if ( error )
-										throw error
-								})
+										throw error;
+								});
 								
 							}
 						}
@@ -298,37 +294,7 @@ const admin_login_3 = function( request, response ) {
 		response.redirect( "/login" ); // Redirect to login page
 	}
 };
-/*
-const admin_test_tweet = function( request, response ) {
 
-	User.find( { "data.screen_name": "genericwinner" }, ( error, user ) => {
-
-		if ( error )
-			throw error;
-
-		if ( ! user )
-			throw new Error( "No User Found" );
-
-		TwitterUser.find( { "twitter_user": new ObjectId( user._id ) }, ( error, twitter_user ) => {
-
-			if ( error )
-				throw error;
-
-			if ( ! twitter_user )
-				throw new Error( "No TwitterUser Found" );
-
-			let client = new Twitter({
-				consumer_key: process.env.TWITTER_CONSUMER_KEY,
-				consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-				bearer_token: process.env.TWITTER_BEARER_TOKEN,
-			});
-
-			client.get( "search/tweets", search_params, function( error, tweets ) {
-
-		});
-	});
-};
-*/
 module.exports = {
 	user_login: user_login,
 	user_login_2: user_login_2,
@@ -336,6 +302,4 @@ module.exports = {
 	admin_login: admin_login,
 	admin_login_2: admin_login_2,
 	admin_login_3: admin_login_3,
-
-//	admin_test_tweet: admin_test_tweet,
 };

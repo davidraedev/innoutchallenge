@@ -1,8 +1,6 @@
 var Twitter = require( "twitter" );
 var TwitterUser = require( "../model/twitter_user" );
-var env = require( "node-env-file" );
-//var db = require( "../app/db" );
-env( ".env" );
+require( "dotenv" ).config();
 
 // need to add in rate limiting
 
@@ -129,9 +127,7 @@ var findOrCreateTwitterUser = function( query, data ) {
 	});
 };
 
-module.exports = {
-	refresh_user: refresh_user,
-	createTwitterUser: createTwitterUser,
-	findTwitterUser: findTwitterUser,
-	findOrCreateTwitterUser: findOrCreateTwitterUser,
-};
+module.exports.refresh_user = refresh_user;
+module.exports.createTwitterUser = createTwitterUser;
+module.exports.findTwitterUser = findTwitterUser;
+module.exports.findOrCreateTwitterUser = findOrCreateTwitterUser;

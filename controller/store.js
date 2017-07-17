@@ -19,10 +19,8 @@ const findStoreNearCoords = function( latitude, longitude ) {
 			return resolve( store );
 
 		});
-
 	});
-	
-}
+};
 
 function getTweetCoords( tweet ) {
 
@@ -152,38 +150,7 @@ const parseTweetForStore = function( tweet, ignore_hashtag ) {
 		}
 
 	});
-}
-/*
-const createReceipt = function( receipt_data ) {
-
-	return new Promise( ( resolve, reject ) => {
-
-		let data = {};
-		data.number = receipt_data.number;
-		data.user = receipt_data.user;
-		data.type = receipt_data.type;
-
-		if ( receipt_data.date )
-			data.date = receipt_data.date;
-
-		if ( receipt_data.store )
-			data.store = receipt_data.store;
-
-		if ( receipt_data.approved )
-			data.approved = receipt_data.approved;
-
-		Receipt.create( data, ( error, receipt ) => {
-
-			if ( error )
-				return reject( error );
-
-			return resolve( receipt );
-
-		});
-
-	});
 };
-*/
 
 const findStores = function( query, lean ) {
 
@@ -240,9 +207,34 @@ const findOrCreateReceipt = function( query, data ) {
 };
 */
 
-module.exports = {
-	findStoreNearCoords: findStoreNearCoords,
-	parseTweetForStore: parseTweetForStore,
-	findStore: findStore,
-	findStores: findStores,
+const parseTweetsForStores = function( tweets ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		let remaining = tweets.length;
+
+		if ( ! remaining )
+			resolve();
+
+		tweets.forEach( ( tweet ) => {
+
+			parseTweetForStore( tweet )
+				.then( () => {
+					if ( --remaining === 0 )
+						resolve();
+				})
+				.catch( ( error ) => {
+					reject( error );
+				});
+		});
+	});
 };
+
+
+
+module.exports.findStoreNearCoords = findStoreNearCoords;
+module.exports.parseTweetForStore = parseTweetForStore;
+module.exports.parseTweetsForStores = parseTweetsForStores;
+module.exports.findStore = findStore;
+module.exports.findStores = findStores;
+module.exports.saveTwitterPlace = saveTwitterPlace;

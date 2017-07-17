@@ -1,8 +1,7 @@
 var innoutLocations = require( "innout_locations" );
 var Store = require( "../../model/store" );
 var db = require( "../db.js" );
-
-var fs = require( "fs" )
+var fs = require( "fs" );
 
 /*
 
@@ -55,7 +54,7 @@ function left_pad( num, size, char ) {
 	which does list out the full hours.
 
 */
-function parseHours( hours_string, location ) {
+function parseHours( hours_string ) {
 
 	let days = [
 		"sunday",
@@ -68,7 +67,7 @@ function parseHours( hours_string, location ) {
 	];
 
 	let all_hours = {};
-	days.forEach(function( day ){
+	days.forEach( ( day ) => {
 
 		let hours = {};
 
@@ -128,22 +127,16 @@ function parseStore( data ) {
 	return store;
 }
 
-db.connect().then( function( connection ){
+db.connect().then( () => {
 
-	innoutLocations.get().then( function( json ){
+	innoutLocations.get().then( ( json ) => {
 		fs.writeFile( "./data/stores.json", JSON.stringify( json ), ( error ) => {
 			if ( error )
 				console.error( "Failed to save json to local" );
-		})
-//	fs.readFile( "./data/stores.json", ( e, contents ) => {
-
-//		if ( e )
-//			throw e;
-
-//		let json = JSON.parse( contents );
+		});
 
 		let remaining = json.data.length;
-		json.data.forEach(function( d, index ){
+		json.data.forEach( ( d ) => {
 			let store = parseStore( d );
 			console.log( "store [%d]", store.number );
 			Store.update(
@@ -161,12 +154,12 @@ db.connect().then( function( connection ){
 //	 })
 
 
-	}).catch( function( error ){
+	}).catch( ( error ) => {
 		if ( error )
 			throw error;
 	});
 
-}).catch( function( error ){
+}).catch( ( error ) => {
 	if ( error )
 		throw error;
 });

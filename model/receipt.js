@@ -13,6 +13,7 @@ var ReceiptSchema = new Schema({
 	/*
 		0: not yet approved,
 		1: approved,
+		2: auto approved, ( for accounts in good standing )
 		5: admin ignored
 	*/
 	type: { type: Number, default: 0 },

@@ -33,7 +33,6 @@
     "word-to-number-node": "git+https://github.com/daraeman/word-to-number-node.git"
   },
   "devDependencies": {
-    "bluebird": "^3.5.0",
     "chai": "^4.0.0",
     "mocha": "^3.4.2",
     "nodemon": "^1.11.0"

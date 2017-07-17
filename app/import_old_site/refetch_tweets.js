@@ -1,9 +1,8 @@
 const db = require( "../db" );
 require( "dotenv" ).config();
 const tweetController = require( "../../controller/tweet" );
-//const Tweet = require( "../../model/tweet" );
 
-function main( callback ) {
+function main() {
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -28,7 +27,7 @@ function main( callback ) {
 			})
 			.then( ( tweets ) => {
 
-				console.log( "tweets >>", tweets );
+			//	console.log( "tweets >>", tweets );
 
 				let keys = Object.keys( tweets.id );
 				let remaining = keys.length;
@@ -38,11 +37,11 @@ function main( callback ) {
 
 				keys.forEach( ( tweet_id ) => {
 
-					console.log( "tweet_id >>", tweet_id );
+				//	console.log( "tweet_id >>", tweet_id );
 
 					let tweet_data = tweets.id[ tweet_id ];
 
-					console.log( "tweet_data >>", tweet_data );
+				//	console.log( "tweet_data >>", tweet_data );
 
 					tweetController.findTweet( { "data.id_str": tweet_id } )
 						.then( ( tweet ) => {
@@ -51,7 +50,7 @@ function main( callback ) {
 								throw new Error( "Existing Tweet was not found [%s]", tweet_data.id_str );
 
 							if ( tweet_data ) {
-								tweet.data = tweet_data;
+								tweet.data = tweetController.formatTweetData( tweet_data );
 								tweet.fetched = true;
 							}
 							else {
@@ -92,17 +91,17 @@ function loop( is_done ) {
 
 	setTimeout( () => {
 		main().then( ( is_done_val ) => {
-			loop( is_done_val )
+			loop( is_done_val );
 		});
-	}, 10000 );
+	}, 500 );
 
 }
 
-let counter = 10;
+let counter = 200;
 db.connect().then( () => {
 
 	main().then( ( is_done_val ) => {
-		loop( is_done_val )
+		loop( is_done_val );
 	});
 
 }).catch( ( error ) => {

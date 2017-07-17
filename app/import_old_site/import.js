@@ -7,9 +7,7 @@ require( "dotenv" ).config();
 const User = require( "../../model/user" );
 const TwitterUser = require( "../../model/twitter_user" );
 const Tweet = require( "../../model/tweet" );
-//const Store = require( "../../model/store" );
 const Receipt = require( "../../model/receipt" );
-
 const ObjectId = require( "mongoose" ).Types.ObjectId;
 
 const agent = new https.Agent({
@@ -69,7 +67,8 @@ function resetData( callback ) {
 		"tweets",
 		"receipts",
 		"twitterusers",
-		"users"
+		"users",
+		"tweetqueues",
 	];
 	let count = collection_names.length;
 	collection_names.forEach( ( collection_name ) => {
@@ -79,12 +78,161 @@ function resetData( callback ) {
 			if ( error && error != "MongoError: ns not found" )
 				throw error;
 
-		//	console.log( "dropped collection [%s]", collection_name )
+			console.log( "dropped collection [%s]", collection_name );
 			if ( --count === 0 )
 				callback();
 		});
 	});
 }
+
+function processUser( user_data, data ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		let this_user;
+//		let this_twitter_user;
+		User.create({
+			name: user_data.user_screenname,
+			join_date: null,
+			twitter_user: null,
+			state: user_data.approved,
+		})
+		.then( ( user ) => {
+			this_user = user;
+
+			return TwitterUser.create({
+				oauth_token: user_data.oauthtoken,
+				oauth_secret: user_data.oauthtokensecret,
+				last_update: new Date( user_data.lastupdate ),
+				data: {
+					id_str: user_data.user_id,
+					screen_name: user_data.user_screenname,
+				}
+			});
+
+		})
+		.then( ( twitter_user ) => {
+//			this_twitter_user = twitter_user;
+
+			this_user.twitter_user = new ObjectId( twitter_user._id );
+			this_user.save( ( error ) => {
+
+				if ( error )
+					return reject( error );
+
+				let tweets = data.tweets.filter( function( tweet_data ) {
+					return ( tweet_data.user_id === twitter_user.data.id_str );
+				});
+				let tweet_count = tweets.length;
+				tweets.forEach( ( tweet_data ) => {
+
+					if ( ! tweet_data.tweet_id.length ) {
+
+						Receipt.create({
+							number: tweet_data.receipt,
+							date: new Date( tweet_data.tweet_date ),
+							type: 1,
+							user: new ObjectId( this_user._id ),
+							approved: tweet_data.approved,
+						})
+						.then(() => {
+							if ( --tweet_count === 0 )
+								return resolve();
+						})
+						.catch( ( error ) => {
+							if ( error )
+								throw error;
+						});
+
+					}
+					else {
+
+						Tweet.create( {
+							source: 0,
+							data: {
+								id_str: tweet_data.tweet_id,
+								text: tweet_data.tweet_text,
+							}
+						})
+						.then( ( tweet ) => {
+
+							if ( ! tweet_data.receipt.length ) {
+								if ( --tweet_count === 0 )
+									resolve();
+								return;
+							}
+
+							return Receipt.create({
+								number: tweet_data.receipt,
+								date: new Date( tweet_data.tweet_date ),
+								type: 1,
+								tweet: new ObjectId( tweet._id ),
+								user: new ObjectId( this_user._id ),
+								approved: tweet_data.approved,
+							});
+						})
+						.then(() => {
+							if ( --tweet_count === 0 )
+								resolve();
+						})
+						.catch( ( error ) => {
+							throw error;
+						});
+					}
+				});
+			});
+		})
+		.catch( ( error ) => {
+			reject( error );
+		});
+	});
+}
+
+function importData( error, data ) {
+
+	if ( error )
+		throw error;
+
+	let user_count = data.users.length;
+	data.users.forEach( ( user_data ) => {
+
+		processUser( user_data, data )
+			.catch( ( error ) => {
+				throw error;
+			})
+			.then( () => {
+				if ( --user_count === 0 )
+					return Receipt.find({}).count();
+				else
+					throw new Error( "break" );
+			})
+			.catch( ( error ) => {
+				//if ( error !== "break" ) {}
+					// do nothing
+			})
+			.then( ( count ) => {
+				console.log( "Receipts [%s]", count );
+				return Tweet.find({}).count();
+			})
+			.then( ( count ) => {
+				console.log( "Tweets [%s]", count );
+				return TwitterUser.find({}).count();
+			})
+			.then( ( count ) => {
+				console.log( "TwitterUsers [%s]", count );
+				return User.find({}).count();
+			})
+			.then( ( count ) => {
+				console.log( "Users [%s]", count );
+				db.close();		
+			})
+			.catch( ( error ) => {
+				throw error;
+			});
+	});
+}
+
+
 
 db.connect().then( () => {
 
@@ -104,154 +252,3 @@ db.connect().then( () => {
 }).catch( ( error ) => {
 	throw error;
 });
-
-function processUser( user_data, data, callback ) {
-
-	User.create({
-		name: user_data.user_screenname,
-		join_date: null,
-		twitter_user: null,
-		state: user_data.approved,
-	}, ( error, user ) => {
-
-		if ( error )
-			throw error;
-
-		TwitterUser.create({
-			oauth_token: user_data.oauthtoken,
-			oauth_secret: user_data.oauthtokensecret,
-			last_update: new Date( user_data.lastupdate ),
-			data: {
-				id_str: user_data.user_id,
-				screen_name: user_data.user_screenname,
-			}
-		}, ( error, twitter_user ) => {
-
-			if ( error )
-				throw error;
-
-			user.twitter_user = new ObjectId( twitter_user._id );
-			user.save( ( error ) => {
-
-				if ( error )
-					throw error;
-
-
-				let tweets = data.tweets.filter( function( tweet_data ) {
-					return ( tweet_data.user_id === twitter_user.data.id_str );
-				});
-				let tweet_count = tweets.length;
-				tweets.forEach( ( tweet_data ) => {
-
-					if ( ! tweet_data.tweet_id.length ) {
-						Receipt.create({
-							number: tweet_data.receipt,
-							date: new Date( tweet_data.tweet_date ),
-							type: 1,
-							user: new ObjectId( user._id ),
-							approved: tweet_data.approved,
-						}, ( error ) => {
-
-							if ( error )
-								throw error;
-							if ( --tweet_count === 0 )
-								callback();
-
-						});
-
-
-					}
-					else {
-
-						Tweet.create({
-							source: 0,
-							data: {
-								id_str: tweet_data.tweet_id,
-								text: tweet_data.tweet_text,
-							}
-						}, ( error, tweet ) => {
-
-							if ( error )
-								throw error;
-
-							if ( ! tweet_data.receipt.length ) {
-								if ( --tweet_count === 0 )
-									callback();
-								return;
-							}
-
-							Receipt.create({
-								number: tweet_data.receipt,
-								date: new Date( tweet_data.tweet_date ),
-								type: 1,
-								tweet: new ObjectId( tweet._id ),
-								user: new ObjectId( user._id ),
-								approved: tweet_data.approved,
-							}, ( error ) => {
-
-								if ( error )
-									throw error;
-								if ( --tweet_count === 0 )
-									callback();
-
-							});
-						});
-					}
-				});
-			});
-		});
-	});
-}
-
-function importData( error, data ) {
-
-	if ( error )
-		throw error;
-
-	let user_count = data.users.length;
-	data.users.forEach( ( user_data ) => {
-		//console.log( user_data.user_id )
-
-		processUser( user_data, data, () => {
-		//	console.log( "user_count [%s]", ( user_count - 1 ) )
-
-			if ( --user_count === 0 ) {
-
-				Receipt.find({}).count(( error, count ) => {
-
-					if ( error )
-						throw error;
-
-					console.log( "Receipts [%s]", count );
-
-					Tweet.find({}).count(( error, count ) => {
-
-						if ( error )
-							throw error;
-
-						console.log( "Tweets [%s]", count );
-
-						TwitterUser.find({}).count(( error, count ) => {
-
-							if ( error )
-								throw error;
-
-							console.log( "TwitterUsers [%s]", count );
-
-							User.find({}).count(( error, count ) => {
-
-								if ( error )
-									throw error;
-
-								console.log( "Users [%s]", count );
-
-								db.close();
-
-							});
-						});
-					});
-				});
-			}
-		});
-	});
-}

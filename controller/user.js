@@ -1,10 +1,8 @@
 const User = require( "../model/user" );
-const tweetController = require( "./tweet" );
-const tweetQueueController = require( "./tweet_queue" );
 const receiptController = require( "./receipt" );
 const storeController = require( "./store" );
-var mongoose = require( "mongoose" );
-var ObjectId = mongoose.Schema.Types.ObjectId;
+
+const Receipt = require( "../model/receipt" );
 
 const searchUser = function( name ) {
 
@@ -26,7 +24,7 @@ const searchUser = function( name ) {
 
 };
 
-const createUser = function( user_data, new_user_tweet ) {
+const createUser = function( user_data ) {
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -45,21 +43,7 @@ const createUser = function( user_data, new_user_tweet ) {
 			if ( error )
 				return reject( error );
 
-			if ( new_user_tweet ) {
-				tweetController.createNewUserTweetParams( data.name, new_user_tweet )
-					.then( ( params ) => {
-						return tweetQueueController.addTweetToQueue( params );
-					})
-					.then(() => {
-						resolve( user );
-					})
-					.catch( ( error ) => {
-						reject( error );
-					});
-			}
-			else {
-				return resolve( user );
-			}
+			return resolve( user );
 
 		});
 
@@ -96,14 +80,14 @@ const findUsers = function( query ) {
 	});
 };
 
-const findOrCreateUser = function( query, data, new_user_tweet ) {
+const findOrCreateUser = function( query, data ) {
 
 	return new Promise( ( resolve, reject ) => {
 
 		findUser( query )
 			.then( ( user ) => {
 				if ( ! user )
-					return createUser( data, new_user_tweet );
+					return createUser( data );
 				return user;
 			})
 			.then( ( user ) => {
@@ -117,6 +101,8 @@ const findOrCreateUser = function( query, data, new_user_tweet ) {
 };
 
 const updateUserTotals = function( user ) {
+
+	console.log( "updateUserTotals ", user.name );
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -141,10 +127,11 @@ const updateUserTotals = function( user ) {
 		};
 
 
-		// in-storea and drivethru totals
+		// in-store and drivethru totals
 		let stores_list = {};
 		let user_id = user._id.toString();
-		receiptController.findReceipts( { user: user_id, type: { $in: [ 1, 2 ] }, approved: 1 } )
+		let query = { user: user_id, type: { $in: [ 1, 2 ] }, approved: { $in: [ 1, 2 ] } };
+		Receipt.find( query )
 			.then( ( receipts ) => {
 
 				if ( ! receipts.length ) {
@@ -163,6 +150,7 @@ const updateUserTotals = function( user ) {
 
 					// in_store
 					if ( receipt.type === 1 ) {
+						console.log( "receipt.number", receipt.number, receipt.tweet )
 					
 						if ( receipts_list[ receipt.number ].amount === 0 ) {
 							totals.receipts.unique++;
@@ -204,16 +192,18 @@ const updateUserTotals = function( user ) {
 				totals.stores.remaining = stores.length;
 
 				stores.forEach( ( store ) => {
-					stores_list[ store._id ] = { amount: 0 };
+					stores_list[ store._id.toString() ] = { amount: 0 };
 				});
 
 				// if we vet our data input correctly, we can take out the store/popup check and rely only on the { type } check
-				return receiptController.findReceipts( { user: user._id, approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } }, true );
-					
+				return Receipt.find( { user: user._id, approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } } );
 			})
 			.then( ( receipts ) => {
 
+				console.log( "receipts.length", receipts.length )
+
 				receipts.forEach( ( receipt ) => {
+					console.log( "receipt.store", receipt.store )
 
 					// popups
 					if ( receipt.popup ) {
@@ -237,7 +227,7 @@ const updateUserTotals = function( user ) {
 				user.save( ( error ) => {
 					if ( error )
 						throw error;
-					resolve();
+					resolve( user.totals );
 				});
 
 			})
@@ -248,6 +238,7 @@ const updateUserTotals = function( user ) {
 };
 
 const updateAllUsersTotals = function(){
+	console.log( "updateAllUsersTotals" );
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -259,19 +250,22 @@ const updateAllUsersTotals = function(){
 					resolve();
 				}
 
-				let users_remaining = users.length;
-
-				users.forEach( ( user ) => {
-					
-					updateUserTotals( user )
+				let remaining = users.length;
+				let i = 0;
+				let end = ( users.length - 1 );
+				function updateUserTotalsSync() {
+					if ( i === end )
+						return resolve();
+					updateUserTotals( users[ i++ ] )
 						.then( () => {
-							if ( --users_remaining === 0 )
-								resolve();
+							updateUserTotalsSync();
 						})
 						.catch( ( error ) => {
 							throw error;
 						});
-				});
+				}
+
+				updateUserTotalsSync();
 			})
 			.catch( ( error ) => {
 				reject( error );
@@ -279,11 +273,9 @@ const updateAllUsersTotals = function(){
 	});
 };
 
-module.exports = {
-	searchUser: searchUser,
-	createUser: createUser,
-	findUser: findUser,
-	findOrCreateUser: findOrCreateUser,
-	updateUserTotals: updateUserTotals,
-	updateAllUsersTotals: updateAllUsersTotals,
-};
+module.exports.searchUser = searchUser;
+module.exports.createUser = createUser;
+module.exports.findUser = findUser;
+module.exports.findOrCreateUser = findOrCreateUser;
+module.exports.updateUserTotals = updateUserTotals;
+module.exports.updateAllUsersTotals = updateAllUsersTotals;
