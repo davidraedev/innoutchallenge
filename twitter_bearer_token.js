@@ -1,6 +1,5 @@
 var OAuth2 = require( "OAuth" ).OAuth2;
-var env = require( "node-env-file" );
-env( ".env" );
+require( "dotenv" ).config();
 
 var oauth2 = new OAuth2(
 	process.env.TWITTER_CONSUMER_KEY,

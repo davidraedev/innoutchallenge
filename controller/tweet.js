@@ -63,6 +63,7 @@ const getTweetsFromSearchApp = function() {
 
 					let remaining = tweets.statuses.length;
 
+					let stop;
 					tweets.statuses.forEach( ( tweet_data ) => {
 
 						if ( stop )
@@ -261,7 +262,6 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 	return new Promise( ( resolve, reject ) => {
 		Tweet.find({ fetched: true, parsed: false })
 			.then( ( tweets ) => {
-//				console.log( "aa" )
 
 				if ( ! tweets.length )
 					throw new PromiseEndError( "no tweets" );
@@ -285,7 +285,6 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 			})
 			.catch( ( error ) => {
 				if ( error instanceof PromiseEndError ) {
-					console.log( error.message );
 					resolve();
 				}
 				else {
@@ -307,7 +306,6 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 
 	return TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str } )
 		.then( ( twitter_user ) => {
-//			console.log( "a" )
 
 			if ( ! twitter_user ) {
 				return TwitterUser.create({
@@ -322,12 +320,10 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			}
 		})
 		.then( ( twitter_user ) => {
-//			console.log( "b" )
 			this_twitter_user = twitter_user;
 			return User.findOne( { twitter_user: twitter_user._id } );
 		})
 		.then( ( user ) => {
-//			console.log( "c" )
 
 			if ( ! user ) {
 				return User.create({
@@ -341,13 +337,11 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			}
 		})
 		.then( ( user ) => {
-//			console.log( "d" )
 			this_user = user;
 			if ( isRetweet( tweet ) || hasIgnoreFlag( tweet ) || isIgnoredUser( tweet ) ) {
 				throw new PromiseEndError();
 			}
 			else {
-//				console.log( "d2" )
 				let in_store_number = parseForInStoreReceipt( tweet.data.text );
 				let receipt = new Receipt();
 					receipt.date = new Date( tweet.data.created_at );
@@ -356,30 +350,24 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					receipt.twitter_user = this_twitter_user._id;
 
 				if ( in_store_number ) {
-//					console.log( "d2.1" )
 					receipt.type = 1;
 					receipt.number = in_store_number;
 					return receipt;
 				}
 				else {
-//					console.log( "d2.2" )
 					let drive_thru_number = parseForDriveThruReceipt( tweet.data.text );
 					if ( drive_thru_number ) {
-//										console.log( "d2.2.1" )
 						receipt.type = 2;
 						receipt.number = drive_thru_number;
 						return receipt;
 					}
 					else {
-//						console.log( "d2.2.2" )
 						throw new PromiseBreakError( "invalid number" );
 					}
 				}
 			}
 		})
 		.then( ( receipt ) => {
-//			console.log( "e" )
-//			console.log( "receipta >>", receipt )
 			this_receipt = receipt;
 			return Receipt.findOne({
 				number: receipt.number,
@@ -388,46 +376,37 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			});
 		})
 		.then( ( receipt ) => {
-//			console.log( "receiptb >>", receipt )
-//			console.log( "f" )
 			if ( receipt )
 				throw new PromiseBreakError( "receipt exists" );
 			else
 				return storeController.parseTweetForStore( tweet );
 		})
 		.then( ( store ) => {
-			console.log( "store", store )
 			if ( store )
 				this_receipt.store = store._id;
 			return this_receipt.save();
 		})
 		.then( () => {
-//			console.log( "h" )
 			return userController.updateUserTotals( this_user );
 		})
 		.then( ( totals ) => {
-//			console.log( "i" )
 			this_totals = totals;
 			return tweetQueueController.findQueue( { user: this_user._id, type: 1 } );
 		})
 		.then( ( tweet_queue ) => {
-//			console.log( "j" )
 			if ( ! tweet_queue && do_new_receipt_tweet && this_receipt.approved === 2 )
 				return createNewReceiptTweetParams( this_twitter_user.data.screen_name, tweet, this_receipt.number, this_totals.receipts.remaining );
 		})
 		.then( ( params ) => {
-//			console.log( "k" )
 			if ( params )
 				return tweetQueueController.addTweetToQueue( params, this_user._id, 2 );
 		})
 		.then(() => {
-//			console.log( "l" )
 
 			tweet.save().then(() => {
 				throw new PromiseEndError( "none remaining" );
 			}).catch( ( error ) => {
 				if ( error instanceof PromiseEndError ) {
-	//				console.log( error.message );
 				}
 				else {
 					throw error;
@@ -436,12 +415,11 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 		})
 		.catch( ( error ) => {
 			if ( error instanceof PromiseBreakError || error instanceof PromiseEndError ) {
-				console.log( error.message, tweet.data.text );
 				tweet.save().then(() => {
 					throw new PromiseEndError();
 				}).catch(( error ) => {
 					if ( error instanceof PromiseEndError ) {
-		//				console.log( error.message );
+
 					}
 					else {
 						throw error;

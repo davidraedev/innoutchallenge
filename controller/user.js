@@ -102,8 +102,6 @@ const findOrCreateUser = function( query, data ) {
 
 const updateUserTotals = function( user ) {
 
-	console.log( "updateUserTotals ", user.name );
-
 	return new Promise( ( resolve, reject ) => {
 
 		let totals = {
@@ -150,7 +148,6 @@ const updateUserTotals = function( user ) {
 
 					// in_store
 					if ( receipt.type === 1 ) {
-						console.log( "receipt.number", receipt.number, receipt.tweet )
 					
 						if ( receipts_list[ receipt.number ].amount === 0 ) {
 							totals.receipts.unique++;
@@ -200,10 +197,7 @@ const updateUserTotals = function( user ) {
 			})
 			.then( ( receipts ) => {
 
-				console.log( "receipts.length", receipts.length )
-
 				receipts.forEach( ( receipt ) => {
-					console.log( "receipt.store", receipt.store )
 
 					// popups
 					if ( receipt.popup ) {
@@ -238,7 +232,6 @@ const updateUserTotals = function( user ) {
 };
 
 const updateAllUsersTotals = function(){
-	console.log( "updateAllUsersTotals" );
 
 	return new Promise( ( resolve, reject ) => {
 

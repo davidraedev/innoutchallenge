@@ -55,7 +55,6 @@ const createReceipt = function( receipt_data, new_receipt_tweet ) {
 					}
 				})
 				.then( () => {
-					console.log( "Added tweet to queue" );
 					next();
 				})
 				.catch( ( error ) => {

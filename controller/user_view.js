@@ -117,7 +117,6 @@ exports.user_stores = function( request, response ) {
 				function getStore( id ) {
 					let store = false;
 					stores.some( ( temp_store ) => {
-						console.log( temp_store._id +" == "+ id );
 						if ( temp_store._id == id ) {
 							store = temp_store;
 							return true;
@@ -135,7 +134,6 @@ exports.user_stores = function( request, response ) {
 				let keys = Object.keys( stores_list );
 				keys.forEach( ( key ) => {
 					let number = getStore( key ).number;
-					console.log( number );
 					final_stores[ number ] = stores_list[ key ];
 				});
 				user.stores = final_stores;

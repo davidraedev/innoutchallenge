@@ -9,9 +9,6 @@ var refresh_user = function( user, callback ) {
 
 	TwitterUser.findOne( { _id: user.twitter_user }, function( error, twitter_user ) {
 
-		console.log( "twitter_user" );
-		console.log( twitter_user );
-
 		if ( error )
 			throw error;
 
@@ -24,12 +21,10 @@ var refresh_user = function( user, callback ) {
 		};
 
 		if ( twitter_user.oauth_token && twitter_user.oauth_secret ) {
-			console.log( "using saved twitter user credentials" );
 			client_params.access_token_key = twitter_user.oauth_token;
 			client_params.access_token_secret = twitter_user.oauth_secret;
 		}
 		else {
-			console.log( "no user credentials found, using ap bearer token" );
 			client_params.bearer_token = process.env.TWITTER_BEARER_TOKEN;
 		}
 
@@ -40,17 +35,12 @@ var refresh_user = function( user, callback ) {
 			if ( error )
 				return callback( error );
 
-			console.log( "twitter_user_object" );
-			console.log( twitter_user_object );
-
 			twitter_user.data = twitter_user_object;
 			twitter_user.last_update = new Date();
 			twitter_user.save( function( error ){
 
 				if ( error )
 					throw error;
-
-				console.log( "successfully updated twitter user" );
 
 			});
 

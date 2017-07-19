@@ -3,22 +3,24 @@
   "version": "1.0.0",
   "description": "Backend for the #innoutChallenge",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "setup": "node setup.js",
     "startdb": "mongod --config mongo.conf",
     "test": "mocha test/**.js",
-    "start": "nodemon server.js",
-    "get_stores": "node app/store/update_stores.js"
+    "dev": "nodemon server.js"
   },
-  "author": "daraeman",
-  "license": "MIT",
+  "author": "David Rae",
+  "license": "Apache-2.0",
   "dependencies": {
     "axios": "^0.16.2",
     "bluebird": "^3.5.0",
     "body-parser": "^1.17.2",
+    "cors": "^2.8.4",
     "dotenv": "^4.0.0",
     "express": "^4.15.2",
     "express-session": "^1.15.3",
+    "frontend": "file:../frontend_react",
     "innout_locations": "git+https://github.com/daraeman/innout_locations.git",
     "json": "^9.0.6",
     "mongodb": "^2.2.25",

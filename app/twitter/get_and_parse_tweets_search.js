@@ -2,8 +2,7 @@ var tweetController = require( "../../controller/tweet" );
 var db = require( "../db" );
 
 db.connect().then(() => {
-	//return tweetController.getTweetsFromSearchApp();
-	return {}
+	return tweetController.getTweetsFromSearchApp();
 })
 .then( ( vals ) => {
 	console.log( "[%s] tweets retrieved, [%s] tweets saved", vals.found, vals.saved );

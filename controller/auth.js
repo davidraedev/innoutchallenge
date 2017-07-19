@@ -62,6 +62,8 @@ const user_login_2 = function( request, response ) {
 const user_login_3 = function( request, response ) {
 
 	let oauth = makeOauth( "user" );
+	let success_redirect_url = "/";
+	let failure_redirect_url = "/";
 
 	if ( request.session.oauth ) {
 		request.session.oauth.verifier = request.query.oauth_verifier;
@@ -99,66 +101,53 @@ const user_login_3 = function( request, response ) {
 
 					request.session.oauth.access_token = oauth_access_token;
 					request.session.oauth.access_token_secret = oauth_access_token_secret;
-					TwitterUser.findOne(
-						{ "data.id_str": results.user_id },
-						function( error, twitter_user ){
 
-							if ( error )
-								throw error;
-
+					let this_twitter_user;
+					TwitterUser.findOne( { "data.id_str": results.user_id } )
+						.then( ( twitter_user ) => {
 							if ( twitter_user === null ) {
-								new TwitterUser( {
+								return TwitterUser.create( {
 									oauth_token: request.session.oauth.access_token,
 									oauth_secret: request.session.oauth.access_token_secret,
 									data: {
 										id_str: results.user_id,
-										screen_name: results.screen_name
-									}
-								}).save( function( error, twitter_user ){
-
-									if ( error )
-										throw error;
-
-									User.findOne( { twitter_user: twitter_user._id }, function( error, user ){
-
-										if ( error )
-											throw error;
-
-										if ( user === null ) {
-
-											new User( {
-												join_date: new Date(),
-												twitter_user: twitter_user._id,
-											}).save( function( error ){
-
-												if ( error )
-													throw error;
-
-											});
-										}
-
-									});
-
+										screen_name: results.screen_name,
+									},
 								});
-							}
-							else {
+							} else {
 								twitter_user.oauth_token = request.session.oauth.access_token;
 								twitter_user.oauth_secret = request.session.oauth.access_token_secret;
-								twitter_user.save( ( error ) => {
-									if ( error )
-										throw error;
-								});
+								return twitter_user.save();
 							}
-						}
-					);
-					response.send( "Authentication Successful" );
-					// response.redirect('/'); // You might actually want to redirect!
+						})
+						.then( ( twitter_user ) => {
+							this_twitter_user = twitter_user;
+							return User.findOne( { twitter_user: twitter_user._id } );
+						})
+						.then( ( user ) => {
+							if ( ! user ) {
+								return User.create({
+									join_date: new Date(),
+									twitter_user: this_twitter_user._id,
+								});
+							} else {
+								return user;
+							}
+						})
+						.then( ( user ) => {
+							response.redirect( success_redirect_url );
+						})
+						.catch( ( error ) => {
+							throw error;
+							//response.redirect( failure_redirect_url );
+						});
+
 				}
 			}
 		);
 	}
 	else {
-		response.redirect( "/login" );
+		response.redirect( "/signin" );
 	}
 };
 
@@ -291,7 +280,7 @@ const admin_login_3 = function( request, response ) {
 		);
 	}
 	else {
-		response.redirect( "/login" ); // Redirect to login page
+		response.redirect( "/signin" ); // Redirect to login page
 	}
 };
 
