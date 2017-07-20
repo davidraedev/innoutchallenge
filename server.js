@@ -76,7 +76,6 @@ passport.use(
 			TwitterUser.findOne({ "data.id_str": profile._json.id_str })
 				.then( ( twitter_user ) => {
 					if ( ! twitter_user ) {
-						console.log( "creating new TwitterUser" );
 						new_user = true;
 						return TwitterUser.create({
 							oauth_token: token,
@@ -86,7 +85,6 @@ passport.use(
 						});
 					}
 					else {
-						console.log( "updating old TwitterUser" );
 						twitter_user.oauth_token = token;
 						twitter_user.oauth_secret = secret;
 						twitter_user.last_update = new Date();
@@ -100,7 +98,6 @@ passport.use(
 				})
 				.then( ( user ) => {
 					if ( ! user ) {
-						console.log( "creating new User" );
 						new_user = true;
 						return User.create({
 							name: this_twitter_user.data.name,
@@ -110,19 +107,16 @@ passport.use(
 						});
 					}
 					else {
-						console.log( "old User" );
 						return user;
 					}
 				})
 				.then( ( user ) => {
 					this_user = user;
 					if ( new_user ) {
-						console.log( "updating totals" );
 						return userController.updateUserTotals( user );
 					}
 				})
 				.then( () => {
-					console.log( token, secret, profile._json );
 					return callback( null, profile );
 				})
 				.catch( ( error ) => {
@@ -145,12 +139,15 @@ app.use( passport.initialize() );
 app.use( passport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
 app.get( "/signin/return/:returnUrl", ( request, response, next ) => { request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next(); }, passport.authenticate( "twitter" ) );
 app.get( "/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.path; next(); }, passport.authenticate( "twitter" ) );
+app.get( "/signout", ( request, response, next ) => {
+	request.logout();
+	response.redirect( "/" );
+});
 app.get( "/auth/twitter/callback",
 	passport.authenticate(
 		"twitter",
 		{ failureRedirect: "/signin" }),
 		( request, response ) => {
-			console.log( "request.session.signinReturnUrl", request.session.signinReturnUrl );
 			let redirect = ( /^\/signin/.test( request.session.signinReturnUrl ) ) ? "/" : request.session.signinReturnUrl;
 			request.session.signinReturnUrl = null;
 			response.redirect( redirect );
@@ -206,10 +203,10 @@ function checkAuthenticationEndpoint( request, response, next ) {
 	return response.json( data );
 }
 
-app.post( "/api/users/list", checkAuthenticationApi, jsonParser, user_controller.users_list );
-app.post( "/api/user/receipts", checkAuthenticationApi, jsonParser, user_controller.user_instore_receipts );
-app.post( "/api/user/stores", checkAuthenticationApi, jsonParser, user_controller.user_stores );
-app.post( "/api/user/drivethru", checkAuthenticationApi, jsonParser, user_controller.user_drivethru_receipts );
+app.post( "/api/users/list", jsonParser, user_controller.users_list );
+app.post( "/api/user/receipts", jsonParser, user_controller.user_instore_receipts );
+app.post( "/api/user/stores", jsonParser, user_controller.user_stores );
+app.post( "/api/user/drivethru", jsonParser, user_controller.user_drivethru_receipts );
 
 app.post( "/auth/check", checkAuthenticationEndpoint );
 
