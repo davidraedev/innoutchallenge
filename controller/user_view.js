@@ -17,7 +17,7 @@ exports.users_list = function( request, response ) {
 	const skip = ( ( page - 1 ) * amount );
 	const limit = ( amount + 1 );
 
-	User.find( { state: 1 }, [ "name", "totals" ], { skip: skip, limit: limit }, ( error, users ) => {
+	User.find( { state: 1, "totals.receipts.unique": { $ne: 0 } }, [ "name", "totals" ], { skip: skip, limit: limit }, ( error, users ) => {
 
 		if ( error )
 			return response.status( 500 ).send( error );
