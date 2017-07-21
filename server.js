@@ -155,8 +155,8 @@ app.get( "/auth/twitter/callback",
 
 
 
-//app.use( "/", require( "./route/auth.js" ) );
-app.use( "/", require( "./route/admin.js" ) );
+app.use( "/", require( "./route/auth.js" ) );
+//app.use( "/", require( "./route/admin.js" ) );
 //app.use( "/", require( "./route/all.js" ) );
 
 

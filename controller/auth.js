@@ -152,7 +152,7 @@ const user_login_3 = function( request, response ) {
 };
 
 const admin_login = function( request, response ) {
-	response.render( "login", { login_url: "/admin/auth/twitter" } );
+	response.redirect( "/admin/auth/twitter" );
 };
 
 const admin_login_2 = function( request, response ) {
