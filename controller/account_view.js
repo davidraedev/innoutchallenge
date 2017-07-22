@@ -12,7 +12,7 @@ const get_account = function( request, response ) {
 };
 
 const update_account = function( request, response ) {
-	accountController.updateAccount( request.user._json.id_str, request.body.category, request.body.option, request.body.value )
+	accountController.updateAccount( request.user._json.id_str, request.body )
 		.then( ( user ) => {
 			response.json( user );
 		})

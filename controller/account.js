@@ -30,13 +30,15 @@ const getAccountFromTwitterID = function( twitter_user_twitter_id, return_full )
 
 };
 
-const updateAccount = function( twitter_user_twitter_id, category, option, value ) {
+const updateAccount = function( twitter_user_twitter_id, settings ) {
 
 	return new Promise( ( resolve, reject ) => {
 
 		getAccountFromTwitterID( twitter_user_twitter_id )
 			.then( ( user ) => {
-				user.settings[ category ][ option ] = value;
+				settings.forEach( ( setting ) => {
+					user.settings[ setting.category ][ setting.option ] = setting.value;
+				})
 				return user.save();
 			})
 			.then( ( user ) => {
