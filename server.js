@@ -173,6 +173,7 @@ app.use( "/", require( "./route/auth.js" ) );
 const bodyParser = require( "body-parser" );
 //const view_controller = require( "./controller/view" );
 const user_controller = require( "./controller/user_view" );
+const account_controller = require( "./controller/account_view" );
 //const store_controller = require( "./controller/store" );
 //const urlEncodedParser = bodyParser.urlencoded({ extended: false })
 const jsonParser = bodyParser.json();
@@ -210,6 +211,9 @@ app.post( "/api/user/drivethru", jsonParser, user_controller.user_drivethru_rece
 
 app.post( "/auth/check", checkAuthenticationEndpoint );
 
+app.post( "/api/account/get", checkAuthenticationApi, account_controller.get_account );
+app.post( "/api/account/set", checkAuthenticationApi, jsonParser, account_controller.update_account );
+app.post( "/api/account/delete", checkAuthenticationApi, account_controller.delete_account );
 
 
 
