@@ -12,7 +12,7 @@ app.use( cors( {
 var MongoDBStore = require( "connect-mongodb-session" )( session );
 
 var store = new MongoDBStore({
-	uri: "mongodb://127.0.0.1:27017/innoutchallenge_sessions",
+	uri: process.env.DB_URL + "/innoutchallenge_sessions",
 	collection: "userSessions",
 });
 
@@ -67,7 +67,7 @@ passport.use(
 		{
 			consumerKey: process.env.TWITTER_CONSUMER_KEY_USER,
 			consumerSecret: process.env.TWITTER_CONSUMER_SECRET_USER,
-			callbackURL: "http://127.0.0.1:3000/auth/twitter/callback"
+			callbackURL: process.env.BACKEND_URL + "/auth/twitter/callback"
 		},
 		( token, secret, profile, callback ) => {
 			let new_user = false;
@@ -134,21 +134,20 @@ passport.deserializeUser( ( obj, callback ) => {
 	callback ( null, obj );
 });
 
-
 app.use( passport.initialize() );
 app.use( passport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
 app.get( "/signin/return/:returnUrl", ( request, response, next ) => { request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next(); }, passport.authenticate( "twitter" ) );
-app.get( "/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.path; next(); }, passport.authenticate( "twitter" ) );
+app.get( "/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.headers.referer; next(); }, passport.authenticate( "twitter" ) );
 app.get( "/signout", ( request, response, next ) => {
 	request.logout();
-	response.redirect( "/" );
+	response.redirect( process.env.FRONTEND_URL );
 });
 app.get( "/auth/twitter/callback",
 	passport.authenticate(
 		"twitter",
 		{ failureRedirect: "/signin" }),
 		( request, response ) => {
-			let redirect = ( /^\/signin/.test( request.session.signinReturnUrl ) ) ? "/" : request.session.signinReturnUrl;
+			let redirect = ( /^\/signin/.test( request.session.signinReturnUrl ) ) ? process.env.FRONTEND_URL : request.session.signinReturnUrl;
 			request.session.signinReturnUrl = null;
 			response.redirect( redirect );
 		});
@@ -229,14 +228,14 @@ if ( process.env.NODE_ENV == "production" ) {
 
 else {
 	app.get( "/", ( request, response ) => {
-		response.redirect( 301, "http://127.0.0.1:8080" + request.originalUrl );
+		response.redirect( 301, process.env.FRONTEND_URL + request.originalUrl );
 	});
 }
 
 db.connect().then( () => {
 
-	app.listen( process.env.BACKEND_PORT_WEB, function(){
-		console.log( "Server started at http://127.0.0.1:"+ process.env.BACKEND_PORT_WEB );
+	app.listen( process.env.BACKEND_PORT, function(){
+		console.log( "Server started at "+ process.env.BACKEND_URL );
 	});
 
 }).catch( ( error ) => {

@@ -7,7 +7,7 @@ const rand = function( min, max ) {
 }
 
 const createUserUrl = function( screen_name ) {
-	return "https://"+ process.env.DOMAIN +"/@"+ screen_name;
+	return process.env.FRONTEND_DOMAIN +"/@"+ screen_name;
 }
 
 module.exports = {
