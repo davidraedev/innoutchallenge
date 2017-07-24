@@ -8,6 +8,7 @@ exports.users_list = function( request, response ) {
 
 	const amount = parseInt( request.body.amount );
 	const page = parseInt( request.body.page );
+	const search = request.body.search || "";
 
 	if ( ! amount )
 		return response.status( 500 ).send( "Invalid amount" );
@@ -17,7 +18,11 @@ exports.users_list = function( request, response ) {
 	const skip = ( ( page - 1 ) * amount );
 	const limit = ( amount + 1 );
 
-	User.find( { state: 1, "totals.receipts.unique": { $ne: 0 } }, [ "name", "totals" ], { skip: skip, limit: limit }, ( error, users ) => {
+	let query = { state: 1, "totals.receipts.unique": { $ne: 0 } };
+	if ( search.length )
+		query.name = new RegExp( "^" + search, "i" );
+
+	User.find( query, [ "name", "totals" ], { skip: skip, limit: limit }, ( error, users ) => {
 
 		if ( error )
 			return response.status( 500 ).send( error );
@@ -34,6 +39,7 @@ exports.users_list = function( request, response ) {
 			currentPage: page,
 			hasNextPage: has_next_page,
 			hasPreviousPage: ( page > 1 ),
+			searchText: search,
 		};
 
 		return response.send( JSON.stringify( data ) );
