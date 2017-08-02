@@ -1,8 +1,14 @@
 const Store = require( "../model/store" );
 const TwitterPlace = require( "../model/twitter_place" );
-const db = require( "../app/db" );
+const Tweet = require( "../model/tweet" );
+const Receipt = require( "../model/receipt" );
+const Utils = require( "./utils" );
+const innoutLocations = require( "innout_locations" );
+const fs = require( "fs" );
 
-const ObjectId = db.mongoose.Schema.Types.ObjectId;
+const ObjectId = require( "mongoose" ).Schema.Types.ObjectId;
+
+const cached_stores_file = "data/stores.json";
 
 const findStoreNearCoords = function( latitude, longitude ) {
 
@@ -232,9 +238,326 @@ const parseTweetsForStores = function( tweets ) {
 
 
 
+/*
+
+Format of the In-N-Out JSON
+
+[ {
+	"StoreNumber": 303,
+	"Name": "Alameda",
+	"StreetAddress": "555 Willie Stargell Ave.",
+	"City": "Alameda",
+	"State": "CA",
+	"ZipCode": 94501,
+	"Latitude": 37.78372,
+	"Longitude": -122.27728,
+	"Distance": 7951.76,
+	"DriveThruHours": "10:30 a.m. - 1:00 a.m.",
+	"DiningRoomHours": "10:30 a.m. - 1:00 a.m.",
+	"OpenDate": "2015-05-14T00:00:00",
+	"ImageUrl": "http://www.in-n-out.com/ino-images/default-source/location-store-images/store_303.png",
+	"EnglishApplicationUrl": "https://wfa.kronostm.com/index.jsp?locale=en_US&INDEX=0&applicationName=InNOutBurgerNonReqExt&LOCATION_ID=60388278526&SEQ=locationDetails",
+	"SpanishApplicationUrl": "https://wfa.kronostm.com/index.jsp?locale=es_PR&INDEX=0&applicationName=InNOutBurgerNonReqExt&LOCATION_ID=60388278526&SEQ=locationDetails",
+	"PayRate": null,
+	"EmploymentNotes": [],
+	"ShowSeparatedHours": false,
+	"DiningRoomNormalHours": [],
+	"DriveThruNormalHours": [],
+	"HasDiningRoom": true,
+	"HasDriveThru": true,
+	"Directions": null,
+	"UnderRemodel": false,
+	"UseGPSCoordinatesForDirections": false
+}, ]
+
+*/
+
+
+
+/*
+
+	parseHours
+
+	The API does not list out the extended weekend hours.
+	Nor the full extend of non-standard hours.
+
+	We mark them as non-standard and will have to manually
+	grab them from http://locations.in-n-out.com/STORENUMBER,
+	which does list out the full hours.
+
+*/
+function parseHours( hours_string ) {
+
+	let days = [
+		"sunday",
+		"monday",
+		"tuesday",
+		"wednesday",
+		"thursday",
+		"friday",
+		"saturday"
+	];
+
+	let all_hours = {};
+	days.forEach( ( day ) => {
+
+		let hours = {};
+
+		// regular hours
+		if ( hours_string == "10:30 a.m. - 1:00 a.m." ) {
+			hours.start = 1030;
+			if ( day === "friday" || day === "saturday" )
+				hours.end = 130;
+			else
+				hours.end = 100;
+		}
+		// non-standard hours
+		else {
+			hours.manual = true;
+		}
+
+		all_hours[ day ] = hours;
+
+	});
+
+	return all_hours;
+}
+
+function parseLocation( data ) {
+
+	let location = {};
+		location.latitude = data.Latitude;
+		location.longitude = data.Longitude;
+		location.address = data.StreetAddress;
+		location.city = data.City;
+		location.state = data.State;
+		location.zipcode = Utils.leftPad( String( data.ZipCode ), 5, "0" );
+		location.country = "US";
+
+	return location;
+}
+
+function parseStore( data ) {
+
+	let store = {};
+		store.number = data.StoreNumber;
+		store.name = data.Name;
+		store.location = parseLocation( data );
+		store.dining_room_hours = parseHours( data.DiningRoomHours, "dining_room" );
+		store.drive_thru_hours = parseHours( data.DriveThruHours, "drive_thru" );
+
+	// stores without an open date aren't open yet
+	let open_date = data.OpenDate || "1900-01-01";
+	store.opened = Date.parse( open_date.substring( 0, 10 ) );
+	store.under_remodel = data.UnderRemodel;
+	store.dining_room = data.HasDiningRoom;
+	store.drive_thru = data.HasDriveThru;
+	store.remote_image_url = data.ImageUrl;
+
+	store.loc = [ store.location.longitude, store.location.latitude ];
+
+	return store;
+}
+
+const updateStores = function() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		innoutLocations.get().then( ( json ) => {
+
+			fs.writeFile( cached_stores_file, JSON.stringify( json ), ( error ) => {
+				if ( error )
+					throw error;
+			});
+
+			let remaining = json.data.length;
+			json.data.forEach( ( raw_store ) => {
+				let store = parseStore( raw_store );
+				Store.update(
+					{ number: store.number },
+					{ "$set": store },
+					{ upsert: true, setDefaultsOnInsert: true },
+					( error ) => {
+						if ( error )
+							throw error;
+						if ( --remaining === 0 )
+							resolve();
+					}
+				);
+			});
+
+		}).catch( ( error ) => {
+			if ( error )
+				reject( error );
+		});
+	});
+};
+
+const findStoresFromTweets = function() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		findStoresFromTweetText()
+			.then( () => {
+				return findStoresFromTweetLocation();
+			})
+			.then( () => {
+				resolve();
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
+
+	});
+};
+
+const findStoresFromTweetText = function() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		Tweet.find( { "data.text": /#store\d+/ })
+			.then( ( tweets ) => {
+
+				if ( ! tweets.length )
+					return reject( "No Tweets found." );
+
+				let tweets_remaining = tweets.length;
+				tweets.forEach( ( tweet ) => {
+					--tweets_remaining;
+
+					if ( ! tweet.receipt ) {
+						console.log( "No receipt id, skipping tweet" );
+						if ( tweets_remaining === 0 )
+							resolve();
+						return;
+					}
+
+					let matches;
+					let this_receipt;
+					Receipt.findOne( { tweet: tweet._id })
+						.then( ( receipt ) => {
+
+							if ( ! receipt ) {
+								console.log( "Receipt not found" );
+								return;
+							}
+
+							if ( receipt.store ) {
+								console.log( "Store already linked" );
+								return;
+							}
+
+							matches = tweet.data.text.match( /#store(\d+)/ );
+							if ( ! matches ) {
+								console.log( "Tweet has no store hashtag" );
+								return;
+							}
+
+							this_receipt = receipt;
+
+							return Store.findOne( { number: matches[1] } );
+
+						})
+						.then( ( store ) => {
+
+							if ( ! store ) {
+								console.log( "Store not found [%s]", matches[1] );
+								return;
+							}
+
+							this_receipt.store = store._id;
+							return this_receipt.save();
+						})
+						.then( () => {
+							if ( tweets_remaining === 0 )
+								resolve();
+						})
+						.catch( ( error ) => {
+							throw error;
+						});
+				});
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
+
+	});
+};
+
+const findStoresFromTweetLocation = function() {
+
+	return new Promise( ( resolve, reject ) => {
+
+		Receipt.find( { store: { $exists: false } } )
+			.then ( ( receipts ) => {
+
+				if ( ! receipts.length )
+					throw new Error( "No Receipts found." );
+
+				let receipts_remaining = receipts.length;
+				receipts.forEach( ( receipt ) => {
+					--receipts_remaining;
+
+					if ( ! receipt.tweet ) {
+						console.log( "No tweet id, skipping receipt" );
+						return;
+					}
+
+					let this_tweet;
+					Tweet.findById( receipt.tweet )
+						.then( ( tweet ) => {
+
+							if ( ! tweet ) {
+								console.log( "Tweet not found" );
+								return;
+							}
+
+							if ( ! tweet.data.coordinates ) {
+								console.log( "Tweet has no coordinates" );
+								return;
+							}
+
+							return findStoreNearCoords( tweet.data.coordinates.coordinates[1], tweet.data.coordinates.coordinates[0] );
+						
+						})
+						.then( ( store ) => {
+
+							if ( ! store ) {
+								if ( this_tweet )
+									console.log( "Store not found [%s] [%s] [%s]", this_tweet.data.coordinates.coordinates[1], this_tweet.data.coordinates.coordinates[0], "https://twitter.com/"+ this_tweet.data.user.screen_name +"/statuses/"+ this_tweet.data.id_str );
+								return;
+							}
+
+							receipt.store = store._id;
+
+							return receipt.save();
+
+						})
+						.then( () => {
+							if ( receipts_remaining === 0 )
+								resolve();
+						})
+						.catch( ( error ) => {
+							throw error;
+						});
+
+				});
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
+
+	});
+};
+
+
 module.exports.findStoreNearCoords = findStoreNearCoords;
 module.exports.parseTweetForStore = parseTweetForStore;
 module.exports.parseTweetsForStores = parseTweetsForStores;
 module.exports.findStore = findStore;
 module.exports.findStores = findStores;
 module.exports.saveTwitterPlace = saveTwitterPlace;
+module.exports.updateStores = updateStores;
+module.exports.findStoresFromTweets = findStoresFromTweets;
+module.exports.findStoresFromTweetText = findStoresFromTweetText;
+module.exports.findStoresFromTweetLocation = findStoresFromTweetLocation;

@@ -1,4 +1,4 @@
-const Twitter = require( "twitter" );
+const TwitterRequestQueue = require( "twitter-request-queue-node" );
 const TwitterPlace = require( "../model/twitter_place" );
 const Tweet = require( "../model/tweet" );
 const Store = require( "../model/store" );
@@ -9,9 +9,9 @@ const TwitterUser = require( "../model/twitter_user" );
 const wordToNumber = require( "word-to-number-node" );
 const w2n = new wordToNumber();
 const storeController = require( "./store" );
-const tweetQueueController = require( "./tweet_queue" );
 const userController = require( "./user" );
-const utils = require( "../app/utils" );
+const tweetQueueController = require( "./tweet_queue" );
+const utils = require( "./utils" );
 
 function PromiseBreakError( message ) {
 	this.name = "PromiseBreakError";
@@ -42,7 +42,7 @@ const getTweetsFromSearchApp = function() {
 				if ( tweet )
 					search_params.since_id = tweet.data.id_str;
 
-				let client = new Twitter({
+				let client = new TwitterRequestQueue({
 					consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
 					consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
 					bearer_token: process.env.TWITTER_BEARER_TOKEN_USER,
@@ -137,7 +137,7 @@ const getTweetsFromSearchUser = function( user ) {
 			if ( twitter_user === null )
 				return reject( "Failed to find TwitterUser" );
 
-			let client = new Twitter({
+			let client = new TwitterRequestQueue({
 				consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
 				consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
 				access_token_key: twitter_user.oauth_token,
@@ -190,7 +190,7 @@ const getTweetsFromLookupApp = function( status_ids_array ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		let client = new Twitter({
+		let client = new TwitterRequestQueue({
 			consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
 			consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
 			bearer_token: process.env.TWITTER_BEARER_TOKEN_USER,
@@ -266,7 +266,7 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 				if ( ! tweets.length )
 					throw new PromiseEndError( "no tweets" );
 
-				let remaining = tweets.length;
+				//let remaining = tweets.length;
 				let i = 0;
 				let end = ( tweets.length - 1 );
 				function parseTweetSync() {
@@ -430,7 +430,7 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 				throw error;
 			}
 		});
-}
+};
 
 const sendTweet = function( twitter_user, tweet ) {
 
@@ -439,7 +439,7 @@ const sendTweet = function( twitter_user, tweet ) {
 		if ( ! twitter_user.oauth_token_admin || ! twitter_user.oauth_secret_admin )
 			return reject( "Invalid credentials" );
 
-		let client = new Twitter({
+		let client = new TwitterRequestQueue({
 			consumer_key: process.env.TWITTER_CONSUMER_KEY_ADMIN,
 			consumer_secret: process.env.TWITTER_CONSUMER_SECRET_ADMIN,
 			access_token_key: twitter_user.oauth_token_admin,

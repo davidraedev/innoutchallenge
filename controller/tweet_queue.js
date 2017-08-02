@@ -1,3 +1,4 @@
+const TwitterRequestQueue = require( "twitter-request-queue-node" );
 const TweetQueue = require( "../model/tweet_queue" );
 
 const addTweetToQueue = function( params, user_id, type, wait_until ) {

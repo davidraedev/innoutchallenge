@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "setup": "node setup.js",
+    "setup": "node app/setup.js",
     "startdb": "mongod --config mongo.conf",
     "start": "node server.js",
     "test": "mocha test/**.js",
@@ -22,6 +22,7 @@
     "express": "^4.15.2",
     "express-session": "^1.15.3",
     "frontend": "file:../frontend_react",
+    "fs.promised": "^3.0.0",
     "innout_locations": "git+https://github.com/daraeman/innout_locations.git",
     "json": "^9.0.6",
     "mongodb": "^2.2.25",
@@ -34,6 +35,7 @@
     "pug": "^2.0.0-rc.1",
     "sinon": "^2.2.0",
     "twitter": "^1.7.0",
+    "twitter-request-queue-node": "^1.0.1",
     "word-to-number-node": "git+https://github.com/daraeman/word-to-number-node.git"
   },
   "devDependencies": {

@@ -1,5 +1,4 @@
 const User = require( "../model/user" );
-const receiptController = require( "./receipt" );
 const storeController = require( "./store" );
 
 const Receipt = require( "../model/receipt" );
@@ -183,7 +182,7 @@ const updateUserTotals = function( user ) {
 
 				if ( ! stores.length ) {
 					console.log( "No Stores found" );
-					return;
+					return [];
 				}
 
 				totals.stores.remaining = stores.length;
@@ -243,22 +242,23 @@ const updateAllUsersTotals = function(){
 					resolve();
 				}
 
-				let remaining = users.length;
 				let i = 0;
 				let end = ( users.length - 1 );
-				function updateUserTotalsSync() {
-					if ( i === end )
+				function updateUserTotalsLoop() {
+
+					if ( i >= end )
 						return resolve();
+
 					updateUserTotals( users[ i++ ] )
 						.then( () => {
-							updateUserTotalsSync();
+							updateUserTotalsLoop();
 						})
 						.catch( ( error ) => {
 							throw error;
 						});
 				}
 
-				updateUserTotalsSync();
+				updateUserTotalsLoop();
 			})
 			.catch( ( error ) => {
 				reject( error );

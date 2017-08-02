@@ -10,7 +10,15 @@ const createUserUrl = function( screen_name ) {
 	return process.env.FRONTEND_DOMAIN +"/@"+ screen_name;
 }
 
+const leftPad = function( num, size, char ) {
+	var s = num + "";
+	while ( s.length < size )
+		s = char + s;
+	return s;
+}
+
 module.exports = {
 	rand: rand,
 	createUserUrl: createUserUrl,
+	leftPad: leftPad,
 };
