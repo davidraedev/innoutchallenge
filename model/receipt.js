@@ -1,9 +1,9 @@
-var mongoose = require( "mongoose" );
-var Schema = mongoose.Schema;
+const mongoose = require( "mongoose" );
+const Schema = mongoose.Schema;
 
-var ObjectId = mongoose.Schema.Types.ObjectId;
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
-var ReceiptSchema = new Schema({
+const ReceiptSchema = new Schema({
 	number: Number,
 	date: Date,
 	store: { type: ObjectId, ref: "Store" },

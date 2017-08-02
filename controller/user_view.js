@@ -2,7 +2,6 @@ const User = require( "../model/user" );
 const Receipt = require( "../model/receipt" );
 const Store = require( "../model/store" );
 const userController = require( "./user" );
-const ObjectId = require( "mongoose" ).Types.ObjectId;
 
 exports.users_list = function( request, response ) {
 
@@ -48,12 +47,22 @@ exports.users_list = function( request, response ) {
 
 };
 
+function getUserLatestReceipt( search_params, keys ) {
+	if ( keys )
+		return Receipt.findOne( search_params, keys ).populate( "tweet store" ).sort( { date: "desc" } ).limit( 1 ).lean().exec();
+	else
+		return Receipt.findOne( search_params ).populate( "tweet store" ).sort( { date: "desc" } ).limit( 1 ).lean().exec();
+}
+
 exports.user_instore_receipts = function( request, response ) {
 
 	const name = request.body.name;
+	const return_latest_receipt = request.body.return_latest_receipt;
 
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
+
+	let search_params = { type: 1, approved: { $in: [ 1, 2 ] } };
 
 	let this_user;
 	userController.searchUser( name )
@@ -61,8 +70,9 @@ exports.user_instore_receipts = function( request, response ) {
 			return response.status( 404 ).send( error );
 		})
 		.then( ( user ) => {
+			search_params.user = user._id;
 			this_user = user;
-			return Receipt.find({ user: user._id, type: 1, approved: { $in: [ 1, 2 ] } }).sort( { date: "desc" } ).lean();
+			return Receipt.find( search_params ).sort( { date: "desc" } ).lean();
 		})
 		.then( ( receipts ) => {
 
@@ -78,8 +88,16 @@ exports.user_instore_receipts = function( request, response ) {
 
 			this_user.receipts = receipts_list;
 
-			return response.send( JSON.stringify( this_user ) );
+			if ( return_latest_receipt )
+				return getUserLatestReceipt( search_params );
+			else
+				return;
 
+		})
+		.then( ( latest_receipt ) => {
+			if ( latest_receipt )
+				this_user.latest_receipt = latest_receipt;
+			return response.send( JSON.stringify( this_user ) );
 		})
 		.catch( ( error ) => {
 			return response.status( 500 ).send( error );
@@ -89,98 +107,128 @@ exports.user_instore_receipts = function( request, response ) {
 exports.user_stores = function( request, response ) {
 
 	const name = request.body.name;
+	const return_latest_receipt = request.body.return_latest_receipt;
 
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
-	userController.searchUser( name ).then( ( user ) => {
+	let search_params = {
+		approved: 1,
+		store: { $ne: null },
+		type: { $in: [ 1, 2, 3 ] }
+	};
 
-		Store.find({ popup: { $exists: false } }, ( error, stores ) => {
-
-			if ( error )
-				throw error;
+	let this_user;
+	let this_stores;
+	let stores_list = {};
+	userController.searchUser( name )
+		.catch( ( error ) => {
+			return response.status( 404 ).send( error );
+		})
+		.then( ( user ) => {
+			search_params.user = user._id;
+			this_user = user;
+			return Store.find({ popup: { $exists: false } }).lean();
+		})
+		.catch( ( error ) => {
+			throw error;
+		})
+		.then( ( stores ) => {
 
 			if ( ! stores.length ) {
 				console.log( "No Stores found" );
-				return;
+				return response.send( JSON.stringify( this_user ) );
 			}
 
-			let stores_list = {};
+			this_stores = stores;
 			stores.forEach( ( store ) => {
 				stores_list[ store._id ] = { amount: 0 };
 			});
 
-			Receipt.find( {
-				user: new ObjectId( user._id ),
-				approved: 1,
-				store: { $ne: null },
-				type: { $in: [ 1, 2, 3 ] }
-			}, ( error, receipts ) => {
+			return Receipt.find( search_params ).lean();
+		})
+		.then( ( receipts ) => {
 
-				if ( error )
-					throw error;
-
-				function getStore( id ) {
-					let store = false;
-					stores.some( ( temp_store ) => {
-						if ( temp_store._id == id ) {
-							store = temp_store;
-							return true;
-						}
-					});
-					return store;
-				}
-
-				receipts.forEach( ( receipt ) => {
-					stores_list[ receipt.store ].amount++;
+			function getStore( id ) {
+				let store = false;
+				this_stores.some( ( temp_store ) => {
+					if ( temp_store._id == id ) {
+						store = temp_store;
+						return true;
+					}
 				});
+				return store;
+			}
 
-				let final_stores = {};
+			receipts.forEach( ( receipt ) => {
+				stores_list[ receipt.store ].amount++;
+			});
 
-				let keys = Object.keys( stores_list );
-				keys.forEach( ( key ) => {
-					let number = getStore( key ).number;
-					final_stores[ number ] = stores_list[ key ];
-				});
-				user.stores = final_stores;
+			let final_stores = {};
 
-				return response.send( JSON.stringify( user ) );
+			let keys = Object.keys( stores_list );
+			keys.forEach( ( key ) => {
+				let number = getStore( key ).number;
+				final_stores[ number ] = stores_list[ key ];
+			});
+			this_user.stores = final_stores;
 
-			}).lean();
+			if ( return_latest_receipt )
+				return getUserLatestReceipt( search_params );
+			else
+				return;
 
-		}).lean();
-
-	}).catch( ( error ) => {
-		return response.status( 404 ).send( error );
-	});
+		})
+		.then( ( latest_receipt ) => {
+			if ( latest_receipt )
+				this_user.latest_receipt = latest_receipt;
+			return response.send( JSON.stringify( this_user ) );
+		})
+		.catch( ( error ) => {
+			return response.status( 500 ).send( error );
+		});
 };
 
 exports.user_drivethru_receipts = function( request, response ) {
 
 	const name = request.body.name;
+	const return_latest_receipt = request.body.return_latest_receipt;
 
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
+	let search_params = { type: 3, approved: 1 };
+
+	let this_user;
 	userController.searchUser( name )
-		.then( ( user ) => {
-
-			Receipt.find( { user: new ObjectId( user._id ), type: 3, approved: 1 }, [ "number" ], ( error, receipts ) => {
-
-				if ( error )
-					return response.status( 500 ).send( error );
-
-				if ( ! receipts )
-					receipts = [];
-
-				user.drivethru = receipts;
-
-				return response.send( JSON.stringify( user ) );
-
-			});
-
-		}).catch( ( error ) => {
+		.catch( ( error ) => {
 			return response.status( 404 ).send( error );
+		})
+		.then( ( user ) => {
+			search_params.user = user._id;
+			this_user = user;
+			return Receipt.find( search_params, [ "number" ] ).lean();
+		})
+		.then( ( receipts ) => {
+
+			if ( ! receipts )
+				receipts = [];
+
+			this_user.drivethru = receipts;
+
+			if ( return_latest_receipt )
+				return getUserLatestReceipt( search_params );
+			else
+				return;
+
+		})
+		.then( ( latest_receipt ) => {
+			if ( latest_receipt )
+				this_user.latest_receipt = latest_receipt;
+			return response.send( JSON.stringify( this_user ) );
+		})
+		.catch( ( error ) => {
+			return response.status( 500 ).send( error );
 		});
 
 };

@@ -12,24 +12,9 @@ const storeController = require( "./store" );
 const userController = require( "./user" );
 const tweetQueueController = require( "./tweet_queue" );
 const utils = require( "./utils" );
+const PromiseBreakError = require( "./error/PromiseBreakError" );
+const PromiseEndError = require( "./error/PromiseEndError" );
 
-function PromiseBreakError( message ) {
-	this.name = "PromiseBreakError";
-	this.message = message || "Breaking out of Promise Chain";
-	this.stack = ( new Error() ).stack;
-}
-PromiseBreakError.prototype = Object.create( Error.prototype );
-PromiseBreakError.prototype.constructor = PromiseBreakError;
-
-function PromiseEndError( message ) {
-	this.name = "PromiseEndError";
-	this.message = message || "Ending Promise";
-	this.stack = ( new Error() ).stack;
-}
-PromiseBreakError.prototype = Object.create( Error.prototype );
-PromiseBreakError.prototype.constructor = PromiseEndError;
-
-// this won't exit immediately if it error in the foreach, it'll continue the loop
 const getTweetsFromSearchApp = function() {
 
 	return new Promise( ( resolve, reject ) => {
@@ -266,7 +251,6 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 				if ( ! tweets.length )
 					throw new PromiseEndError( "no tweets" );
 
-				//let remaining = tweets.length;
 				let i = 0;
 				let end = ( tweets.length - 1 );
 				function parseTweetSync() {
@@ -709,7 +693,6 @@ module.exports.getLatestSearchTweetFromDb = getLatestSearchTweetFromDb;
 module.exports.getTweetsFromSearchUser = getTweetsFromSearchUser;
 module.exports.getTweetsFromLookupApp = getTweetsFromLookupApp;
 module.exports.parseTweets = parseTweets;
-//module.exports.parseTweet = parseTweet;
 module.exports.sendTweet = sendTweet;
 module.exports.createNewReceiptTweetText = createNewReceiptTweetText;
 module.exports.createNewReceiptTweetParams = createNewReceiptTweetParams;
