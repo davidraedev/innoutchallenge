@@ -9,6 +9,8 @@ app.use( cors( {
 	credentials: true,
 }) );
 
+app.disable( "x-powered-by" );
+
 var MongoDBStore = require( "connect-mongodb-session" )( session );
 
 var store = new MongoDBStore({
