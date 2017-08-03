@@ -11,6 +11,8 @@ app.use( cors( {
 
 app.disable( "x-powered-by" );
 
+app.use( "/img", express.static( "public/img" ) );
+
 var MongoDBStore = require( "connect-mongodb-session" )( session );
 
 var store = new MongoDBStore({

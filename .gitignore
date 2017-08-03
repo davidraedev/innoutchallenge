@@ -9,5 +9,6 @@ data/old_site/*
 data/stores.json
 log/*
 !.gitkeep
+public/img/src/
 
 *.DS_Store
