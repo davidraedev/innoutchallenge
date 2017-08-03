@@ -528,6 +528,8 @@ const findStoresFromTweetLocation = function() {
 								return;
 							}
 
+							console.log( "store", store )
+
 							receipt.store = store._id;
 
 							return receipt.save();

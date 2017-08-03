@@ -12,8 +12,8 @@ const storeController = require( "./store" );
 const userController = require( "./user" );
 const tweetQueueController = require( "./tweet_queue" );
 const utils = require( "./utils" );
-const PromiseBreakError = require( "./error/PromiseBreakError" );
-const PromiseEndError = require( "./error/PromiseEndError" );
+const PromiseBreakError = require( "../app/error/PromiseBreakError" );
+const PromiseEndError = require( "../app/error/PromiseEndError" );
 
 const getTweetsFromSearchApp = function() {
 
@@ -357,6 +357,7 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 				number: receipt.number,
 				date: receipt.date,
 				user: receipt.user,
+				approved: ( this_user.state === 1 ) ? 2 : 0,
 			});
 		})
 		.then( ( receipt ) => {

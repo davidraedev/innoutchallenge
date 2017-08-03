@@ -21,29 +21,31 @@ exports.users_list = function( request, response ) {
 	if ( search.length )
 		query.name = new RegExp( "^" + search, "i" );
 
-	User.find( query, [ "name", "totals" ], { skip: skip, limit: limit }, ( error, users ) => {
+	User.find( query, [ "name", "totals" ], { skip: skip, limit: limit } ).sort({ "totals.receipts.unique": "desc" }).lean()
+		.then( ( users ) => {
 
-		if ( error )
+			if ( ! users.length )
+				return response.send( JSON.stringify( [] ) );
+	     
+			const has_next_page = ( users.length === limit );
+
+			if ( users.length > amount )
+				users.splice( [ users.length - 1 ], 1 );
+
+			const data = {
+				users: users,
+				currentPage: page,
+				hasNextPage: has_next_page,
+				hasPreviousPage: ( page > 1 ),
+				searchText: search,
+			};
+
+			return response.send( JSON.stringify( data ) );
+
+		})
+		.catch( ( error ) => {
 			return response.status( 500 ).send( error );
-
-		if ( ! users.length )
-			return response.send( JSON.stringify( [] ) );
-     
-		const has_next_page = ( users.length === limit );
-
-		users.splice( [ users.length - 1 ], 1 );
-
-		const data = {
-			users: users,
-			currentPage: page,
-			hasNextPage: has_next_page,
-			hasPreviousPage: ( page > 1 ),
-			searchText: search,
-		};
-
-		return response.send( JSON.stringify( data ) );
-
-	}).sort({ "totals.receipts.unique": "desc" }).lean();
+		});
 
 };
 

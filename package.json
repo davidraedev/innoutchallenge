@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "setup": "node app/setup.js",
+    "setup": "node app/init/setup.js",
     "startdb": "mongod --config mongo.conf",
     "start": "node server.js",
     "test": "mocha test/**.js",

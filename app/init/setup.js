@@ -9,7 +9,7 @@ const userController = require( "../../controller/user" );
 const mongo_log = "log/mongo.log";
 const env_file = ".env";
 const env_template = ".env.sample";
-const use_cache = true;
+const use_cache = false;
 
 // check mongo log exists
 fs.access( mongo_log, fs.constants.F_OK | fs.constants.W_OK )
