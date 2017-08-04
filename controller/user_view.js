@@ -21,7 +21,7 @@ exports.users_list = function( request, response ) {
 	if ( search.length )
 		query.name = new RegExp( "^" + search, "i" );
 
-	User.find( query, [ "name", "totals" ], { skip: skip, limit: limit } ).sort({ "totals.receipts.unique": "desc" }).lean()
+	User.find( query, [ "name", "totals", "settings.avatar" ], { skip: skip, limit: limit } ).sort({ "totals.receipts.unique": "desc" }).lean()
 		.then( ( users ) => {
 
 			if ( ! users.length )

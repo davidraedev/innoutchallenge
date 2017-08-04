@@ -1,5 +1,6 @@
 const User = require( "../model/user" );
 const storeController = require( "./store" );
+const twitterUtils = require( "./twitter_utils" );
 
 const Receipt = require( "../model/receipt" );
 
@@ -34,8 +35,12 @@ const createUser = function( user_data ) {
 		if ( user_data.join_date )
 			data.join_date = user_data.join_date;
 
-		if ( user_data.twitter_user )
+		if ( user_data.twitter_user ) {
 			data.twitter_user = user_data.twitter_user;
+			if ( user_data.twitter_user.profile_image_url_https ) {
+				data.settings = { avatar: twitterUtils.convertProfileImageUrl( user_data.twitter_user.profile_image_url_https, "full" ) };
+			}
+		}
 
 		User.create( data, ( error, user ) => {
 

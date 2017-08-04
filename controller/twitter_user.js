@@ -1,14 +1,15 @@
 const Twitter = require( "twitter-request-queue-node" );
 const TwitterUser = require( "../model/twitter_user" );
+const User = require( "../model/user" );
 const PromiseEndError = require( "../app/error/PromiseEndError" );
 require( "dotenv" ).config();
 
-const update_user_older_than_days = 0.01;
+const update_user_older_than_days = 0.00001;
 
-function updateUser( user, data ) {
-	user.data = data;
-	user.last_update = new Date();
-	return user.save();
+function updateTwitterUser( twitter_user, data ) {
+	twitter_user.data = data;
+	twitter_user.last_update = new Date();
+	return twitter_user.save();
 }
 
 const refresh_user = function( user, callback ) {
@@ -41,7 +42,7 @@ const refresh_user = function( user, callback ) {
 			if ( error )
 				return callback( error );
 
-			updateUser( twitter_user, twitter_user_object )
+			updateTwitterUser( twitter_user, twitter_user_object )
 				.catch( ( error ) => {
 					throw error;
 				});
@@ -183,6 +184,10 @@ const updateTwitterUsers = function( limit ) {
 			.then( ( twitter_user_objects ) => {
 
 				let remaining_twitter_user_objects = twitter_user_objects.length;
+
+				if ( ! remaining_twitter_user_objects )
+					return resolve( "No twitter users returned" );
+
 				twitter_user_objects.forEach( ( twitter_user_object ) => {
 
 					let twitter_user;
@@ -206,7 +211,24 @@ const updateTwitterUsers = function( limit ) {
 
 					twitter_user.state = 1;
 
-					updateUser( twitter_user, twitter_user_object )
+					updateTwitterUser( twitter_user, twitter_user_object )
+						.then( () => {
+							return User.findOne( { twitter_user: twitter_user._id } );
+						})
+						.then( ( user ) => {
+
+							if ( ! user )
+								throw new Error( "failed to find user "+ twitter_user._id );
+
+							try {
+								user.settings.avatar = twitter_user.data.profile_image_url_https;
+							} catch ( error ) {
+								console.log( "user", user );
+								throw error;
+							}
+							return user.save();
+
+						})
 						.then( () => {
 
 							this_twitter_users[ twitter_user_index ] = null;
@@ -226,13 +248,10 @@ const updateTwitterUsers = function( limit ) {
 							throw error;
 						});
 				});
-
-				resolve();
 			})
 			.catch( ( error ) => {
 				if ( error instanceof PromiseEndError )
-					return resolve();
-				console.log( error );
+					return resolve( error );
 				reject( error );
 			});
 	});

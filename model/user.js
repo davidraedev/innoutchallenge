@@ -9,6 +9,12 @@ var UserSchema = new Schema({
 	join_date: Date,
 	twitter_user: { type: ObjectId, ref: "TwitterUser" },
 	state: { type: Number, default: 0 },
+	/*
+		0 = not approved
+		1 = approved
+		2 = banned
+		3 = temp_ignored
+	*/
 	settings: {
 		tweet: {
 			unique_numbers: { type: Boolean, default: true },
@@ -20,13 +26,8 @@ var UserSchema = new Schema({
 			stores: { type: Boolean, default: false },
 			drive_thrus: { type: Boolean, default: false }, 
 		},
+		avatar: { type: String, default: null },
 	},
-	/*
-		0 = not approved
-		1 = approved
-		2 = banned
-		3 = temp_ignored
-	*/
 	totals: Mixed,
 });
 
