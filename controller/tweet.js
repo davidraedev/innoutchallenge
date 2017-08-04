@@ -1,4 +1,4 @@
-const TwitterRequestQueue = require( "twitter-request-queue-node" );
+const Twitter = require( "twitter-request-queue-node" );
 const TwitterPlace = require( "../model/twitter_place" );
 const Tweet = require( "../model/tweet" );
 const Store = require( "../model/store" );
@@ -27,7 +27,7 @@ const getTweetsFromSearchApp = function() {
 				if ( tweet )
 					search_params.since_id = tweet.data.id_str;
 
-				let client = new TwitterRequestQueue({
+				let client = new Twitter({
 					consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
 					consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
 					bearer_token: process.env.TWITTER_BEARER_TOKEN_USER,
@@ -122,7 +122,7 @@ const getTweetsFromSearchUser = function( user ) {
 			if ( twitter_user === null )
 				return reject( "Failed to find TwitterUser" );
 
-			let client = new TwitterRequestQueue({
+			let client = new Twitter({
 				consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
 				consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
 				access_token_key: twitter_user.oauth_token,
@@ -175,7 +175,7 @@ const getTweetsFromLookupApp = function( status_ids_array ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		let client = new TwitterRequestQueue({
+		let client = new Twitter({
 			consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
 			consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
 			bearer_token: process.env.TWITTER_BEARER_TOKEN_USER,
@@ -283,7 +283,11 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 	let this_twitter_user,
 		this_user,
 		this_receipt,
-		this_totals;
+		this_totals,
+		this_store,
+		is_new_in_store,
+		is_new_drive_thru,
+		is_new_store;
 
 	tweet.parsed = true;
 	tweet.data.created_at = new Date( tweet.data.created_at );
@@ -369,6 +373,28 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 		.then( ( store ) => {
 			if ( store )
 				this_receipt.store = store._id;
+
+			this_store = store;
+
+			// check if this is a new in_store/drive_thru receipt
+			return Receipt.findOne( { number: this_receipt.number, user: this_user._id } );
+		})
+		.then( ( existing_number_receipt ) => {
+			if ( ! existing_number_receipt ) {
+				if ( this_receipt.type === 1 )
+					is_new_in_store = true;
+				else if ( this_receipt.type === 2 )
+					is_new_drive_thru = true;
+			}
+
+			if ( this_receipt.store )
+				return Receipt.findOne( { store: this_receipt.store, user: this_user._id } );
+			return false;
+		})
+		.then( ( existing_store_receipt ) => {
+			if ( ! existing_store_receipt )
+				is_new_store = true;
+
 			return this_receipt.save();
 		})
 		.then( () => {
@@ -379,8 +405,20 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			return tweetQueueController.findQueue( { user: this_user._id, type: 1 } );
 		})
 		.then( ( tweet_queue ) => {
-			if ( ! tweet_queue && do_new_receipt_tweet && this_receipt.approved === 2 )
-				return createNewReceiptTweetParams( this_twitter_user.data.screen_name, tweet, this_receipt.number, this_totals.receipts.remaining );
+			if ( ! tweet_queue && do_new_receipt_tweet && this_receipt.approved === 2 ) {
+				let data = {
+					is_new_in_store: is_new_in_store,
+					in_store_receipt_number: this_receipt.number,
+					in_store_receipts_remaining: this_totals.receipts.remaining,
+					is_new_drive_thru: is_new_drive_thru,
+					drive_thru_receipt_number: this_receipt.number,
+					drive_thru_receipts_remaining: this_totals.drivethru.remaining,
+					is_new_store: is_new_store,
+					store_number: this_store.number,
+					stores_remaining: this_totals.stores.remaining,
+				};
+				return createNewReceiptTweetParams( this_twitter_user.data.screen_name, tweet, data );
+			}
 		})
 		.then( ( params ) => {
 			if ( params )
@@ -424,7 +462,7 @@ const sendTweet = function( twitter_user, tweet ) {
 		if ( ! twitter_user.oauth_token_admin || ! twitter_user.oauth_secret_admin )
 			return reject( "Invalid credentials" );
 
-		let client = new TwitterRequestQueue({
+		let client = new Twitter({
 			consumer_key: process.env.TWITTER_CONSUMER_KEY_ADMIN,
 			consumer_secret: process.env.TWITTER_CONSUMER_SECRET_ADMIN,
 			access_token_key: twitter_user.oauth_token_admin,
@@ -441,9 +479,38 @@ const sendTweet = function( twitter_user, tweet ) {
 	});
 };
 
-const createNewReceiptTweetText = function( screen_name, number, remaining ) {
+const sendDM = function( twitter_user, to_twitter_user_id, text ) {
 
-	const phrases = [
+	return new Promise( ( resolve, reject ) => {
+
+		if ( ! twitter_user.oauth_token_admin || ! twitter_user.oauth_secret_admin )
+			return reject( "Invalid credentials" );
+
+		let client = new Twitter({
+			consumer_key: process.env.TWITTER_CONSUMER_KEY_ADMIN,
+			consumer_secret: process.env.TWITTER_CONSUMER_SECRET_ADMIN,
+			access_token_key: twitter_user.oauth_token_admin,
+			access_token_secret: twitter_user.oauth_secret_admin,
+		});
+
+		let data = {
+			"user_id": to_twitter_user_id,
+			"text": text,
+		};
+
+		client.post( "direct_messages/new", data, ( error, tweet ) => {
+
+			if ( error )
+				return reject( error );
+
+			return resolve( tweet );
+		});
+	});
+};
+
+const createNewReceiptTweetText = function( screen_name, data ) {
+
+	let in_store_phrases = [
 		"Congrats",
 		"Nice",
 		"Sweet",
@@ -461,14 +528,43 @@ const createNewReceiptTweetText = function( screen_name, number, remaining ) {
 		"Yeehaw",
 		"Awesome"
 	];
+	let drive_thru_phrases = in_store_phrases;
 
-	const key = utils.rand( 0, ( phrases.length - 1 ) );
-	const intro = phrases[ key ];
+	let key;
+	let intro;
+	if ( data.is_new_in_store ) {
+		key = utils.rand( 0, ( in_store_phrases.length - 1 ) );
+		intro = in_store_phrases[ key ];
+	}
+	else if ( data.is_new_drive_thru ) {
+		key = utils.rand( 0, ( drive_thru_phrases.length - 1 ) );
+		intro = drive_thru_phrases[ key ];
+	}
 
-	return "@"+ screen_name +" "+ intro +"! You just got "+ number +". Now you only have "+ remaining +" to go!";
+	if ( data.is_new_drive_thru && data.is_new_store )
+		return "@"+ screen_name +" "+ intro +"! You just got "+ data.drive_thru_receipt_number +" and store "+ data.store_number +"!. Now you only have "+ data.stores_remaining +" stores to go!";
+	else if ( data.is_new_in_store && data.is_new_store )
+		return "@"+ screen_name +" "+ intro +"! You just got "+ data.in_store_receipt_number +" and store "+ data.store_number +"!. Now you only have "+ data.in_store_receipts_remaining +" receipts and "+ data.stores_remaining +" stores to go!";
+	else if ( data.is_new_drive_thru )
+		return "@"+ screen_name +" "+ intro +"! You just got "+ data.drive_thru_receipt_number +".";
+	else if ( data.is_new_in_store )
+		return "@"+ screen_name +" "+ intro +"! You just got "+ data.in_store_receipt_number +". Now you only have "+ data.in_store_receipts_remaining +" to go!";
 };
 
-const createNewReceiptTweetParams = function( screen_name, originating_tweet, number, remaining ) {
+/*
+	 data = {
+		is_new_in_store: (Boolean),
+		in_store_receipt_number: (Number),
+		in_store_receipts_remaining: (Number),
+		is_new_drive_thru: (Boolean),
+		drive_thru_receipt_number: (Number),
+		drive_thru_receipts_remaining: (Number),
+		is_new_store: (Boolean),
+		store_number: (Number),
+		stores_remaining: (Number),
+	}
+*/
+const createNewReceiptTweetParams = function( screen_name, originating_tweet, data ) {
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -476,7 +572,7 @@ const createNewReceiptTweetParams = function( screen_name, originating_tweet, nu
 			return reject( "invalid screen_name ["+ screen_name +"]" );
 
 		let params = {
-			status: createNewReceiptTweetText( screen_name, number, remaining ),
+			status: createNewReceiptTweetText( screen_name, data ),
 		};
 
 		if ( originating_tweet )
@@ -597,7 +693,7 @@ const sendNewUserTweet = function( params ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		TwitterUser.findOne({ "data.screen_name": process.env.NEW_USER_TWEET_SCREEN_NAME }, ( error, twitter_user ) => {
+		TwitterUser.findOne({ "data.id_str": process.env.NEW_USER_TWEET_USER_ID }, ( error, twitter_user ) => {
 
 			if ( error )
 				return reject( error );
@@ -695,6 +791,7 @@ module.exports.getTweetsFromSearchUser = getTweetsFromSearchUser;
 module.exports.getTweetsFromLookupApp = getTweetsFromLookupApp;
 module.exports.parseTweets = parseTweets;
 module.exports.sendTweet = sendTweet;
+module.exports.sendDM = sendDM;
 module.exports.createNewReceiptTweetText = createNewReceiptTweetText;
 module.exports.createNewReceiptTweetParams = createNewReceiptTweetParams;
 module.exports.createNewUserTweetText = createNewUserTweetText;

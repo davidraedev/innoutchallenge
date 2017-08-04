@@ -86,7 +86,7 @@ fs.access( mongo_log, fs.constants.F_OK | fs.constants.W_OK )
 		return tweetController.parseTweets( true, true );
 	})
 	.then( () => {
-		// parse the tweets fr any store locations
+		// parse the tweets for any store locations
 		console.log( "Tweets Parsed, Getting Stores From Tweets" );
 		return storeController.findStoresFromTweets();
 	})

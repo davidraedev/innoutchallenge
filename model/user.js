@@ -18,7 +18,7 @@ var UserSchema = new Schema({
 	settings: {
 		tweet: {
 			unique_numbers: { type: Boolean, default: true },
-			milestones: { type: Boolean, default: true }, 
+			milestones: { type: Boolean, default: false }, 
 		},
 		dm: {
 			unique_numbers: { type: Boolean, default: false },
