@@ -287,7 +287,8 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 		this_store,
 		is_new_in_store,
 		is_new_drive_thru,
-		is_new_store;
+		is_new_store,
+		message_type = 0;
 
 	tweet.parsed = true;
 	tweet.data.created_at = new Date( tweet.data.created_at );
@@ -405,7 +406,9 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			return tweetQueueController.findQueue( { user: this_user._id, type: 1 } );
 		})
 		.then( ( tweet_queue ) => {
+
 			if ( ! tweet_queue && do_new_receipt_tweet && this_receipt.approved === 2 ) {
+
 				let data = {
 					is_new_in_store: is_new_in_store,
 					in_store_receipt_number: this_receipt.number,
@@ -417,14 +420,38 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					store_number: this_store.number,
 					stores_remaining: this_totals.stores.remaining,
 				};
-				return createNewReceiptTweetParams( this_twitter_user.data.screen_name, tweet, data );
+
+				if ( is_new_in_store ) {
+					if ( this_user.settings.tweet.unique_numbers ) {
+						message_type = 1;
+						return createNewReceiptTweetParams( this_twitter_user.data.screen_name, tweet, data );
+					}
+					else if ( this_user.settings.dm.unique_numbers ) {
+						message_type = 2;
+						return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
+					}
+				}
+				else if ( is_new_drive_thru ) {
+					if ( this_user.settings.dm.drive_thrus ) {
+						message_type = 2;
+						return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
+					}
+					else
+						return;
+				}
+				else {
+					return;
+				}
+			}
+			else {
+				return;
 			}
 		})
 		.then( ( params ) => {
 			if ( params )
-				return tweetQueueController.addTweetToQueue( params, this_user._id, 2 );
+				return tweetQueueController.addTweetToQueue( params, this_user._id, 2, null, message_type );
 		})
-		.then(() => {
+		.then( () => {
 
 			tweet.save().then(() => {
 				throw new PromiseEndError( "none remaining" );
@@ -479,7 +506,7 @@ const sendTweet = function( twitter_user, tweet ) {
 	});
 };
 
-const sendDM = function( twitter_user, to_twitter_user_id, text ) {
+const sendDM = function( twitter_user, dm ) {
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -494,8 +521,8 @@ const sendDM = function( twitter_user, to_twitter_user_id, text ) {
 		});
 
 		let data = {
-			"user_id": to_twitter_user_id,
-			"text": text,
+			"user_id": dm.user_id,
+			"text": dm.text,
 		};
 
 		client.post( "direct_messages/new", data, ( error, tweet ) => {
@@ -551,6 +578,8 @@ const createNewReceiptTweetText = function( screen_name, data ) {
 		return "@"+ screen_name +" "+ intro +"! You just got "+ data.in_store_receipt_number +". Now you only have "+ data.in_store_receipts_remaining +" to go!";
 };
 
+const createNewReceiptDMText = createNewReceiptTweetText;
+
 /*
 	 data = {
 		is_new_in_store: (Boolean),
@@ -578,42 +607,73 @@ const createNewReceiptTweetParams = function( screen_name, originating_tweet, da
 		if ( originating_tweet )
 			params.in_reply_to_status_id = originating_tweet.data.id_str;
 
-		if ( originating_tweet.store ) {
-			Store.findOne( { _id: originating_tweet.store }, ( error, store ) => {
+		if ( data.store_number ) {
 
-				if ( error )
-					return;
+			Store.findOne( { number: data.store_number } )
+				.then( ( store ) => {
 
-				if ( ! store )
-					return;
+					if ( ! store )
+						return resolve( params );
 
-				params.lat = store.location.latitude;
-				params.long = store.location.longitude;
+					params.lat = store.location.latitude;
+					params.long = store.location.longitude;
 
-				if ( store.location.twitter_place ) {
+					if ( store.location.twitter_place ) {
 
-					TwitterPlace.findOne( { _id: store.location.twitter_place }, ( error, twitter_place ) => {
+						TwitterPlace.findOne( { _id: store.location.twitter_place }, ( error, twitter_place ) => {
 
-						if ( error )
-							return; // logerror
+							if ( error )
+								return;
 
-						if ( ! twitter_place )
-							return;
+							if ( ! twitter_place )
+								return resolve( params );
 
-						params.place = twitter_place.data.id;
+							params.place = twitter_place.data.id;
 
+							resolve( params );
+
+						});
+					}
+					else {
 						resolve( params );
-
-					});
-				}
-				else {
-					resolve( params );
-				}
-			});
+					}
+				})
+				.catch( ( error ) => {
+					reject( error );
+				});
 		}
 		else {
 			resolve( params );
 		} 
+	});
+};
+
+/*
+	 data = {
+		is_new_in_store: (Boolean),
+		in_store_receipt_number: (Number),
+		in_store_receipts_remaining: (Number),
+		is_new_drive_thru: (Boolean),
+		drive_thru_receipt_number: (Number),
+		drive_thru_receipts_remaining: (Number),
+		is_new_store: (Boolean),
+		store_number: (Number),
+		stores_remaining: (Number),
+	}
+*/
+const createNewReceiptDMParams = function( screen_name, data ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		if ( ! screen_name )
+			return reject( "invalid screen_name ["+ screen_name +"]" );
+
+		let params = {
+			screen_name: screen_name,
+			status: createNewReceiptDMText( screen_name, data ),
+		};
+
+		resolve( params );
 	});
 };
 
