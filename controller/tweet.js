@@ -439,6 +439,14 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					else
 						return;
 				}
+				else if ( is_new_store ) {
+					if ( this_user.settings.dm.stores ) {
+						message_type = 2;
+						return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
+					}
+					else
+						return;
+				}
 				else {
 					return;
 				}
@@ -556,6 +564,7 @@ const createNewReceiptTweetText = function( screen_name, data ) {
 		"Awesome"
 	];
 	let drive_thru_phrases = in_store_phrases;
+	let store_phrases = store_phrases;
 
 	let key;
 	let intro;
@@ -567,6 +576,10 @@ const createNewReceiptTweetText = function( screen_name, data ) {
 		key = utils.rand( 0, ( drive_thru_phrases.length - 1 ) );
 		intro = drive_thru_phrases[ key ];
 	}
+	else if ( data.is_new_store ) {
+		key = utils.rand( 0, ( store_phrases.length - 1 ) );
+		intro = store_phrases[ key ];
+	}
 
 	if ( data.is_new_drive_thru && data.is_new_store )
 		return "@"+ screen_name +" "+ intro +"! You just got "+ data.drive_thru_receipt_number +" and store "+ data.store_number +"!. Now you only have "+ data.stores_remaining +" stores to go!";
@@ -576,6 +589,10 @@ const createNewReceiptTweetText = function( screen_name, data ) {
 		return "@"+ screen_name +" "+ intro +"! You just got "+ data.drive_thru_receipt_number +".";
 	else if ( data.is_new_in_store )
 		return "@"+ screen_name +" "+ intro +"! You just got "+ data.in_store_receipt_number +". Now you only have "+ data.in_store_receipts_remaining +" to go!";
+	else if ( data.is_new_store )
+		return "@"+ screen_name +" "+ intro +"! You just got store "+ data.store_number +". Now you only have "+ data.stores_remaining +" to go!";
+
+	return;
 };
 
 const createNewReceiptDMText = createNewReceiptTweetText;
