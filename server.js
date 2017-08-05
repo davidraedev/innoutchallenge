@@ -179,8 +179,6 @@ app.post( "/api/account/get", checkAuthenticationApi, account_controller.get_acc
 app.post( "/api/account/set", checkAuthenticationApi, jsonParser, account_controller.update_account );
 app.post( "/api/account/delete", checkAuthenticationApi, account_controller.delete_account );
 
-
-
 if ( process.env.NODE_ENV == "production" ) {
 	app.get( "/bundle.js", ( request, response ) => {
 		response.sendFile( __dirname + "/node_modules/innoutchallenge_frontend/build/bundle.js" );
@@ -199,8 +197,19 @@ else {
 
 db.connect().then( () => {
 
-	app.listen( process.env.BACKEND_PORT, function(){
+	app.listen( process.env.BACKEND_PORT, function( error ) {
+
 		console.log( "Server started at "+ process.env.BACKEND_URL );
+
+		if ( error )
+			throw error;
+
+		let uid = parseInt( process.env.SUDO_UID );
+
+		if ( uid )
+			process.setuid( uid );
+
+		console.log( "Server's UID is now " + process.getuid() );
 	});
 
 }).catch( ( error ) => {
