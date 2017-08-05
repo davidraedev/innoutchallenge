@@ -22,7 +22,7 @@
     "dotenv": "^4.0.0",
     "express": "^4.15.2",
     "express-session": "^1.15.3",
-    "frontend": "git+https://github.com/daraeman/innoutchallenge_frontend.git",
+    "innoutchallenge_frontend": "../innoutchallenge_frontend",
     "fs.promised": "^3.0.0",
     "innout_locations": "git+https://github.com/daraeman/innout_locations.git",
     "json": "^9.0.6",
