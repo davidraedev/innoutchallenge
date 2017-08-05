@@ -4,11 +4,13 @@ const twitterUtils = require( "./twitter_utils" );
 
 const Receipt = require( "../model/receipt" );
 
-const searchUser = function( name ) {
+const searchUser = function( name, lazy ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		User.findOne( { state: 1, name: { $regex : new RegExp( name, "i" ) } }, [ "name", "totals" ], ( error, user ) => {
+		let regex = ( lazy ) ? name : "/^" + name;
+
+		User.findOne( { state: 1, name: { $regex : new RegExp( regex, "i" ) } }, [ "name", "totals" ], ( error, user ) => {
 
 			if ( error )
 				reject( error );

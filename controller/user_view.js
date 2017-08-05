@@ -3,6 +3,8 @@ const Receipt = require( "../model/receipt" );
 const Store = require( "../model/store" );
 const userController = require( "./user" );
 
+const PromiseEndError = require( "../app/error/PromiseEndError" );
+
 exports.users_list = function( request, response ) {
 
 	const amount = parseInt( request.body.amount );
@@ -19,7 +21,7 @@ exports.users_list = function( request, response ) {
 
 	let query = { state: 1, "totals.receipts.unique": { $ne: 0 } };
 	if ( search.length )
-		query.name = new RegExp( "^" + search, "i" );
+		query.name = new RegExp( search, "i" );
 
 	User.find( query, [ "name", "totals", "settings.avatar" ], { skip: skip, limit: limit } ).sort({ "totals.receipts.unique": "desc" }).lean()
 		.then( ( users ) => {
@@ -68,10 +70,13 @@ exports.user_instore_receipts = function( request, response ) {
 
 	let this_user;
 	userController.searchUser( name )
-		.catch( ( error ) => {
-			return response.status( 404 ).send( error );
-		})
 		.then( ( user ) => {
+
+			if ( ! user ) {
+				response.status( 404 ).send( "User Not Found" );
+				throw new PromiseEndError();
+			}
+
 			search_params.user = user._id;
 			this_user = user;
 			return Receipt.find( search_params ).sort( { date: "desc" } ).lean();
@@ -102,7 +107,8 @@ exports.user_instore_receipts = function( request, response ) {
 			return response.send( JSON.stringify( this_user ) );
 		})
 		.catch( ( error ) => {
-			return response.status( 500 ).send( error );
+			if ( ! ( error instanceof PromiseEndError ) )
+				return response.status( 500 ).send( error );
 		});
 };
 
@@ -124,10 +130,13 @@ exports.user_stores = function( request, response ) {
 	let this_stores;
 	let stores_list = {};
 	userController.searchUser( name )
-		.catch( ( error ) => {
-			return response.status( 404 ).send( error );
-		})
 		.then( ( user ) => {
+
+			if ( ! user ) {
+				response.status( 404 ).send( "User Not Found" );
+				throw new PromiseEndError();
+			}
+
 			search_params.user = user._id;
 			this_user = user;
 			return Store.find({ popup: { $exists: false } }).lean();
@@ -187,7 +196,8 @@ exports.user_stores = function( request, response ) {
 			return response.send( JSON.stringify( this_user ) );
 		})
 		.catch( ( error ) => {
-			return response.status( 500 ).send( error );
+			if ( ! ( error instanceof PromiseEndError ) )
+				return response.status( 500 ).send( error );
 		});
 };
 
@@ -203,10 +213,13 @@ exports.user_drivethru_receipts = function( request, response ) {
 
 	let this_user;
 	userController.searchUser( name )
-		.catch( ( error ) => {
-			return response.status( 404 ).send( error );
-		})
 		.then( ( user ) => {
+
+			if ( ! user ) {
+				response.status( 404 ).send( "User Not Found" );
+				throw new PromiseEndError();
+			}
+
 			search_params.user = user._id;
 			this_user = user;
 			return Receipt.find( search_params, [ "number" ] ).lean();
@@ -230,7 +243,8 @@ exports.user_drivethru_receipts = function( request, response ) {
 			return response.send( JSON.stringify( this_user ) );
 		})
 		.catch( ( error ) => {
-			return response.status( 500 ).send( error );
+			if ( ! ( error instanceof PromiseEndError ) )
+				return response.status( 500 ).send( error );
 		});
 
 };

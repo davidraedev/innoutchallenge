@@ -1,5 +1,5 @@
 const convertProfileImageUrl = function( url, size ) {
-	let regex = /(_[a-zA-Z0-9]+)?(\.\w+)/;
+	let regex = /(_normal|200x200|400x400)(\.\w+)/;
 	let replace;
 	if ( size == "normal" )
 		replace = "_normal";
