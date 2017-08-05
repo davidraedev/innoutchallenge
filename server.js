@@ -4,6 +4,7 @@ const session = require( "express-session" );
 const db = require( "./app/db" );
 require( "dotenv" ).config();
 const cors = require( "cors" );
+const assert = require( "assert" );
 app.use( cors( {
 	origin: true,
 	credentials: true,
@@ -119,7 +120,7 @@ app.use( passport.initialize() );
 app.use( passport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
 app.get( "/signin/return/:returnUrl", ( request, response, next ) => { request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next(); }, passport.authenticate( "twitter" ) );
 app.get( "/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.headers.referer; next(); }, passport.authenticate( "twitter" ) );
-app.get( "/signout", ( request, response, next ) => {
+app.get( "/signout", ( request, response ) => {
 	request.logout();
 	response.redirect( process.env.FRONTEND_URL );
 });
@@ -157,7 +158,7 @@ function checkAuthenticationApi( request, response, next ) {
 	next();
 }
 
-function checkAuthenticationEndpoint( request, response, next ) {
+function checkAuthenticationEndpoint( request, response ) {
 
 	let data = { authenticated: false };
 

@@ -8,20 +8,15 @@ const searchUser = function( name, lazy ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		let regex = ( lazy ) ? name : "/^" + name;
+		let search = ( lazy ) ? { $regex: new RegExp( name, "i" ) } : name ;
 
-		User.findOne( { state: 1, name: { $regex : new RegExp( regex, "i" ) } }, [ "name", "totals" ], ( error, user ) => {
-
-			if ( error )
+		User.findOne( { state: 1, name: search }, [ "name", "totals" ] ).lean()
+			.then( ( user ) => {
+				resolve( user );
+			})
+			.catch( ( error ) => {
 				reject( error );
-
-			if ( error )
-				reject( "User Not Found" );
-
-			resolve( user );
-
-		}).lean();
-		
+			});
 	});
 
 };
