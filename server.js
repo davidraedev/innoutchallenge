@@ -12,6 +12,7 @@ app.use( cors( {
 app.disable( "x-powered-by" );
 
 app.use( "/img", express.static( "public/img" ) );
+app.use( "/font", express.static( "public/font" ) );
 
 var MongoDBStore = require( "connect-mongodb-session" )( session );
 
@@ -38,33 +39,9 @@ app.use( session({
 const passport = require( "passport" );
 const Strategy = require( "passport-twitter" ).Strategy;
 
-//const cookieSession = require( "cookie-session" );
-
 const User = require( "./model/user" );
 const TwitterUser = require( "./model/twitter_user" );
 const userController = require( "./controller/user" );
-/*
-app.use( session({
-	resave: false,
-	saveUninitialized: true,
-	secret: process.env.APP_SECRET,
-}));
-*/
-/*
-// auth middleware
-app.use( ( request, response, next ) => {
-	console.log( request.headers["X-Auth-Token"] );
-	Auth.findOne( { token: request.headers["X-Auth-Token"] } )
-		.then( ( auth ) => {
-			if ( auth )
-				response.header( "Auth-Token", auth.token );
-			next();
-		})
-		.catch( ( error ) => {
-			next();
-		})
-});
-*/
 
 passport.use(
 	new Strategy(
@@ -159,29 +136,12 @@ app.get( "/auth/twitter/callback",
 
 
 app.use( "/", require( "./route/auth.js" ) );
-//app.use( "/", require( "./route/admin.js" ) );
-//app.use( "/", require( "./route/all.js" ) );
-
-
-
-
-
-
-
-
-
-
 
 
 const bodyParser = require( "body-parser" );
-//const view_controller = require( "./controller/view" );
 const user_controller = require( "./controller/user_view" );
 const account_controller = require( "./controller/account_view" );
-//const store_controller = require( "./controller/store" );
-//const urlEncodedParser = bodyParser.urlencoded({ extended: false })
 const jsonParser = bodyParser.json();
-//const router = express.Router();
-//app.post( "/api/users/list", jsonParser, user_controller.users_list );
 
 function checkAuthenticationView( request, response, next ) {
 	response.locals.authenticated = ( request.isAuthenticated() ) ? true : false;
