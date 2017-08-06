@@ -183,7 +183,6 @@ if ( process.env.NODE_ENV == "production" ) {
 	app.get( "/bundle.js", ( request, response ) => {
 		response.sendFile( __dirname + "/node_modules/innoutchallenge_frontend/build/bundle.js" );
 	});
-	// need to mirror the client router here, or find a wildcard workaround
 	app.get( "/*", checkAuthenticationView, ( request, response ) => {
 		response.sendFile( __dirname + "/node_modules/innoutchallenge_frontend/build/index.html" );
 	});
@@ -199,7 +198,7 @@ db.connect().then( () => {
 
 	app.listen( process.env.BACKEND_PORT, function( error ) {
 
-		console.log( "Server started at "+ process.env.BACKEND_URL );
+		console.log( "Server started at "+ process.env.BACKEND_URL + " on port " + process.env.BACKEND_PORT );
 
 		if ( error )
 			throw error;

@@ -5,6 +5,7 @@ const oldSiteContoller = require( "../../controller/old_site" );
 const tweetController = require( "../../controller/tweet" );
 const storeController = require( "../../controller/store" );
 const userController = require( "../../controller/user" );
+const twitterUserController = require( "../../controller/twitter_user" );
 
 const mongo_log = "log/mongo.log";
 const env_file = ".env";
@@ -96,7 +97,12 @@ fs.access( mongo_log, fs.constants.F_OK | fs.constants.W_OK )
 		return userController.updateAllUsersTotals();
 	})
 	.then( () => {
-		console.log( "Totals Updated, All Done!" );
+		// update all the user totals
+		console.log( "User Totals Updated, Filling TwitterUser Data From Twitter" );
+		return twitterUserController.updateTwitterUsers();
+	})
+	.then( () => {
+		console.log( "TwitterUsers Updated, All Done!" );
 		db.close();
 	})
 	.catch( ( error ) => {
