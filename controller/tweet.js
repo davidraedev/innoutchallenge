@@ -15,14 +15,16 @@ const utils = require( "./utils" );
 const PromiseBreakError = require( "../app/error/PromiseBreakError" );
 const PromiseEndError = require( "../app/error/PromiseEndError" );
 
-const getTweetsFromSearchApp = function() {
+const getTweetsFromSearchApp = function( search_string ) {
+
+	search_string = search_string || "innoutchallenge";
 
 	return new Promise( ( resolve, reject ) => {
 
 		getLatestSearchTweetFromDb()
 			.then( ( tweet ) => {
 
-				let search_params = { q: "innoutchallenge", count: 100 };
+				let search_params = { q: search_string, count: 100 };
 
 				if ( tweet )
 					search_params.since_id = tweet.data.id_str;

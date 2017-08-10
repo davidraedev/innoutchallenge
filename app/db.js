@@ -1,32 +1,34 @@
-var mongoose = require( "mongoose" );
+const mongoose = require( "mongoose" );
 mongoose.Promise = require( "bluebird" );
+require( "dotenv" ).config();
 
-var host = "mongodb://localhost/test";
+const connect = function( db_name ) {
 
-function connect( callback ) {
+	db_name = db_name || process.env.DB_NAME;
+	const db_url = process.env.DB_HOST + "/" + db_name;
 
-	return mongoose.connect( host )
-		.then( function(){
+	return new Promise( ( resolve, reject ) => {
 
-			if ( mongoose.connection.readyState !== 1 )
-				throw new Error( "DB not connected state["+ mongoose.connection.readyState +"]" );
+		mongoose.connect( db_url )
+			.then( () => {
 
-			if ( typeof callback == "function" )
-				callback( null );
-		})
-		.catch( function( error ){
-			if ( typeof callback == "function" )
-				callback( error );
-		});;
-}
+				if ( mongoose.connection.readyState !== 1 )
+					throw new Error( "DB not connected state["+ mongoose.connection.readyState +"]" );
 
-function close() {
+				resolve( null );
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
+	});
+};
+
+const close = function() {
 	return mongoose.connection.close();
-}
+};
 
 module.exports = {
 	connect: connect,
 	close: close,
-	host: host,
 	mongoose: mongoose,
 };

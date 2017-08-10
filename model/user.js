@@ -5,10 +5,10 @@ const ObjectId = Schema.Types.ObjectId;
 const Mixed = Schema.Types.Mixed;
 
 var UserSchema = new Schema({
-	name: String,
-	join_date: Date,
+	name: { type: String, required: true },
+	join_date: { type: Date, required: true },
 	twitter_user: { type: ObjectId, ref: "TwitterUser" },
-	state: { type: Number, default: 0 },
+	state: { type: Number, default: 0, min: 0, max: 3 },
 	/*
 		0 = not approved
 		1 = approved

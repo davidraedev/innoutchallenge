@@ -66,7 +66,7 @@ const findUser = function( query ) {
 	});
 };
 
-const findUsers = function( query ) {
+function findUsers( query ) {
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -79,7 +79,7 @@ const findUsers = function( query ) {
 
 		});
 	});
-};
+}
 
 const findOrCreateUser = function( query, data ) {
 

@@ -6,12 +6,16 @@ describe( "Database", function(){
 
 	describe( "Establishes connection", function(){
 
-		it( "Does not throw an exception", function(){
-			return db.connect().then( function( connection ){
-				expect( connection ).to.be.an( "undefined" );
+		/*
+			0 = disconnected
+			1 = connected
+			2 = connecting
+			3 = disconnecting
+		*/
+		it( "readyState is 1", function(){
+			return db.connect( "test" ).then( function(){
+				expect( db.mongoose.connection.readyState ).to.equal( 1 );
 				db.close();
-			}).catch( function( error ){
-				throw new Error( error );
 			});
 		});
 
