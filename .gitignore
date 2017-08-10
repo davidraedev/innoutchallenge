@@ -3,6 +3,8 @@ node_modules/
 jspm_packages/
 
 .env
+.env.dev
+.env.production
 
 data/database/*
 data/old_site/*

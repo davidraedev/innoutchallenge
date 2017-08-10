@@ -7,9 +7,9 @@
   "scripts": {
     "setup": "node app/init/setup.js",
     "startdb": "mongod --config mongo.conf",
-    "start": "node server.js",
+    "start": "NODE_ENV=production; node server.js",
     "test": "mocha test/**.js",
-    "dev": "nodemon server.js"
+    "dev": "NODE_ENV=dev; nodemon server.js"
   },
   "author": "David Rae",
   "license": "Apache-2.0",
