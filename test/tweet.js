@@ -1,7 +1,6 @@
 const chai = require( "chai" );
 const expect = chai.expect;
 const db = require( "../app/db" );
-//const Receipt = require( "../model/receipt" );
 const tweetController = require( "../controller/tweet" );
 
 const good_test_receipt_data = {
@@ -64,6 +63,50 @@ describe( "Parse Tweet for In Store", () => {
 
 	it( "should not parse in the thousands", () => {
 		let result = tweetController.parseForInStoreReceipt( "Heyo four thousand fifty-three!" );
+		expect( result ).to.equal( false );
+	});
+
+});
+
+describe( "Parse Tweet for Drive Thru", () => {
+
+	it( "should return a 4060", () => {
+		let result = tweetController.parseForDriveThruReceipt( "Heyo 4060!" );
+		expect( result ).to.equal( "4060" );
+	});
+
+	it( "should not parse digits below 4000", () => {
+		let result = tweetController.parseForDriveThruReceipt( "Heyo 3099!" );
+		expect( result ).to.equal( false );
+	});
+
+	it( "should not parse digits above 4999", () => {
+		let result = tweetController.parseForDriveThruReceipt( "Heyo 5000!" );
+		expect( result ).to.equal( false );
+	});
+
+	it( "should not parse digits in hashtags", () => {
+		let result = tweetController.parseForDriveThruReceipt( "Heyo number #4000!" );
+		expect( result ).to.equal( false );
+	});
+
+	it( "should return a 4060", () => {
+		let result = tweetController.parseForDriveThruReceipt( "Heyo four thousand sixty!" );
+		expect( result ).to.equal( "4060" );
+	});
+
+	it( "should not parse word-numbers below 4000", () => {
+		let result = tweetController.parseForDriveThruReceipt( "Heyo three thousand ninety nine!" );
+		expect( result ).to.equal( false );
+	});
+
+	it( "should not parse word-numbers above 4999", () => {
+		let result = tweetController.parseForDriveThruReceipt( "Heyo five thousand!" );
+		expect( result ).to.equal( false );
+	});
+
+	it( "should not parse word-numbers in hashtags", () => {
+		let result = tweetController.parseForDriveThruReceipt( "Heyo number #four thousand!" );
 		expect( result ).to.equal( false );
 	});
 
