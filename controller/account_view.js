@@ -7,7 +7,11 @@ const get_account = function( request, response ) {
 			response.json( user );
 		})
 		.catch( ( error ) => {
-			throw error;
+			console.log( "error [%s]", error );
+			if ( error == "Error: twitter_user not found" )
+				response.status( 401 ).send();
+			else
+				response.status( 500 ).send( error );
 		});
 };
 
@@ -17,7 +21,7 @@ const update_account = function( request, response ) {
 			response.json( user );
 		})
 		.catch( ( error ) => {
-			throw error;
+			response.status( 500 ).send( error );
 		});
 };
 
@@ -31,7 +35,7 @@ const delete_account = function( request, response ) {
 			response.json({ success: 1 });
 		})
 		.catch( ( error ) => {
-			throw error;
+			response.status( 500 ).send( error );
 		});
 };
 

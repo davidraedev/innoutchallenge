@@ -5,6 +5,15 @@ const db = require( "./app/db" );
 require( "dotenv" ).config();
 const cors = require( "cors" );
 const assert = require( "assert" );
+const passport = require( "passport" );
+const TwitterStrategy = require( "passport-twitter" ).Strategy;
+const userPassport = new passport.Passport();
+const adminPassport = new passport.Passport();
+
+const User = require( "./model/user" );
+const TwitterUser = require( "./model/twitter_user" );
+const userController = require( "./controller/user" );
+
 app.use( cors( {
 	origin: true,
 	credentials: true,
@@ -18,7 +27,7 @@ app.use( "/font", express.static( "public/font" ) );
 var MongoDBStore = require( "connect-mongodb-session" )( session );
 
 var store = new MongoDBStore({
-	uri: process.env.DB_URL + "/innoutchallenge_sessions",
+	uri: process.env.DB_HOST + "/innoutchallenge_sessions",
 	collection: "userSessions",
 });
 
@@ -37,15 +46,12 @@ app.use( session({
 	saveUninitialized: true
 }));
 
-const passport = require( "passport" );
-const Strategy = require( "passport-twitter" ).Strategy;
 
-const User = require( "./model/user" );
-const TwitterUser = require( "./model/twitter_user" );
-const userController = require( "./controller/user" );
 
-passport.use(
-	new Strategy(
+
+
+userPassport.use(
+	new TwitterStrategy(
 		{
 			consumerKey: process.env.TWITTER_CONSUMER_KEY_USER,
 			consumerSecret: process.env.TWITTER_CONSUMER_SECRET_USER,
@@ -108,35 +114,134 @@ passport.use(
 	)
 );
 
-passport.serializeUser( ( user, callback ) => {
+userPassport.serializeUser( ( user, callback ) => {
 	callback( null, user );
 });
 
-passport.deserializeUser( ( obj, callback ) => {
+userPassport.deserializeUser( ( obj, callback ) => {
 	callback ( null, obj );
 });
 
-app.use( passport.initialize() );
-app.use( passport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
-app.get( "/signin/return/:returnUrl", ( request, response, next ) => { request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next(); }, passport.authenticate( "twitter" ) );
-app.get( "/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.headers.referer; next(); }, passport.authenticate( "twitter" ) );
+app.use( userPassport.initialize() );
+app.use( userPassport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
+app.get( "/signin/return/:returnUrl", ( request, response, next ) => { request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next(); }, userPassport.authenticate( "twitter" ) );
+app.get( "/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.headers.referer; next(); }, userPassport.authenticate( "twitter" ) );
 app.get( "/signout", ( request, response ) => {
 	request.logout();
 	response.redirect( process.env.FRONTEND_URL );
 });
 app.get( "/auth/twitter/callback",
-	passport.authenticate(
+	userPassport.authenticate(
 		"twitter",
 		{ failureRedirect: "/signin" }),
 		( request, response ) => {
-			let redirect = ( /^\/signin/.test( request.session.signinReturnUrl ) ) ? process.env.FRONTEND_URL : request.session.signinReturnUrl;
+			let redirect = ( request.session.signinReturnUrl === process.env.FRONTEND_URL + "/signin" ) ? process.env.FRONTEND_URL : request.session.signinReturnUrl;
 			request.session.signinReturnUrl = null;
 			response.redirect( redirect );
 		});
 
 
 
-app.use( "/", require( "./route/auth.js" ) );
+
+
+adminPassport.use(
+	new TwitterStrategy(
+		{
+			consumerKey: process.env.TWITTER_CONSUMER_KEY_ADMIN,
+			consumerSecret: process.env.TWITTER_CONSUMER_SECRET_ADMIN,
+			callbackURL: process.env.BACKEND_URL + "/admin/auth/twitter/callback"
+		},
+		( token, secret, profile, callback ) => {
+			let new_user = false;
+			let this_twitter_user;
+			let this_user;
+			TwitterUser.findOne({ "data.id_str": profile._json.id_str })
+				.then( ( twitter_user ) => {
+					if ( ! twitter_user ) {
+						new_user = true;
+						return TwitterUser.create({
+							oauth_token_admin: token,
+							oauth_secret_admin: secret,
+							last_update: new Date(),
+							data: profile._json,
+						});
+					}
+					else {
+						twitter_user.oauth_token_admin = token;
+						twitter_user.oauth_secret_admin = secret;
+						twitter_user.last_update = new Date();
+						twitter_user.data = profile._json;
+						return twitter_user.save();
+					}
+				})
+				.then( ( twitter_user ) => {
+					this_twitter_user = twitter_user;
+					return User.findOne({ "twitter_user": twitter_user._id });
+				})
+				.then( ( user ) => {
+					if ( ! user ) {
+						new_user = true;
+						return User.create({
+							name: this_twitter_user.data.name,
+							join_date: new Date(),
+							twitter_user: this_twitter_user._id,
+							state: 1,
+						});
+					}
+					else {
+						return user;
+					}
+				})
+				.then( () => {
+					return callback( null, profile );
+				})
+				.catch( ( error ) => {
+					throw error;
+				});
+		}
+	)
+);
+
+adminPassport.serializeUser( ( user, callback ) => {
+	callback( null, user );
+});
+
+adminPassport.deserializeUser( ( obj, callback ) => {
+	callback ( null, obj );
+});
+
+app.use( adminPassport.initialize() );
+app.use( adminPassport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
+app.get( "/admin/signin/return/:returnUrl", ( request, response, next ) => { request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next(); }, adminPassport.authenticate( "twitter" ) );
+app.get( "/admin/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.headers.referer; next(); }, adminPassport.authenticate( "twitter" ) );
+app.get( "/admin/signout", ( request, response ) => {
+	request.logout();
+	response.redirect( process.env.FRONTEND_URL );
+});
+app.get( "/admin/auth/twitter/callback",
+	adminPassport.authenticate(
+		"twitter",
+		{ failureRedirect: "/admin/signin" }),
+		( request, response ) => {
+			let redirect = ( request.session.signinReturnUrl === process.env.FRONTEND_URL + "/admin/signin" ) ? process.env.FRONTEND_URL : request.session.signinReturnUrl;
+			request.session.signinReturnUrl = null;
+			response.redirect( redirect );
+		});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 const bodyParser = require( "body-parser" );
