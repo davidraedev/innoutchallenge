@@ -300,21 +300,20 @@ else {
 }
 
 db.connect().then( () => {
+	// start the server
+	return app.listen( process.env.BACKEND_PORT );
+}).then( () => {
 
-	app.listen( process.env.BACKEND_PORT, function( error ) {
+	console.log( "Server started at "+ process.env.BACKEND_URL );
 
-		console.log( "Server started at "+ process.env.BACKEND_URL + " on port " + process.env.BACKEND_PORT );
+	// this lets us use sudo to start the server on a privileged port,
+	// then drop it down to normal permissions
+	let uid = parseInt( process.env.SUDO_UID );
 
-		if ( error )
-			throw error;
+	if ( uid )
+		process.setuid( uid );
 
-		let uid = parseInt( process.env.SUDO_UID );
-
-		if ( uid )
-			process.setuid( uid );
-
-		console.log( "Server's UID is now " + process.getuid() );
-	});
+	console.log( "Server's UID is now " + process.getuid() );
 
 }).catch( ( error ) => {
 	throw error;
