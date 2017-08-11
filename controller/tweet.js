@@ -8,6 +8,7 @@ require( "dotenv" ).config();
 const TwitterUser = require( "../model/twitter_user" );
 const wordToNumber = require( "word-to-number-node" );
 const w2n = new wordToNumber();
+		w2n.setSideChars( /[a-z#]/i );
 const storeController = require( "./store" );
 const userController = require( "./user" );
 const tweetQueueController = require( "./tweet_queue" );
@@ -195,55 +196,55 @@ const getTweetsFromLookupApp = function( status_ids_array ) {
 	});
 };
 
-function parseForInStoreReceipt( text ) {
+const parseForInStoreReceipt = function( text ) {
 	let number = parseForInStoreDigits( text ) || w2n.parse( text )[0];
-	if ( number && number !== 69 && number > 0 && number < 100 )
+	if ( number && number != 69 && number > 0 && number < 100 )
 		return number;
 	return false;
-}
+};
 
-function parseForDriveThruReceipt( text ) {
+const parseForDriveThruReceipt = function( text ) {
 	let number = parseForDriveThruDigits( text ) || w2n.parse( text )[0];
 	if ( number && number > 3999 && number < 5000 )
 		return number;
 	return false;
-}
+};
 
-function isRetweet( tweet ) {
+const isRetweet = function( tweet ) {
 	if ( tweet.retweet || /^rt\s/i.test( tweet.data.text ) )
 		return true;
 	return false;
-}
+};
 
-function hasIgnoreFlag( tweet ) {
+const hasIgnoreFlag = function( tweet ) {
 	if ( /\#\!/i.test( tweet.data.text ) )
 		return true;
 	return false;
-}
+};
 
-function isIgnoredUser( tweet ) {
+const isIgnoredUser = function( tweet ) {
 	if ( tweet.data.user.id_str === "584408608" || tweet.data.user.id_str === "1487483659" )
 		return true;
 	return false;
-}
+};
 
-function parseForInStoreDigits( text ) {
-	let matches = text.match( /number\s+(\d{1,2})/i );
+const parseForInStoreDigits = function( text ) {
+	let matches = text.match( /number\s+(\d{1,2})(?!\d)/i );
 	if ( ! matches )
 		matches = text.match( /(?:^|[\s!.,])(\d{1,2})(?:[\s!.,]|$)/ );
 	if ( matches )
 		return matches[1].trim();
 	return false;
-}
+};
 
-function parseForDriveThruDigits( text ) {
+const parseForDriveThruDigits = function( text ) {
 	let matches = text.match( /number\s+(4\d{3})/i );
 	if ( ! matches )
 		matches = text.match( /(?:^|[\s!.,])(4\d{3})(?:[\s!.,]|$)/ );
 	if ( matches )
 		return matches[1].trim();
 	return false;
-}
+};
 
 const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 	return new Promise( ( resolve, reject ) => {
@@ -881,3 +882,10 @@ module.exports.findTweet = findTweet;
 module.exports.findTweets = findTweets;
 module.exports.createTweet = createTweet;
 module.exports.formatTweetData = formatTweetData;
+module.exports.parseForInStoreReceipt = parseForInStoreReceipt;
+module.exports.parseForDriveThruReceipt = parseForDriveThruReceipt;
+module.exports.isRetweet = isRetweet;
+module.exports.hasIgnoreFlag = hasIgnoreFlag;
+module.exports.isIgnoredUser = isIgnoredUser;
+module.exports.parseForInStoreDigits = parseForInStoreDigits;
+module.exports.parseForDriveThruDigits = parseForDriveThruDigits;

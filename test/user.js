@@ -107,12 +107,16 @@ describe( "Create a new User via model", () => {
 		});
 	});
 
-	describe( "Search multiple Users from database via controller", () => {
+	describe( "Fuzzy search single User from database via controller", () => {
 
-		it( "should return an array of User objects", ( done ) =>{
+		it( "should return a User object", ( done ) =>{
 
 			userController.searchUser( good_test_user_data.name ).then( ( result ) => {
 				expect( result ).to.be.an( "object" );
+				return User.remove( good_test_user_data );
+			})
+			.then( () => {
+				db.close();
 				done();
 			});
 
