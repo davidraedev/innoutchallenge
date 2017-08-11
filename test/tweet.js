@@ -3,12 +3,6 @@ const expect = chai.expect;
 const db = require( "../app/db" );
 const tweetController = require( "../controller/tweet" );
 
-const good_test_receipt_data = {
-	number: 20,
-	date: new Date(),
-	type: 4,
-};
-
 describe( "Parse Tweet for In Store", () => {
 
 	it( "should return a 5", () => {
