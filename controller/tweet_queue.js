@@ -1,4 +1,4 @@
-require( "dotenv" ).config( process.env.ENV_PATH );
+require( "dotenv" ).config( { path: process.env.ENV_PATH } );
 
 const tweetController = require( "./tweet" );
 

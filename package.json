@@ -12,8 +12,7 @@
     "start": "NODE_ENV=production; ENV_PATH='.env.production' node server.js",
     "dev": "NODE_ENV=dev; ENV_PATH='.env.dev' nodemon server.js",
     "pretest": "npm run startdb",
-    "test": "NODE_ENV=testing; ENV_PATH='.env.testing' node_modules/mocha/bin/mocha test/**.js",
-    "posttest": "npm run stopdb"
+    "test": "NODE_ENV=testing; ENV_PATH='.env.testing' node_modules/mocha/bin/mocha test/**.js; npm run stopdb"
   },
   "author": "David Rae",
   "license": "Apache-2.0",

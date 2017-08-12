@@ -2,7 +2,7 @@ const Twitter = require( "twitter-request-queue-node" );
 const TwitterUser = require( "../model/twitter_user" );
 const User = require( "../model/user" );
 const PromiseEndError = require( "../app/error/PromiseEndError" );
-require( "dotenv" ).config( process.env.ENV_PATH );
+require( "dotenv" ).config( { path: process.env.ENV_PATH } );
 
 const update_user_older_than_days = 0.00001;
 
