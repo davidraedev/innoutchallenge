@@ -6,10 +6,14 @@
   "private": true,
   "scripts": {
     "setup": "node app/init/setup.js",
-    "startdb": "mongod --config mongo.conf",
+    "startdb": "mongod --fork --config mongo.conf",
+    "startdbdev": "mongod --config mongo.conf",
+    "stopdb": "mongo admin --eval 'db.shutdownServer()' > /dev/null",
     "start": "NODE_ENV=production; node server.js",
+    "dev": "NODE_ENV=dev; nodemon server.js",
+    "pretest": "npm run startdb",
     "test": "node_modules/mocha/bin/mocha test/**.js",
-    "dev": "NODE_ENV=dev; nodemon server.js"
+    "posttest": "npm run stopdb"
   },
   "author": "David Rae",
   "license": "Apache-2.0",
