@@ -1,7 +1,7 @@
-var TwitterStream = require( "node-tweet-stream" )
+const TwitterStream = require( "node-tweet-stream" )
 const TwitterUser = require( "../../model/twitter_user" );
 const db = require( "../db" );
-require( "dotenv" ).config();
+require( "dotenv" ).config( process.env.ENV_PATH );
 
 const RawStreamObject = require( "../../model/raw_stream_object" );
 

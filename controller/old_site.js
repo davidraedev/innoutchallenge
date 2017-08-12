@@ -5,7 +5,7 @@ const https = require( "https" );
 const agent = new https.Agent({
 	rejectUnauthorized: false
 });
-require( "dotenv" ).config();
+require( "dotenv" ).config( process.env.ENV_PATH );
 const User = require( "../model/user" );
 const TwitterUser = require( "../model/twitter_user" );
 const Tweet = require( "../model/tweet" );

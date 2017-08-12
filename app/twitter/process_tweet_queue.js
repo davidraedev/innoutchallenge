@@ -3,7 +3,7 @@ const TwitterUser = require( "../../model/twitter_user" );
 const User = require( "../../model/user" );
 const tweetController = require( "../../controller/tweet" );
 const db = require( "../db" );
-require( "dotenv" ).config();
+require( "dotenv" ).config( process.env.ENV_PATH );
 
 let this_user,
 	this_tweet_queue,

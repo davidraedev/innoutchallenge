@@ -2,7 +2,6 @@ const chai = require( "chai" );
 const expect = chai.expect;
 const db = require( "../app/db" );
 const Receipt = require( "../model/receipt" );
-//const receiptController = require( "../controller/receipt" );
 
 const good_test_receipt_data = {
 	number: 20,
@@ -13,7 +12,7 @@ const good_test_receipt_data = {
 describe( "Create a new Receipt via model", () => {
 
 	before( ( done ) => {
-		db.connect( "test" ).then(() => {
+		db.connect().then(() => {
 			done();
 		});
 	});

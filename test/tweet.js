@@ -1,6 +1,5 @@
 const chai = require( "chai" );
 const expect = chai.expect;
-const db = require( "../app/db" );
 const tweetController = require( "../controller/tweet" );
 
 describe( "Parse Tweet for In Store", () => {

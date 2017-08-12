@@ -13,7 +13,7 @@ const good_test_user_data = {
 describe( "Create a new User via model", () => {
 
 	before( ( done ) => {
-		db.connect( "test" ).then(() => {
+		db.connect().then(() => {
 			done();
 		});
 	});

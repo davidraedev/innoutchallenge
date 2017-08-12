@@ -1,5 +1,5 @@
-var tweetController = require( "../../controller/tweet" );
-var db = require( "../db" );
+const tweetController = require( "../../controller/tweet" );
+const db = require( "../db" );
 
 db.connect().then(() => {
 

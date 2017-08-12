@@ -1,10 +1,10 @@
-var chai = require( "chai" );
-var expect = chai.expect;
-var db = require( "../app/db" );
+const chai = require( "chai" );
+const expect = chai.expect;
+const db = require( "../app/db" );
 
-describe( "Database", function(){
+describe( "Database", () => {
 
-	describe( "Establishes connection", function(){
+	describe( "Establishes connection", () => {
 
 		/*
 			0 = disconnected
@@ -12,8 +12,8 @@ describe( "Database", function(){
 			2 = connecting
 			3 = disconnecting
 		*/
-		it( "readyState is 1", function(){
-			return db.connect( "test" ).then( function(){
+		it( "readyState is 1", () => {
+			return db.connect().then( () => {
 				expect( db.mongoose.connection.readyState ).to.equal( 1 );
 				db.close();
 			});

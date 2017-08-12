@@ -1,7 +1,7 @@
-var tweetController = require( "../../controller/tweet" );
-var userController = require( "../../controller/user" );
-var storeController = require( "../../controller/store" );
-var db = require( "../db" );
+const tweetController = require( "../../controller/tweet" );
+const userController = require( "../../controller/user" );
+const storeController = require( "../../controller/store" );
+const db = require( "../db" );
 
 db.connect().then(() => {
 	return userController.updateAllUsersTotals();

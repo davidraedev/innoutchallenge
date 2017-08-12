@@ -1,5 +1,5 @@
 const db = require( "../db" );
-require( "dotenv" ).config();
+require( "dotenv" ).config( process.env.ENV_PATH );
 
 const RawStreamObject = require( "../../model/raw_stream_object" );
 
