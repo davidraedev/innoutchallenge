@@ -11,21 +11,7 @@ const ObjectId = require( "mongoose" ).Schema.Types.ObjectId;
 const cached_stores_file = "data/stores.json";
 
 const findStoreNearCoords = function( latitude, longitude ) {
-
-	return new Promise( ( resolve, reject ) => {
-		
-		Store.findOne({ loc: { $nearSphere: { $geometry: { type: "Point", coordinates: [ longitude, latitude ] }, $maxDistance: 1000 } } }, ( error, store ) => {
-		
-			if ( error )
-				return reject( error );
-
-			if ( ! store )
-				return resolve( null );
-
-			return resolve( store );
-
-		});
-	});
+	return Store.findOne({ loc: { $nearSphere: { $geometry: { type: "Point", coordinates: [ longitude, latitude ] }, $maxDistance: 1000 } } } );
 };
 
 function getTweetCoords( tweet ) {
@@ -120,39 +106,45 @@ const parseTweetForStore = function( tweet, ignore_hashtag ) {
 		if ( ! store_number || ignore_hashtag ) {
 
 			let coords = getTweetCoords( tweet );
-			if ( ! coords )
-				resolve( null );
+			if ( ! coords ) {
+				return resolve( null );
+			}
 
-			findStoreNearCoords( coords.latitude, coords.longitude ).then( ( store ) => {
+			findStoreNearCoords( coords.latitude, coords.longitude )
+				.then( ( store ) => {
 
-				if ( ! store ) {
+					if ( ! store ) {
 
-					findStoreFromTwitterPlace( tweet ).then( ( store ) => {
-						resolve( store );
-					}).catch( ( error ) => {
-						reject( error );
-					});
+						findStoreFromTwitterPlace( tweet )
+							.then( ( store ) => {
+								return resolve( store );
+							});
 
-				}
-				else {
-					resolve( store );
-				}
+					}
+					else {
+						return resolve( store );
+					}
 
-			}).catch( ( error ) => {
-				reject( error );
-			});
+				})
+				.catch( ( error ) => {
+					return reject( error );
+				});
 		}
 		else {
-			Store.findOne( { number: store_number }, ( error, store ) => {
+			Store.findOne( { number: store_number } )
+				.then( ( store ) => {
+					if ( ! store ) {
+						return parseTweetForStore( tweet, true )
+							.then( ( store ) => {
+								resolve( store );
+							});
+					}
 
-				if ( error )
+					return resolve( store );
+				})
+				.catch( ( error ) => {
 					return reject( error );
-
-				if ( ! store )
-					return parseTweetForStore( tweet, true );
-
-				resolve( store );
-			});
+				});
 		}
 
 	});
@@ -191,27 +183,6 @@ const findStore = function( query, lean ) {
 			Store.findOne( query, callback );
 	});
 };
-/*
-const findOrCreateReceipt = function( query, data ) {
-
-	return new Promise( ( resolve, reject ) => {
-
-		findReceipt( query )
-			.then( ( receipt ) => {
-				if ( ! receipt )
-					return createReceipt( data );
-				return receipt;
-			})
-			.then( ( receipt ) => {
-				resolve( receipt );
-			})
-			.catch( ( error ) => {
-				reject( error );
-			});
-
-	});
-};
-*/
 
 const parseTweetsForStores = function( tweets ) {
 

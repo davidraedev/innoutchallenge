@@ -94,11 +94,11 @@ const findReceipt = function( query ) {
 	});
 };
 
-const findOrCreateReceipt = function( query, data, new_receipt_tweet ) {
+const findOrCreateReceipt = function( data, new_receipt_tweet ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		findReceipt( query )
+		findReceipt( data )
 			.then( ( receipt ) => {
 				if ( ! receipt )
 					return createReceipt( data, new_receipt_tweet );

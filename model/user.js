@@ -6,7 +6,7 @@ const Mixed = Schema.Types.Mixed;
 
 var UserSchema = new Schema({
 	name: { type: String, required: true },
-	join_date: { type: Date, required: true },
+	join_date: Date,
 	twitter_user: { type: ObjectId, ref: "TwitterUser" },
 	state: { type: Number, default: 0, min: 0, max: 3 },
 	/*
