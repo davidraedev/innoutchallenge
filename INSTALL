@@ -8,4 +8,4 @@ Prerequisites: mongod
 5. (production) Run npm run build_client
 	- This will webpack bundle the React frontend
 6. (production) Run npm run start_all
-	- This will spawn the express backend, and several daemons that fetch data when neceddary
+	- This will spawn the express backend, mongo database, and several daemons that fetch data when necessary
