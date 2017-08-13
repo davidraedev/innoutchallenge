@@ -10,6 +10,7 @@
     "start_server": "export NODE_ENV=production; export ENV_PATH='.env.production'; node server/server.js start http_server",
     "start_server_dev": "export NODE_ENV=dev; export ENV_PATH='.env.dev'; nodemon --trace-warnings server/app/http/server_daemon.js",
     "stop_server": "export NODE_ENV=production; export ENV_PATH='.env.production'; node server/server.js stop http_server",
+    "stop_all": "export NODE_ENV=production; export ENV_PATH='.env.production'; node server/server.js stop_all; npm run stop_database",
     "build_client": "export NODE_ENV=production; export ENV_PATH='.env.production'; webpack --config webpack.config.js",
     "start_client_dev": "export NODE_ENV=dev; export ENV_PATH='.env.dev'; node_modules/.bin/webpack-dev-server",
     "start_database": "mongod --fork --config mongo.conf",
