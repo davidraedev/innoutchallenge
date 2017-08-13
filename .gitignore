@@ -1,16 +1,12 @@
-# Dependency directories
 node_modules/
-jspm_packages/
-
-.env
 .env.dev
 .env.production
-
 data/database/*
 data/old_site/*
 data/stores/*
 log/*
-!.gitkeep
-public/img/src/
-
+server/public/img/src/
 *.DS_Store
+client/build/bundle.js
+pids/*
+!.gitkeep

@@ -1,0 +1,29 @@
+.sub_nav_font {
+	font-family: "Lucida Grande", sans-serif;
+	font-size: 18px;
+}
+
+#sub_nav {
+	position: relative;
+	top: -6px;
+	z-index: 3;
+	background-color: rgb( 255,255,255 );
+
+	ul {
+		margin: 0px;
+		padding: 0px;
+		box-shadow: 0px 0px 4px rgb( 220,220,220 );
+		text-align: center;
+
+		li {
+			display: inline-block;
+			.sub_nav_font;
+			color: rgb( 214,131,131 );
+			padding: 7px 15px;
+
+			.active {
+				color: rgb( 191,0,0 );
+			}
+		}
+	}
+}
