@@ -8,7 +8,9 @@ const fs = require( "fs" );
 
 const ObjectId = require( "mongoose" ).Schema.Types.ObjectId;
 
-const cached_stores_file = process.env.BASE + "/data/stores/stores.json";
+const base = process.env.BASE || process.cwd();
+
+const cached_stores_file = base + "/data/stores/stores.json";
 
 const findStoreNearCoords = function( latitude, longitude ) {
 	return Store.findOne({ loc: { $nearSphere: { $geometry: { type: "Point", coordinates: [ longitude, latitude ] }, $maxDistance: 1000 } } } );
