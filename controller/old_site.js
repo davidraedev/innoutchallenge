@@ -13,7 +13,7 @@ const Receipt = require( "../model/receipt" );
 const ObjectId = db.mongoose.Types.ObjectId;
 const tweetController = require( "./tweet" );
 
-const default_data_path = "data/old_site.json";
+const default_data_path = "data/old_site/old_site.json";
 const default_data_url = "https://innoutchallenge.com/export_data.php?key="+ process.env.INNOUTCHALLENGE_OLD_KEY;
 
 const getRemote = function( data_url, data_path ) {

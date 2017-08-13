@@ -8,7 +8,7 @@ jspm_packages/
 
 data/database/*
 data/old_site/*
-data/stores.json
+data/stores/*
 log/*
 !.gitkeep
 public/img/src/
