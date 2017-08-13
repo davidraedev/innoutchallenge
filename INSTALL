@@ -1,0 +1,11 @@
+Prerequisites: mongod
+
+1. Run: npm install
+2. (optional) Run: npm test
+3. Create and populate your .env.production and/or .env.dev files from .env.sample
+4. Run: npm run setup (be sure to define your production/dev env vars first)
+	- This will migrate the data from the old innoutchallenge, create any necessary files, and fetch any new data it can from Twitter.
+5. (production) Run npm run build_client
+	- This will webpack bundle the React frontend
+6. (production) Run npm run start_all
+	- This will spawn the express backend, and several daemons that fetch data when neceddary
