@@ -59,12 +59,12 @@ module.exports = {
 	devServer: {
 		contentBase: path.resolve( __dirname, "client/build" ),
 		historyApiFallback: true,
-		host: "127.0.0.1",
-		port: 8080,
+		host: process.env.FRONTEND_HOST,
+		port: process.env.FRONTEND_PORT,
 		proxy: [
 			{
 				context: [ "/api/**", "/img/**", "/font/**" ],
-				target: "http://127.0.0.1:3000/",
+				target: process.env.BACKEND_URL,
 				secure: false,
 			},
 		],
