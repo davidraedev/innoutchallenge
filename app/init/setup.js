@@ -8,7 +8,8 @@ const userController = require( "../../controller/user" );
 const twitterUserController = require( "../../controller/twitter_user" );
 
 const mongo_log = "log/mongo.log";
-const env_file = ".env";
+const env_file_dev = ".env.dev";
+const env_file_production = ".env.production";
 const env_template = ".env.sample";
 const use_cache = false;
 
@@ -27,15 +28,27 @@ fs.access( mongo_log, fs.constants.F_OK | fs.constants.W_OK )
 	})
 	.then( () => {
 		// check envronment file exists
-		return fs.access( env_file, fs.constants.F_OK | fs.constants.W_OK );
+		return fs.access( env_file_dev, fs.constants.F_OK | fs.constants.W_OK );
 	})
 	.then( () => {
-		console.log( "Environment File Already Exists" );
+		console.log( "Dev Environment File Already Exists" );
 	})
 	.catch( () => {
 		// create environment file from the sample
-		fs.createReadStream( env_template ).pipe( fs.createWriteStream( env_file ) );
-		console.log( "Blank Environment File Created" );
+		fs.createReadStream( env_template ).pipe( fs.createWriteStream( env_file_dev ) );
+		console.log( "Blank Dev Environment File Created" );
+	})
+	.then( () => {
+		// check envronment file exists
+		return fs.access( env_file_production, fs.constants.F_OK | fs.constants.W_OK );
+	})
+	.then( () => {
+		console.log( "Production Environment File Already Exists" );
+	})
+	.catch( () => {
+		// create environment file from the sample
+		fs.createReadStream( env_template ).pipe( fs.createWriteStream( env_file_production ) );
+		console.log( "Blank Production Environment File Created" );
 	})
 	.then( () => {
 		return db.connect();

@@ -147,22 +147,7 @@ const processQueues = function( limit ) {
 	});
 };
 
-const watch = function( delay, limit ) {
-	console.log( "watch", new Date() );
-
-	delay = delay || 20000;
-
-	processQueues( limit )
-		.then( () => {
-			setTimeout( watch, delay );
-		})
-		.catch( ( error ) => {
-			throw error;
-		});
-};
-
 module.exports.addTweetToQueue = addTweetToQueue;
 module.exports.findQueue = findQueue;
 module.exports.findQueues = findQueues;
 module.exports.processQueues = processQueues;
-module.exports.watch = watch;

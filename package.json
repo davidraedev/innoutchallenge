@@ -5,14 +5,14 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "setup": "node app/init/setup.js",
+    "setup": "export NODE_ENV=production; export ENV_PATH='.env.production'; npm run startdb && node --trace-warnings app/init/setup.js; npm run stopdb",
     "startdb": "mongod --fork --config mongo.conf",
     "startdbdev": "mongod --config mongo.conf",
     "stopdb": "mongo admin --eval 'db.shutdownServer()' > /dev/null",
-    "start": "NODE_ENV=production; ENV_PATH='.env.production' node server.js",
-    "dev": "NODE_ENV=dev; ENV_PATH='.env.dev' nodemon server.js",
+    "start": "export NODE_ENV=production; export ENV_PATH='.env.production'; node server.js",
+    "dev": "export NODE_ENV=dev; export ENV_PATH='.env.dev'; nodemon --trace-warnings server.js",
     "pretest": "npm run startdb",
-    "test": "NODE_ENV=testing; ENV_PATH='.env.testing' node_modules/mocha/bin/mocha test/**.js; npm run stopdb"
+    "test": "export NODE_ENV=testing; export ENV_PATH='.env.testing'; node_modules/mocha/bin/mocha test/**.js; npm run stopdb"
   },
   "author": "David Rae",
   "license": "Apache-2.0",

@@ -8,12 +8,13 @@ var UserSchema = new Schema({
 	name: { type: String, required: true },
 	join_date: Date,
 	twitter_user: { type: ObjectId, ref: "TwitterUser" },
-	state: { type: Number, default: 0, min: 0, max: 3 },
+	state: { type: Number, default: 0, min: 0, max: 5 },
 	/*
 		0 = not approved
 		1 = approved
 		2 = banned
 		3 = temp_ignored
+		5 = app_account
 	*/
 	settings: {
 		tweet: {
