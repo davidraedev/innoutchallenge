@@ -1,0 +1,52 @@
+html, body {
+	margin: 0px;
+}
+
+body {
+	display: flex;
+	min-height: 100vh;
+	flex-direction: column;
+}
+
+ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+
+a {
+	text-decoration: none;
+	color: inherit;
+}
+
+.input {
+	border: 1px solid rgb( 200,200,200 );
+	border-radius: 100px;
+
+	input {
+		border: 0px;
+		outline: 0px;
+		background: transparent;
+		line-height: inherit;
+		font-size: inherit;
+		color: inherit;
+		font-family: inherit;
+		font-style: inherit;
+	}
+
+	&.search {
+
+		&:before {
+			content: "\f002";
+			font-family: "FontAwesome";
+			float: right;
+			font-style: normal;
+		}
+	}
+}
+
+#main_content {
+	padding: 10px;
+	text-align: center;
+	flex: 1;
+}

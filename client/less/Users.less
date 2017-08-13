@@ -1,0 +1,133 @@
+.challenger {
+	padding: 40px 34px;
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+
+	.number {
+		background: rgb( 72,72,72 );
+		border-radius: 500px;
+		width: 165px;
+		height: 165px;
+		position: relative;
+		color: rgb( 255,255,255 );
+		text-align: center;
+		line-height: 165px;
+		font-size: 65px;
+		font-family: "Times", serif;
+		background-size: cover;
+		background-position: center;
+
+		.text {
+			position: relative;
+			z-index: 2;
+		}
+
+		&:before {
+			content: "";
+			position: absolute;
+			top: 5px;
+			left: 5px;
+			width: 151px;
+			height: 151px;
+			border: 2px solid rgb( 255,255,255 );
+			border-radius: 500px;
+			background-color: rgba( 0,0,0, 0.5 );
+			z-index: 1;
+		}
+	}
+
+	.name {
+		color: rgb( 72,72,72 );
+		font-family: serif;
+		font-size: 30px;
+		font-style: italic;
+		padding: 15px 0px;
+	}
+}
+
+#challengers_nav {
+	text-align: center;
+	height: 45px;
+
+	.previous, .next {
+		width: 41px;
+		height: 44px;
+		border-radius: 25px;
+		background: rgb( 94,94,94 );
+		cursor: pointer;
+
+		&.disabled {
+			background: rgb( 190,190,190 );
+			pointer-events: none;
+		}
+
+		&:before {
+			font-family: "FontAwesome";
+			color: rgb( 255,255,255 );
+			font-size: 28px;
+			text-align: center;
+			line-height: 44px;
+		}
+	}
+
+	.previous {
+		float: left;
+		margin-left: 20px;
+		padding-right: 3px;
+
+		&:before {
+			content: "\f0d9"; // fa-caret-left
+		}
+	}
+	.next {
+		float: right;
+		margin-right: 20px;
+		padding-left: 3px;
+
+		&:before {
+			content: "\f0da"; // fa-caret-right
+		}
+	}
+	.pages {
+		text-align: center;
+		display: inline-block;
+
+		.page {
+			font-family: sans-serif;
+			color: rgb( 126,126,126 );
+			font-size: 20px;
+			padding: 10px;
+			line-height: 51px;
+			cursor: pointer;
+
+			&.active {
+				color: rgb( 0,0,0 );
+			}
+		}
+	}
+}
+
+
+@media ( max-width: 640px ) {
+	
+	.challenger {
+		padding: 14px 25px;
+
+		.number {
+			width: 125px;
+			height: 125px;
+			line-height: 129px;
+			font-size: 48px;
+
+			&:before {
+				width: 109px;
+				height: 109px;
+			}
+		}
+
+		.name {
+			padding: 15px 0px;
+		}
+	}
+}
