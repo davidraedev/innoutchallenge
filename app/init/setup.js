@@ -1,3 +1,14 @@
+console.log( "process.env.NODE_ENV", process.env.NODE_ENV );
+console.log( "process.env.ENV_PATH", process.env.ENV_PATH );
+
+if ( ! process.env.NODE_ENV )
+	console.log( "missing NODE_ENV, remember to prepend \"export NODE_ENV=production/dev;\"" );
+if ( ! process.env.ENV_PATH )
+	console.log( "missing NODE_ENV, remember to prepend \"export ENV_PATH=.env.production/.env.dev;\"" );
+
+if ( ! process.env.ENV_PATH || ! process.env.ENV_PATH )
+	throw new Error( "missing required env vars" );
+
 const fs = require( "fs.promised" );
 
 const db = require( "../db" );
