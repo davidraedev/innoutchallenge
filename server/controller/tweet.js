@@ -8,7 +8,7 @@ require( "dotenv" ).config( { path: process.env.ENV_PATH } );
 const TwitterUser = require( "../model/twitter_user" );
 const wordToNumber = require( "word-to-number-node" );
 const w2n = new wordToNumber();
-w2n.setSideChars( /[a-z#]/i );
+w2n.setSideChars( /[a-z#]/i ); // don't allow word numbers in hashtags
 const storeController = require( "./store" );
 const userController = require( "./user" );
 const tweetQueueController = require( "./tweet_queue" );
@@ -18,7 +18,7 @@ const PromiseEndError = require( "../app/error/PromiseEndError" );
 
 const getTweetsFromSearchApp = function( search_string ) {
 
-	search_string = search_string || "innoutchallenge";
+	search_string = search_string || "#innoutchallenge";
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -338,14 +338,6 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 				}
 				else {
 					let in_store_number = parseForInStoreReceipt( tweet.data.text );
-					receipt_data.date = new Date( tweet.data.created_at );
-					receipt_data.tweet = tweet._id;
-					receipt_data.user = this_user._id;
-					receipt_data.twitter_user = this_twitter_user._id;
-					receipt_data.approved = ( this_user.state === 1 ) ? 2 : 0;
-
-					if ( store )
-						receipt_data.store = this_store._id;
 
 					if ( in_store_number ) {
 						receipt_data.type = 1;
@@ -362,7 +354,20 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 						}
 					}
 
-					return Receipt.findOne( receipt_data ); 
+					let search = {
+						tweet: receipt_data.tweet
+					};
+
+					receipt_data.tweet = tweet._id;
+					receipt_data.user = this_user._id;
+					receipt_data.twitter_user = this_twitter_user._id;
+					receipt_data.date = tweet.data.created_at;
+					receipt_data.approved = ( this_user.state === 1 ) ? 2 : 0;
+
+					if ( store )
+						receipt_data.store = this_store._id;
+
+					return Receipt.findOne( search ); 
 				}
 			})
 			.then( ( receipt ) => {

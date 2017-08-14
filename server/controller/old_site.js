@@ -16,6 +16,8 @@ const tweetController = require( "./tweet" );
 const default_data_path = "data/old_site/old_site.json";
 const default_data_url = "https://innoutchallenge.com/export_data.php?key="+ process.env.INNOUTCHALLENGE_OLD_KEY;
 
+const PromiseEndError = require( "../app/error/PromiseEndError" );
+
 const getRemote = function( data_url, data_path ) {
 
 	data_path = data_path || default_data_path;
@@ -121,63 +123,91 @@ function processUser( user_data, data ) {
 			let tweet_count = tweets.length;
 			tweets.forEach( ( tweet_data ) => {
 
+				let search = {
+					number: tweet_data.receipt,
+					date: new Date( tweet_data.tweet_date ),
+					type: 1,
+					user: new ObjectId( this_user._id ),
+				};
+
+				let receipt_data = {
+					number: tweet_data.receipt,
+					date: new Date( tweet_data.tweet_date ),
+					type: 1,
+					user: new ObjectId( this_user._id ),
+					approved: tweet_data.approved,
+				};
+
+				// tweetless receipt
 				if ( ! tweet_data.tweet_id.length ) {
 
-					Receipt.create({
-						number: tweet_data.receipt,
-						date: new Date( tweet_data.tweet_date ),
-						type: 1,
-						user: new ObjectId( this_user._id ),
-						approved: tweet_data.approved,
-					})
-					.then(() => {
-						if ( --tweet_count === 0 )
-							return resolve();
-					})
-					.catch( ( error ) => {
-						if ( error )
-							throw error;
-					});
-
+					Receipt.findOne( search )
+						.then( ( receipt ) => {
+							if ( ! receipt )
+								return Receipt.create( receipt_data );
+							else
+								return receipt;
+						})
+						.then(() => {
+							if ( --tweet_count === 0 )
+								return resolve();
+						})
+						.catch( ( error ) => {
+							if ( error )
+								throw error;
+						});
 				}
+				// tweeted receipt, create tweet
 				else {
 
 					Tweet.create( {
-						source: 0,
-						data: {
-							id_str: tweet_data.tweet_id,
-							text: tweet_data.tweet_text,
-						}
-					})
-					.then( ( tweet ) => {
+							source: 0,
+							data: {
+								id_str: tweet_data.tweet_id,
+								text: tweet_data.tweet_text,
+							}
+						})
+						.then( ( tweet ) => {
 
-						if ( ! tweet_data.receipt.length ) {
+							if ( ! tweet_data.receipt.length ) {
+								if ( --tweet_count === 0 )
+									resolve();
+								return;
+							}
+
+							Receipt.findOne( { tweet: new ObjectId( tweet._id ) } )
+								.then( ( receipt ) => {
+									if ( ! receipt ) {
+										receipt_data.tweet = new ObjectId( tweet._id );
+										return Receipt.create( receipt_data );
+									}
+									else
+										return receipt;
+								})
+								.then(() => {
+									if ( --tweet_count === 0 )
+										return resolve();
+								})
+								.catch( ( error ) => {
+									if ( error )
+										throw error;
+								});
+
+						})
+						.then(() => {
 							if ( --tweet_count === 0 )
 								resolve();
-							return;
-						}
-
-						return Receipt.create({
-							number: tweet_data.receipt,
-							date: new Date( tweet_data.tweet_date ),
-							type: 1,
-							tweet: new ObjectId( tweet._id ),
-							user: new ObjectId( this_user._id ),
-							approved: tweet_data.approved,
+						})
+						.catch( ( error ) => {
+							throw error;
 						});
-					})
-					.then(() => {
-						if ( --tweet_count === 0 )
-							resolve();
-					})
-					.catch( ( error ) => {
-						throw error;
-					});
 				}
 			});
 		})
 		.catch( ( error ) => {
-			reject( error );
+			if ( error instanceof PromiseEndError )
+				return resolve();
+			return reject( error );
 		});
 	});
 }

@@ -1,22 +1,28 @@
-const fs = require( "fs" );
+process.env.BASE = process.env.BASE || process.cwd();
+if ( process.env.NODE_ENV === "production" ) {
+	const fs = require( "fs" );
+	const logStream = fs.createWriteStream( process.env.BASE + "/log/tweet_queue.log" );
+	function log( msg ) {
+		logStream.write( msg + "\n" );
+	}
 
-const logStream = fs.createWriteStream( process.env.BASE + "/log/tweet_queue.log" );
+	log( "["+ new Date() +"] Starting Log" );
 
-function log( msg ) {
-	logStream.write( msg + "\n" );
+	process.on( "uncaughtException", ( error ) => {
+		log( error.stack );
+	});
+
+	process.once( "SIGTERM", () => {
+		log( "["+ new Date() +"] Stopped" );
+		logStream.end();
+		process.exit( 0 );
+	});
 }
-
-log( "["+ new Date() +"] Starting Log" );
-
-process.on( "uncaughtException", ( error ) => {
-	log( error.stack );
-});
-
-process.once( "SIGTERM", () => {
-	log( "["+ new Date() +"] Stopped" );
-	logStream.end();
-	process.exit( 0 );
-});
+else {
+	function log( msg ) {
+		console.log( msg );
+	}
+}
 
 const tweetQueueController = require( "../../controller/tweet_queue" );
 const db = require( "../db" );
