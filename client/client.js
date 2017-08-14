@@ -17,6 +17,7 @@ import UserDriveThru from "./components/UserDriveThru"
 import PageNotFound from "./components/PageNotFound"
 import AdminAuth from "./components/AdminAuth"
 import UserAuth from "./components/UserAuth"
+import BackendPassThru from "./components/BackendPassThru"
 import store from "./store"
 
 require( "./less/main.less" )
@@ -45,8 +46,11 @@ ReactDOM.render(
 						<Route path="/challengers" component={ Users } exact />
 						<Route path="/signin" exact component={ UserAuth } />
 						<Route path="/admin/signin" exact component={ AdminAuth } />
+						<Route path="/admin/signin/return/:returnUrl" exact component={ BackendPassThru } />
+						<Route path="/admin/signout" exact component={ BackendPassThru } />
+						<Route path="/admin/auth/twitter/callback" exact component={ BackendPassThru } />
+						<Route path="/img/*" exact component={ BackendPassThru } />
 						<Route path="/404" exact component={ PageNotFound } />
-						<Route path="/*" component={ PageNotFound } />
 					</Switch>
 				</div>
 			</Router>

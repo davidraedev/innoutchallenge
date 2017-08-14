@@ -1,22 +1,31 @@
-const fs = require( "fs" );
+process.env.BASE = process.env.BASE || process.cwd();
 
-const logStream = fs.createWriteStream( process.env.BASE + "/log/http_server.log" );
 
-function log( msg ) {
-	logStream.write( msg + "\n" );
+
+if ( process.env.NODE_ENV === "production" ) {
+	const fs = require( "fs" );
+	const logStream = fs.createWriteStream( process.env.BASE + "/log/http_server.log" );
+	function log( msg ) {
+		logStream.write( msg + "\n" );
+	}
+
+	log( "["+ new Date() +"] Starting Log" );
+
+	process.on( "uncaughtException", ( error ) => {
+		log( error.stack );
+	});
+
+	process.once( "SIGTERM", () => {
+		log( "["+ new Date() +"] Stopped" );
+		logStream.end();
+		process.exit( 0 );
+	});
 }
-
-log( "["+ new Date() +"] Starting Log" );
-
-process.on( "uncaughtException", ( error ) => {
-	log( error.stack );
-});
-
-process.once( "SIGTERM", () => {
-	log( "["+ new Date() +"] Stopped" );
-	logStream.end();
-	process.exit( 0 );
-});
+else {
+	function log( msg ) {
+		console.log( msg );
+	}
+}
 
 
 if ( ! process.env.NODE_ENV )
@@ -45,6 +54,8 @@ app.use( cors( {
 }) );
 
 app.disable( "x-powered-by" );
+
+log( "img, "+ process.env.BASE + "/server/public/img" )
 
 app.use( "/img", express.static( process.env.BASE + "/server/public/img" ) );
 app.use( "/font", express.static( process.env.BASE + "/server/public/font" ) );
@@ -180,7 +191,6 @@ adminPassport.use(
 		( token, secret, profile, callback ) => {
 			let new_user = false;
 			let this_twitter_user;
-		//	let this_user;
 			TwitterUser.findOne({ "data.id_str": profile._json.id_str })
 				.then( ( twitter_user ) => {
 					if ( ! twitter_user ) {
@@ -238,8 +248,16 @@ adminPassport.deserializeUser( ( obj, callback ) => {
 
 app.use( adminPassport.initialize() );
 app.use( adminPassport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
-app.get( "/admin/signin/return/:returnUrl", ( request, response, next ) => { request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next(); }, adminPassport.authenticate( "twitter" ) );
-app.get( "/admin/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.headers.referer; next(); }, adminPassport.authenticate( "twitter" ) );
+app.get( "/admin/signin/return/:returnUrl", ( request, response, next ) => {
+	log( "returnUrl a " + request.params.returnUrl );
+	request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl );
+	next();
+}, adminPassport.authenticate( "twitter" ) );
+app.get( "/admin/signin", ( request, response, next ) => {
+	log( "returnUrl b " + request.params.returnUrl );
+	request.session.signinReturnUrl = request.headers.referer;
+	next();
+}, adminPassport.authenticate( "twitter" ) );
 app.get( "/admin/signout", ( request, response ) => {
 	request.logout();
 	response.redirect( process.env.FRONTEND_URL );
@@ -249,7 +267,8 @@ app.get( "/admin/auth/twitter/callback",
 		"twitter",
 		{ failureRedirect: "/admin/signin" }),
 		( request, response ) => {
-			let redirect = ( request.session.signinReturnUrl === process.env.FRONTEND_URL + "/admin/signin" ) ? process.env.FRONTEND_URL : request.session.signinReturnUrl;
+			let redirect = ( request.session.signinReturnUrl === process.env.FRONTEND_URL + "/admin/signin" || ! request.session.signinReturnUrl ) ? process.env.FRONTEND_URL : request.session.signinReturnUrl;
+			log( "redirect " + redirect );
 			request.session.signinReturnUrl = null;
 			response.redirect( redirect );
 		});
