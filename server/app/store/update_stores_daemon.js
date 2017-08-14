@@ -1,40 +1,27 @@
 process.env.BASE = process.env.BASE || process.cwd();
-if ( process.env.NODE_ENV === "production" ) {
-	const fs = require( "fs" );
-	const logStream = fs.createWriteStream( process.env.BASE + "/log/update_stores.log" );
-	function log( msg ) {
-		logStream.write( msg + "\n" );
-	}
-
-	log( "["+ new Date() +"] Starting Log" );
-
-	process.on( "uncaughtException", ( error ) => {
-		log( error.stack );
-	});
-
-	process.once( "SIGTERM", () => {
-		log( "["+ new Date() +"] Stopped" );
-		logStream.end();
-		process.exit( 0 );
-	});
-}
-else {
-	function log( msg ) {
-		console.log( msg );
-	}
-}
+const Logger = require( "./server/controller/log" );
+const log = new Logger( { path: process.env.BASE + "/log/update_stores.log" } );
 
 const db = require( "../db" );
 const storeController = require( "../../controller/store" );
 const utils = require( "../../controller/utils" );
+const appController = require( "../../controller/app" );
+const PromiseEndError = require( "../error/PromiseEndError" );
+const moment = require( "moment" );
 
-const fetch_delay = 1000 * 60 * 60 * 24; // once per day
+const fetch_delay = 60 * 60 * 24; // 24 hours in seconds
 
 function callback() {
 
 	return new Promise( ( resolve, reject ) => {
 
-		storeController.updateStores()
+		appController.getStoreFetchDate()
+			.then( ( result ) => {
+				let fetch_cutoff = moment().subtract( fetch_delay, "seconds" );
+				if ( ! result || fetch_cutoff.isAfter( result.store_fetch_date ) )
+					return storeController.updateStores()
+				throw new PromiseEndError( "Not time yet!" );
+			})
 			.then( () => {
 				log( "["+ new Date() +"] loop" );
 				resolve();
@@ -48,7 +35,7 @@ function callback() {
 
 db.connect()
 	.then(() => {
-		log( "DB connected, updateStores looping" );
+		log( "["+ new Date() +"] DB connected, updateStores looping" );
 		utils.loop( callback, fetch_delay );
 	})
 	.catch( ( error ) => {
