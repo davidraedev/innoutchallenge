@@ -6,6 +6,8 @@ const agent = new https.Agent({
 	rejectUnauthorized: false
 });
 require( "dotenv" ).config( { path: process.env.ENV_PATH } );
+const moment = require( "moment-timezone" );
+
 const User = require( "../model/user" );
 const TwitterUser = require( "../model/twitter_user" );
 const Tweet = require( "../model/tweet" );
@@ -123,16 +125,20 @@ function processUser( user_data, data ) {
 			let tweet_count = tweets.length;
 			tweets.forEach( ( tweet_data ) => {
 
+				let original_date = moment( tweet_data.tweet_date ).tz( "America/Los_Angeles" );
+				let offset = original_date.utcOffset();
+				let adjusted_date = original_date.add( offset, "minutes" ).toDate();
+
 				let search = {
 					number: tweet_data.receipt,
-					date: new Date( tweet_data.tweet_date ),
+					date: adjusted_date,
 					type: 1,
 					user: new ObjectId( this_user._id ),
 				};
 
 				let receipt_data = {
 					number: tweet_data.receipt,
-					date: new Date( tweet_data.tweet_date ),
+					date: adjusted_date,
 					type: 1,
 					user: new ObjectId( this_user._id ),
 					approved: tweet_data.approved,
