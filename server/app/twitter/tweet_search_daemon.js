@@ -1,28 +1,34 @@
-const fs = require( "fs" );
+process.env.BASE = process.env.BASE || process.cwd();
+if ( process.env.NODE_ENV === "production" ) {
+	const fs = require( "fs" );
+	const logStream = fs.createWriteStream( process.env.BASE + "/log/fetch_tweets.log" );
+	function log( msg ) {
+		logStream.write( msg + "\n" );
+	}
 
-const logStream = fs.createWriteStream( process.env.BASE + "/log/fetch_tweets.log" );
+	log( "["+ new Date() +"] Starting Log" );
 
-function log( msg ) {
-	logStream.write( msg + "\n" );
+	process.on( "uncaughtException", ( error ) => {
+		log( error.stack );
+	});
+
+	process.once( "SIGTERM", () => {
+		log( "["+ new Date() +"] Stopped" );
+		logStream.end();
+		process.exit( 0 );
+	});
 }
-
-log( "["+ new Date() +"] Starting Log" );
-
-process.on( "uncaughtException", ( error ) => {
-	log( error.stack );
-});
-
-process.once( "SIGTERM", () => {
-	log( "["+ new Date() +"] Stopped" );
-	logStream.end();
-	process.exit( 0 );
-});
+else {
+	function log( msg ) {
+		console.log( msg );
+	}
+}
 
 const tweetController = require( "../../controller/tweet" );
 const db = require( "../db" );
 const utils = require( "../../controller/utils" );
 
-const fetch_delay = 1000 * 60;
+const fetch_delay = 1000 * 60; // once per minute
 
 function callback() {
 

@@ -1,7 +1,4 @@
 process.env.BASE = process.env.BASE || process.cwd();
-
-
-
 if ( process.env.NODE_ENV === "production" ) {
 	const fs = require( "fs" );
 	const logStream = fs.createWriteStream( process.env.BASE + "/log/http_server.log" );

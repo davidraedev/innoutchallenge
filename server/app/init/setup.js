@@ -1,6 +1,3 @@
-console.log( "process.env.NODE_ENV", process.env.NODE_ENV );
-console.log( "process.env.ENV_PATH", process.env.ENV_PATH );
-
 if ( ! process.env.NODE_ENV )
 	console.log( "missing NODE_ENV, remember to prepend \"export NODE_ENV=production/dev;\"" );
 if ( ! process.env.ENV_PATH )
@@ -10,9 +7,8 @@ if ( ! process.env.ENV_PATH || ! process.env.ENV_PATH )
 	throw new Error( "missing required env vars" );
 
 const fs = require( "fs.promised" );
-
 const db = require( "../db" );
-const oldSiteContoller = require( "../../controller/old_site" );
+const oldSiteController = require( "../../controller/old_site" );
 const tweetController = require( "../../controller/tweet" );
 const storeController = require( "../../controller/store" );
 const userController = require( "../../controller/user" );
@@ -66,7 +62,7 @@ fs.access( mongo_log, fs.constants.F_OK | fs.constants.W_OK )
 	})
 	.then( () => {
 		// delete all collections in mongo
-		return oldSiteContoller.resetData();
+		return oldSiteController.resetData();
 	})
 	.then( () => {
 		// fetch the list of all the stores and import it
@@ -76,29 +72,29 @@ fs.access( mongo_log, fs.constants.F_OK | fs.constants.W_OK )
 		// fetch the remote/cached data from the old innoutchalllenge
 		console.log( "Data Reset" );
 		if ( ! use_cache )
-			return oldSiteContoller.getRemote();
+			return oldSiteController.getRemote();
 		else
-			return oldSiteContoller.getLocal();
+			return oldSiteController.getLocal();
 	})
 	.then( ( data ) => {
 		// import the old data
 		console.log( "Data Retrieved" );
-		return oldSiteContoller.importData( data );
+		return oldSiteController.importData( data );
 	})
 	.then( () => {
 		// fetch all the tweets for the old, incomplete data
 		console.log( "Data Imported, Refetching Tweets" );
-		return oldSiteContoller.refetchTweetsAll();
+		return oldSiteController.refetchTweetsAll();
 	})
 	.then( () => {
 		// normalize the data to our new format
 		console.log( "Tweets Fetched, Cleaning up Tweets" );
-		return oldSiteContoller.postCleanup();
+		return oldSiteController.postCleanup();
 	})
 	.then( () => {
 		// parse all the tweets we just fetched
 		console.log( "Data Cleaned, Parsing Tweets" );
-		return tweetController.parseTweets( { source: 0 } );
+		return tweetController.parseTweets( false, false );
 	})
 	.then( () => {
 		// fetch any new tweets to fill in the gap, if any

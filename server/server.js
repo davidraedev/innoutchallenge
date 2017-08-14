@@ -8,8 +8,6 @@ require( "dotenv" ).config( { path: process.env.ENV_PATH } );
 const base = process.cwd();
 process.env.BASE = base;
 
-console.log( base + "/server/app/http/server_daemon.js" );
-
 let apps = {
 	http_server: {
 		main: base + "/server/app/http/server_daemon.js",
@@ -87,7 +85,6 @@ function isValidApp( name ) {
 }
 
 function init( action, name ) {
-	console.log( "[%s] [%s]", action, name )
 
 	if ( action === "start_all" )
 		start_all();
