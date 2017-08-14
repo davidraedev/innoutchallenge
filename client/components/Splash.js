@@ -12,7 +12,6 @@ export default class Splash extends React.Component {
 		this.setState({
 			images: {
 				obtain_innout: {
-					url: "splash_obtain_innout.jpg",
 					original: {
 						width: 336,
 						height: 527,
@@ -23,7 +22,6 @@ export default class Splash extends React.Component {
 					}
 				},
 				tweet_receipt: {
-					url: "splash_tweet_receipt.jpg",
 					original: {
 						width: 357,
 						height: 474,
@@ -34,7 +32,6 @@ export default class Splash extends React.Component {
 					}
 				},
 				repeat: {
-					url: "splash_repeat.jpg",
 					original: {
 						width: 526,
 						height: 350,
@@ -94,9 +91,9 @@ export default class Splash extends React.Component {
 				<div class="container" id="splash_content">
 					
 					<div class="intro">
-						<img class="img_welcome" src="img/splash_welcome.png" />
-						<img class="img_to_the" src="img/splash_to_the.png" />
-						<img class="img_logo" src="img/splash_logo.png" />
+						<img class="img_welcome" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_welcome.png" } />
+						<img class="img_to_the" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_to_the.png" } />
+						<img class="img_logo" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_logo.png" } />
 					</div>
 
 					<div class="section">
@@ -119,7 +116,7 @@ export default class Splash extends React.Component {
 
 								<div class="column image_col">
 									<div class="image">
-										<img src="img/splash_obtain_innout.jpg" style={ this.resizeImage( "obtain_innout" ) } />
+										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_obtain_innout.jpg" } style={ this.resizeImage( "obtain_innout" ) } />
 									</div>
 								</div>
 
@@ -161,7 +158,7 @@ export default class Splash extends React.Component {
 
 								<div class="column image_col">
 									<div class="image">
-										<img src="img/splash_tweet_receipt.jpg" style={ this.resizeImage( "tweet_receipt" ) } />
+										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_tweet_receipt.jpg" } style={ this.resizeImage( "tweet_receipt" ) } />
 									</div>
 								</div>
 								
@@ -181,7 +178,7 @@ export default class Splash extends React.Component {
 
 								<div class="column image_col">
 									<div class="image">
-										<img src="img/splash_repeat.jpg" style={ this.resizeImage( "repeat" ) } />
+										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_repeat.jpg" } style={ this.resizeImage( "repeat" ) } />
 									</div>
 								</div>
 
