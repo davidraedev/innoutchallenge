@@ -243,8 +243,6 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 		Tweet.find({ fetched: true, parsed: false })
 			.then( ( tweets ) => {
 
-				console.log( "tweets", tweets );
-
 				if ( ! tweets.length ) {
 					throw new PromiseEndError( "no tweets" );
 				}
@@ -252,14 +250,9 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 				let i = 0;
 				let end = tweets.length;
 				function parseTweetSync() {
-					console.log( "a" )
 
 					if ( i == end )
 						return resolve();
-
-					console.log( "b" )
-
-					
 
 					parseTweet( tweets[ i++ ], do_new_user_tweet, do_new_receipt_tweet )
 						.then( () => {
@@ -286,11 +279,8 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 };
 
 const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
-	console.log( "parseTweet", tweet, do_new_user_tweet, do_new_receipt_tweet )
 
 	return new Promise( ( resolve, reject ) => {
-
-		console.log( "parseTweet a" )
 
 		let this_twitter_user,
 			this_user,
@@ -306,16 +296,10 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 		tweet.parsed = true;
 		tweet.data.created_at = new Date( tweet.data.created_at );
 
-		console.log( "parseTweet b" )
-
 		return TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str } )
 			.then( ( twitter_user ) => {
 
-				console.log( "parseTweet c" )
-
 				if ( ! twitter_user ) {
-
-					console.log( "parseTweet d" )
 					return TwitterUser.create({
 						data: {
 							id_str: tweet.data.user.id_str,
@@ -324,23 +308,15 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					});
 				}
 				else {
-
-					console.log( "parseTweet e" )
 					return twitter_user;
 				}
 			})
 			.then( ( twitter_user ) => {
-
-				console.log( "parseTweet f" )
 				this_twitter_user = twitter_user;
 				return User.findOne( { twitter_user: twitter_user._id } );
 			})
 			.then( ( user ) => {
-
-				console.log( "parseTweet g" )
-
 				if ( ! user ) {
-					console.log( "parseTweet h" )
 					return User.create({
 						name: this_twitter_user.data.screen_name,
 						twitter_user: this_twitter_user._id,
@@ -348,42 +324,32 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					});
 				}
 				else {
-					console.log( "parseTweet i" )
 					return user;
 				}
 			})
 			.then( ( user ) => {
-				console.log( "parseTweet j" )
 				this_user = user;
 				return storeController.parseTweetForStore( tweet );
 			})
 			.then( ( store ) => {
-				console.log( "parseTweet k" )
 				this_store = store;
-				console.log( "store", store )
 				if ( isRetweet( tweet ) || hasIgnoreFlag( tweet ) || isIgnoredUser( tweet ) ) {
-					console.log( "parseTweet l" )
 					throw new PromiseEndError();
 				}
 				else {
-					console.log( "parseTweet m" )
 					let in_store_number = parseForInStoreReceipt( tweet.data.text );
 
 					if ( in_store_number ) {
-						console.log( "parseTweet n" )
 						receipt_data.type = 1;
 						receipt_data.number = in_store_number;
 					}
 					else {
-						console.log( "parseTweet o" )
 						let drive_thru_number = parseForDriveThruReceipt( tweet.data.text );
 						if ( drive_thru_number ) {
-							console.log( "parseTweet p" )
 							receipt_data.type = 2;
 							receipt_data.number = drive_thru_number;
 						}
 						else {
-							console.log( "parseTweet q" )
 							throw new PromiseBreakError( "invalid number" );
 						}
 					}
@@ -392,8 +358,6 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 						tweet: tweet._id
 					};
 
-					console.log( "search", search );
-
 					receipt_data.tweet = tweet._id;
 					receipt_data.user = this_user._id;
 					receipt_data.twitter_user = this_twitter_user._id;
@@ -401,21 +365,14 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					receipt_data.approved = ( this_user.state === 1 ) ? 2 : 0;
 
 					if ( store ) {
-						console.log( "parseTweet q.1" )
 						receipt_data.store = this_store._id;
-					}
-					else {
-						console.log( "parseTweet q.2" )
 					}
 
 					return Receipt.findOne( search ); 
 				}
 			})
 			.then( ( receipt ) => {
-				console.log( "parseTweet r" )
 				if ( receipt ) {
-					console.log( "parseTweet s" )
-					console.log( "receipt",receipt )
 					if ( receipt_data.store && ! receipt.store ) {
 						return new Promise( ( resolve, reject ) => {
 							receipt.store = receipt_data.store;
@@ -431,44 +388,35 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					throw new PromiseBreakError( "receipt exists" );
 				}
 				else {
-					console.log( "parseTweet t" )
 					return Receipt.create( receipt_data );
 				}
 			})
 			.then( ( receipt ) => {
-				console.log( "parseTweet u" )
 				if ( receipt === "break" ) {
-					console.log( "parseTweet u.1" )
 					throw new PromiseBreakError( "receipt exists" );
 				}
 				this_receipt = receipt;
 				return Receipt.findOne( { number: this_receipt.number, user: this_user._id, _id: { $ne: this_receipt._id } } );
 			})
 			.then( ( existing_number_receipt ) => {
-				console.log( "parseTweet v" )
 
 				if ( ! existing_number_receipt ) {
-					console.log( "parseTweet w" )
 
 					if ( this_receipt.type === 1 )  {
-						console.log( "parseTweet x" )
 						is_new_in_store = true;
 					}
 					else if ( this_receipt.type === 2 )  {
-						console.log( "parseTweet y" )
 						is_new_drive_thru = true;
 					}
 				}
 
 				if ( this_receipt.store ) {
-					console.log( "parseTweet z" )
 					return Receipt.findOne( { store: this_receipt.store, user: this_user._id } );
 				}
 
 				return false;
 			})
 			.then( ( existing_store_receipt ) => {
-				console.log( "parseTweet aa" )
 
 				if ( ! existing_store_receipt )
 					is_new_store = true;
@@ -476,19 +424,15 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 				return this_receipt.save();
 			})
 			.then( () => {
-				console.log( "parseTweet ab" )
 				return userController.updateUserTotals( this_user );
 			})
 			.then( ( totals ) => {
-				console.log( "parseTweet ac" )
 				this_totals = totals;
 				return tweetQueueController.findQueue( { user: this_user._id, type: 1 } );
 			})
 			.then( ( tweet_queue ) => {
-				console.log( "parseTweet ad" )
 
 				if ( ! tweet_queue && do_new_receipt_tweet && this_receipt.approved === 2 ) {
-					console.log( "parseTweet ae" )
 
 					let store_number = ( this_store ) ? this_store.number : null;
 
@@ -505,94 +449,72 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					};
 
 					if ( is_new_in_store ) {
-						console.log( "parseTweet af" )
 						if ( this_user.settings.tweet.unique_numbers ) {
-							console.log( "parseTweet ag" )
 							message_type = 1;
 							return createNewReceiptTweetParams( this_twitter_user.data.screen_name, tweet, data );
 						}
 						else if ( this_user.settings.dm.unique_numbers ) {
-							console.log( "parseTweet ah" )
 							message_type = 2;
 							return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
 						}
 					}
 					else if ( is_new_drive_thru ) {
-						console.log( "parseTweet ai" )
 						if ( this_user.settings.dm.drive_thrus ) {
-							console.log( "parseTweet aj" )
 							message_type = 2;
 							return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
 						}
 						else {
-							console.log( "parseTweet ak" )
 							return;
 						}
 					}
 					else if ( is_new_store ) {
-						console.log( "parseTweet al" )
 						if ( this_user.settings.dm.stores ) {
-							console.log( "parseTweet am" )
 							message_type = 2;
 							return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
 						}
 						else {
-							console.log( "parseTweet an" )
 							return;
 						}
 					}
 					else {
-						console.log( "parseTweet ao" )
 						return;
 					}
 				}
 				else {
-					console.log( "parseTweet ap" )
 					return;
 				}
 			})
 			.then( ( params ) => {
-				console.log( "parseTweet aq" )
 				if ( params ) {
-					console.log( "parseTweet ar" )
 					return tweetQueueController.addTweetToQueue( params, this_user._id, 2, null, message_type );
 				}
 			})
 			.then( () => {
-				console.log( "parseTweet as" )
 
 				tweet.save()
 					.then(() => {
-						console.log( "parseTweet at" )
 						resolve();
 					})
 					.catch( ( error ) => {
-						console.log( "parseTweet au" )
 						throw error;
 					});
 			})
 			.catch( ( error ) => {
-				console.log( "parseTweet av" )
 				if ( error instanceof PromiseBreakError || error instanceof PromiseEndError ) {
-					console.log( "parseTweet aw" )
 					tweet.save()
 						.then(() => {
-							console.log( "parseTweet ax" )
 							resolve();
 						})
 						.catch(( error ) => {
-							console.log( "parseTweet ay" )
 							if ( error instanceof PromiseEndError ) {
 								resolve();
 							}
 							else {
-								console.log( "parseTweet az" )
 								reject( error );
 							}
 						});
 				}
 				else {
-					console.log( "parseTweet bb" )
 					reject( error );
 				}
 			});
