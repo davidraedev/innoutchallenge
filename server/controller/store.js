@@ -18,12 +18,12 @@ const findStoreNearCoords = function( latitude, longitude ) {
 
 function getTweetCoords( tweet ) {
 
-	if ( ! tweet.data.coordinates || ! tweet.data.coordinates.length )
+	if ( ! tweet.data.coordinates || ! tweet.data.coordinates.coordinates.length )
 		return false;
 
 	return {
-		latitude: tweet.data.coordinates.coordinates[0],
-		longitude: tweet.data.coordinates.coordinates[1],
+		latitude: tweet.data.coordinates.coordinates[1],
+		longitude: tweet.data.coordinates.coordinates[0],
 	};
 }
 
@@ -101,24 +101,29 @@ function findStoreFromTwitterPlace( tweet ) {
 }
 
 const parseTweetForStore = function( tweet, ignore_hashtag ) {
+	console.log( "parseTweetForStore", tweet, ignore_hashtag )
 
 	return new Promise( ( resolve, reject ) => {
 
 		let store_number = parseStringForStoreHashtag( tweet.data.text );
+		console.log( "parseStringForStoreHashtag", store_number )
 		if ( ! store_number || ignore_hashtag ) {
 
 			let coords = getTweetCoords( tweet );
+			console.log( "getTweetCoords", tweet.data.coordinates, tweet.data.geo, coords )
 			if ( ! coords ) {
 				return resolve( null );
 			}
 
 			findStoreNearCoords( coords.latitude, coords.longitude )
 				.then( ( store ) => {
+					console.log( "findStoreNearCoords", store )
 
 					if ( ! store ) {
 
 						findStoreFromTwitterPlace( tweet )
 							.then( ( store ) => {
+								console.log( "findStoreFromTwitterPlace", store )
 								return resolve( store );
 							});
 
@@ -135,9 +140,11 @@ const parseTweetForStore = function( tweet, ignore_hashtag ) {
 		else {
 			Store.findOne( { number: store_number } )
 				.then( ( store ) => {
+					console.log( "Store.findOne( { number: "+ store_number +" } )", store )
 					if ( ! store ) {
 						return parseTweetForStore( tweet, true )
 							.then( ( store ) => {
+								console.log( "parseTweetForStore", store )
 								resolve( store );
 							});
 					}
