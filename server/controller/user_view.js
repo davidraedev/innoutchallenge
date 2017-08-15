@@ -66,7 +66,10 @@ exports.user_instore_receipts = function( request, response ) {
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
-	let search_params = { type: 1, approved: { $in: [ 1, 2 ] } };
+	let search_params = {
+		type: 1,
+		approved: { $in: [ 1, 2 ] },
+	};
 
 	let this_user;
 	userController.searchUser( name )
@@ -121,7 +124,7 @@ exports.user_stores = function( request, response ) {
 		return response.status( 500 ).send( "Invalid name" );
 
 	let search_params = {
-		approved: 1,
+		approved: { $in: [ 1, 2 ] },
 		store: { $ne: null },
 		type: { $in: [ 1, 2, 3 ] }
 	};
@@ -209,7 +212,10 @@ exports.user_drivethru_receipts = function( request, response ) {
 	if ( ! name )
 		return response.status( 500 ).send( "Invalid name" );
 
-	let search_params = { type: 3, approved: 1 };
+	let search_params = {
+		type: 3,
+		approved: { $in: [ 1, 2 ] },
+	};
 
 	let this_user;
 	userController.searchUser( name )

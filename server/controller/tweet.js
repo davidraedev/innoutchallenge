@@ -360,6 +360,7 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			.then( ( store ) => {
 				console.log( "parseTweet k" )
 				this_store = store;
+				console.log( "store", store )
 				if ( isRetweet( tweet ) || hasIgnoreFlag( tweet ) || isIgnoredUser( tweet ) ) {
 					console.log( "parseTweet l" )
 					throw new PromiseEndError();
@@ -399,8 +400,13 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					receipt_data.date = tweet.data.created_at;
 					receipt_data.approved = ( this_user.state === 1 ) ? 2 : 0;
 
-					if ( store )
+					if ( store ) {
+						console.log( "parseTweet q.1" )
 						receipt_data.store = this_store._id;
+					}
+					else {
+						console.log( "parseTweet q.2" )
+					}
 
 					return Receipt.findOne( search ); 
 				}
