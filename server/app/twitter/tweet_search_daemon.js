@@ -13,7 +13,6 @@ function callback() {
 
 		tweetController.getTweetsFromSearchApp()
 			.then( () => {
-				log( "["+ new Date() +"] loop" );
 				return tweetController.parseTweets( true, true );
 			})
 			.then( () => {
@@ -28,7 +27,7 @@ function callback() {
 
 db.connect()
 	.then(() => {
-		log( "DB connected, looping" );
+		log( "DB connected, starting" );
 		utils.loop( callback, fetch_delay );
 	})
 	.catch( ( error ) => {

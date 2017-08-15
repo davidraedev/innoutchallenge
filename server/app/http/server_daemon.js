@@ -28,8 +28,6 @@ app.use( cors( {
 
 app.disable( "x-powered-by" );
 
-log( "img, "+ process.env.BASE + "/server/public/img" )
-
 app.use( "/img", express.static( process.env.BASE + "/server/public/img" ) );
 app.use( "/font", express.static( process.env.BASE + "/server/public/font" ) );
 
@@ -222,12 +220,10 @@ adminPassport.deserializeUser( ( obj, callback ) => {
 app.use( adminPassport.initialize() );
 app.use( adminPassport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
 app.get( "/admin/signin/return/:returnUrl", ( request, response, next ) => {
-	log( "returnUrl a " + request.params.returnUrl );
 	request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl );
 	next();
 }, adminPassport.authenticate( "twitter" ) );
 app.get( "/admin/signin", ( request, response, next ) => {
-	log( "returnUrl b " + request.params.returnUrl );
 	request.session.signinReturnUrl = request.headers.referer;
 	next();
 }, adminPassport.authenticate( "twitter" ) );
@@ -241,7 +237,6 @@ app.get( "/admin/auth/twitter/callback",
 		{ failureRedirect: "/admin/signin" }),
 		( request, response ) => {
 			let redirect = ( request.session.signinReturnUrl === process.env.FRONTEND_URL + "/admin/signin" || ! request.session.signinReturnUrl ) ? process.env.FRONTEND_URL : request.session.signinReturnUrl;
-			log( "redirect " + redirect );
 			request.session.signinReturnUrl = null;
 			response.redirect( redirect );
 		});
@@ -341,7 +336,6 @@ db.connect()
 	})
 	.catch( ( error ) => {
 		log( error );
-		logStream.end();
 		db.close();
 	});
 
