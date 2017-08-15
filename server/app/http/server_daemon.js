@@ -1,36 +1,12 @@
-process.env.BASE = process.env.BASE || process.cwd();
-if ( process.env.NODE_ENV === "production" ) {
-	const fs = require( "fs" );
-	const logStream = fs.createWriteStream( process.env.BASE + "/log/http_server.log" );
-	function log( msg ) {
-		logStream.write( msg + "\n" );
-	}
-
-	log( "["+ new Date() +"] Starting Log" );
-
-	process.on( "uncaughtException", ( error ) => {
-		log( error.stack );
-	});
-
-	process.once( "SIGTERM", () => {
-		log( "["+ new Date() +"] Stopped" );
-		logStream.end();
-		process.exit( 0 );
-	});
-}
-else {
-	function log( msg ) {
-		console.log( msg );
-	}
-}
-
 
 if ( ! process.env.NODE_ENV )
 	throw new Error( "NODE_ENV not defined" );
 if ( ! process.env.ENV_PATH )
 	throw new Error( "ENV_PATH not defined" );
 
-
+process.env.BASE = process.env.BASE || process.cwd();
+const Logger = require( "../../controller/log" );
+const log = new Logger( { path: process.env.BASE + "/log/http_server.log" } );
 const express = require( "express" );
 const app = express();
 const session = require( "express-session" );
