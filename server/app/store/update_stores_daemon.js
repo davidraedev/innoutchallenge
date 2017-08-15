@@ -1,7 +1,6 @@
 process.env.BASE = process.env.BASE || process.cwd();
-const Logger = require( "./server/controller/log" );
+const Logger = require( "../../controller/log" );
 const log = new Logger( { path: process.env.BASE + "/log/update_stores.log" } );
-
 const db = require( "../db" );
 const storeController = require( "../../controller/store" );
 const utils = require( "../../controller/utils" );
@@ -16,17 +15,28 @@ function callback() {
 	return new Promise( ( resolve, reject ) => {
 
 		appController.getStoreFetchDate()
-			.then( ( result ) => {
+			.then( ( store_fetch_date ) => {
+
 				let fetch_cutoff = moment().subtract( fetch_delay, "seconds" );
-				if ( ! result || fetch_cutoff.isAfter( result.store_fetch_date ) )
-					return storeController.updateStores()
-				throw new PromiseEndError( "Not time yet!" );
+
+				if ( ! store_fetch_date || fetch_cutoff.isAfter( store_fetch_date ) ) {
+					log( "its time, updating" )
+					return storeController.updateStores();
+				}
+				else {
+					log( "not time yet" )
+					throw new PromiseEndError();
+				}
 			})
 			.then( () => {
-				log( "["+ new Date() +"] loop" );
+				return appController.setStoreFetchDate();
+			})
+			.then( () => {
 				resolve();
 			})
 			.catch( ( error ) => {
+				if ( error instanceof PromiseEndError )
+					resolve();
 				reject( error );
 			});
 	});
@@ -35,11 +45,10 @@ function callback() {
 
 db.connect()
 	.then(() => {
-		log( "["+ new Date() +"] DB connected, updateStores looping" );
-		utils.loop( callback, fetch_delay );
+		log( "["+ new Date() +"] DB connected, starting updateStores loop" );
+		utils.loop( callback, ( fetch_delay * 1000 ) );
 	})
 	.catch( ( error ) => {
 		log( error );
-		logStream.end();
 		db.close();
 	});

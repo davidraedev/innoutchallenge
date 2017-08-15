@@ -3,23 +3,30 @@ let logStream;
 
 function Logger( params ) {
 
-	logStream = fs.createWriteStream( params.path );
+	if ( process.env.NODE_ENV === "production" ) {
 
-	process.on( "uncaughtException", ( error ) => {
-		this.writeLog( error.stack );
-	});
+		logStream = fs.createWriteStream( params.path );
 
-	process.once( "SIGTERM", () => {
-		this.writeLog( "Stopped" );
-		logStream.end();
-		process.exit( 0 );
-	});
+		process.on( "uncaughtException", ( error ) => {
+			this.writeLog( error.stack );
+		});
+
+		process.once( "SIGTERM", () => {
+			this.writeLog( "Stopped" );
+			logStream.end();
+			process.exit( 0 );
+		});
+
+	}
 
 	return this.writeLog;
 }
 
 Logger.prototype.writeLog = function( message ) {
-	logStream.write( "["+ new Date() +"] " + message + "\n" );
+	if ( process.env.NODE_ENV === "production" )
+		logStream.write( "["+ new Date() +"] " + message + "\n" );
+	else
+		console.log( "["+ new Date() +"] " + message );
 };
 
 module.exports = Logger;
