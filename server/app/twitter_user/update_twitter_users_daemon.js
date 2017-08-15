@@ -1,29 +1,6 @@
 process.env.BASE = process.env.BASE || process.cwd();
-if ( process.env.NODE_ENV === "production" ) {
-	const fs = require( "fs" );
-	const logStream = fs.createWriteStream( process.env.BASE + "/log/update_twitter_users.log" );
-	function log( msg ) {
-		logStream.write( msg + "\n" );
-	}
-
-	log( "["+ new Date() +"] Starting Log" );
-
-	process.on( "uncaughtException", ( error ) => {
-		log( error.stack );
-	});
-
-	process.once( "SIGTERM", () => {
-		log( "["+ new Date() +"] Stopped" );
-		logStream.end();
-		process.exit( 0 );
-	});
-}
-else {
-	function log( msg ) {
-		console.log( msg );
-	}
-}
-
+const Logger = require( "../../controller/log" );
+const log = new Logger( { path: process.env.BASE + "/log/update_twitter_users.log" } );
 const twitterUsersController = require( "../../controller/twitter_user" );
 const db = require( "../db" );
 const utils = require( "../../controller/utils" );
