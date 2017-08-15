@@ -14,7 +14,6 @@ function callback() {
 
 		tweetQueueController.processQueues( tweets_per_queue )
 			.then( () => {
-				log( "["+ new Date() +"] loop" );
 				resolve();
 			})
 			.catch( ( error ) => {
@@ -26,11 +25,10 @@ function callback() {
 
 db.connect()
 	.then(() => {
-		log( "DB connected, processQueues looping" );
+		log( "DB connected, starting" );
 		utils.loop( callback, fetch_delay );
 	})
 	.catch( ( error ) => {
 		log( error );
-		logStream.end();
 		db.close();
 	});

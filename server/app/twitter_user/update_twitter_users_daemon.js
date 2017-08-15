@@ -13,7 +13,6 @@ function callback() {
 
 		twitterUsersController.updateTwitterUsers()
 			.then( () => {
-				log( "["+ new Date() +"] loop" );
 				resolve();
 			})
 			.catch( ( error ) => {
@@ -25,11 +24,10 @@ function callback() {
 
 db.connect()
 	.then(() => {
-		log( "DB connected, looping" );
+		log( "DB connected, starting" );
 		utils.loop( callback, fetch_delay );
 	})
 	.catch( ( error ) => {
 		log( error );
-		logStream.end();
 		db.close();
 	});

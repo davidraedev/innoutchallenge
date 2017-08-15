@@ -20,11 +20,9 @@ function callback() {
 				let fetch_cutoff = moment().subtract( fetch_delay, "seconds" );
 
 				if ( ! store_fetch_date || fetch_cutoff.isAfter( store_fetch_date ) ) {
-					log( "its time, updating" )
 					return storeController.updateStores();
 				}
 				else {
-					log( "not time yet" )
 					throw new PromiseEndError();
 				}
 			})
@@ -45,7 +43,7 @@ function callback() {
 
 db.connect()
 	.then(() => {
-		log( "["+ new Date() +"] DB connected, starting updateStores loop" );
+		log( "DB connected, starting" );
 		utils.loop( callback, ( fetch_delay * 1000 ) );
 	})
 	.catch( ( error ) => {
