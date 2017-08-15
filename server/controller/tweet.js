@@ -416,6 +416,18 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 				if ( receipt ) {
 					console.log( "parseTweet s" )
 					console.log( "receipt",receipt )
+					if ( receipt_data.store && ! receipt.store ) {
+						return new Promise( ( resolve, reject ) => {
+							receipt.store = receipt_data.store;
+							receipt.save()
+								.then( () => {
+									resolve( "break" );
+								})
+								.catch( ( error ) => {
+									reject( error );
+								});
+						});
+					}
 					throw new PromiseBreakError( "receipt exists" );
 				}
 				else {
@@ -425,6 +437,10 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			})
 			.then( ( receipt ) => {
 				console.log( "parseTweet u" )
+				if ( receipt === "break" ) {
+					console.log( "parseTweet u.1" )
+					throw new PromiseBreakError( "receipt exists" );
+				}
 				this_receipt = receipt;
 				return Receipt.findOne( { number: this_receipt.number, user: this_user._id, _id: { $ne: this_receipt._id } } );
 			})
