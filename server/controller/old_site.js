@@ -94,7 +94,6 @@ function processUser( user_data, data ) {
 		let this_twitter_user;
 		User.create({
 			name: user_data.user_screenname,
-			join_date: null,
 			twitter_user: null,
 			state: user_data.approved,
 		})

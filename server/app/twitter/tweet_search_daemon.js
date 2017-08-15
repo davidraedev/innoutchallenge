@@ -33,6 +33,5 @@ db.connect()
 	})
 	.catch( ( error ) => {
 		log( error );
-		logStream.end();
 		db.close();
 	});

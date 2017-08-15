@@ -29,9 +29,6 @@ const createUser = function( user_data ) {
 		data.name = user_data.name;
 		data.state = user_data.state;
 
-		if ( user_data.join_date )
-			data.join_date = user_data.join_date;
-
 		if ( user_data.twitter_user ) {
 			data.twitter_user = user_data.twitter_user;
 			if ( user_data.twitter_user.profile_image_url_https ) {
