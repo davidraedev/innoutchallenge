@@ -51,7 +51,7 @@ exports.users_list = function( request, response ) {
 
 };
 
-function getUserLatestReceipt( search_params, keys ) {
+function getUserLatestReceipt( search_params, keys) {
 	if ( keys )
 		return Receipt.findOne( search_params, keys ).populate( "tweet store" ).sort( { date: "desc" } ).limit( 1 ).lean().exec();
 	else
@@ -188,7 +188,8 @@ exports.user_stores = function( request, response ) {
 			this_user.stores = final_stores;
 
 			if ( return_latest_receipt )
-				return getUserLatestReceipt( search_params );
+				return Receipt.findOne( search_params ).populate( "tweet", "data.text" ).populate( "store", "number" ).sort( { date: "desc" } ).limit( 1 ).lean().exec();
+				//return getUserLatestReceipt( search_params, [ "tweet", "store", "number", "date" ] );
 			else
 				return;
 
