@@ -29,8 +29,6 @@ export default class UserStores extends React.Component {
 
 		const { user, error } = this.props;
 
-		let mappedStores = []
-
 		if ( error ) {
 			console.log( "error", error )
 			if ( error.status === 404 ) {
@@ -49,13 +47,15 @@ export default class UserStores extends React.Component {
 
 		const store_keys = Object.keys( user.stores ).sort( ( a, b ) => { return a - b });
 		let has_stores = false;
+		let mappedStores = []
 		store_keys.forEach( ( number ) => {
 			let store = user.stores[ number ];
 			let classes = [ "number", "store" ];
-			if ( store.amount > 0 )
-				classes.push( "has" );
-			if ( store.amount > 1 ) {
+			if ( store.amount > 0 ) {
 				has_stores = true;
+				classes.push( "has" );
+			}
+			if ( store.amount > 1 ) {
 				classes.push( "multiple" );
 			}
 			if ( user.latest_receipt && user.latest_receipt.store.number == number )
@@ -68,7 +68,6 @@ export default class UserStores extends React.Component {
 			user.totals.stores.total = user.totals.stores.total || 0
 			user.totals.stores.unique = user.totals.stores.unique || 0
 			user.totals.stores.remaining = user.totals.stores.remaining || 0
-
 		}
 		else {
 			content = (
