@@ -268,7 +268,7 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 			.catch( ( error ) => {
 
 				if ( error instanceof PromiseEndError ) {
-					console.error( error.toString() );
+					console.log( error, true );
 					resolve();
 				}
 				else {
@@ -288,9 +288,9 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			this_totals,
 			this_store,
 			receipt_data = {},
-			is_new_in_store,
-			is_new_drive_thru,
-			is_new_store,
+			is_new_in_store = false,
+			is_new_drive_thru = false,
+			is_new_store = false,
 			message_type = 0;
 
 		tweet.parsed = true;
@@ -411,7 +411,7 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 				}
 
 				if ( this_receipt.store ) {
-					return Receipt.findOne( { store: this_receipt.store, user: this_user._id } );
+					return Receipt.findOne( { store: this_receipt.store, user: this_user._id, _id: { $ne: this_receipt._id } } );
 				}
 
 				return false;
