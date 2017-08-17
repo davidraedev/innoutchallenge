@@ -22,7 +22,18 @@ const getTweetsFromSearchApp = function( search_string ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		getLatestSearchTweetFromDb()
+		const TweetQueue = require( "../model/tweet_queue" );
+		Tweet.remove({})
+			.then( () => {
+				return Receipt.remove({});
+			})
+			.then( () => {
+				return TweetQueue.remove({});
+			})
+			.then( () => {
+				return getLatestSearchTweetFromDb()
+			})
+		//getLatestSearchTweetFromDb()
 			.then( ( last_tweet ) => {
 
 				let search_params = { q: search_string, count: 100 };
@@ -396,9 +407,22 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					throw new PromiseBreakError( "receipt exists" );
 				}
 				this_receipt = receipt;
-				return Receipt.findOne( { number: this_receipt.number, user: this_user._id, _id: { $ne: this_receipt._id } } );
+				let search = {
+					number: this_receipt.number,
+					user: this_user._id,
+					date: this_receipt.date,
+					_id: { $ne: this_receipt._id }
+				};
+
+				if ( this_receipt.tweet ) {
+					search.tweet = this_receipt.tweet;
+				}
+				
+				return Receipt.findOne( search );
 			})
 			.then( ( existing_number_receipt ) => {
+
+				console.log( "existing_number_receipt", existing_number_receipt )
 
 				if ( ! existing_number_receipt ) {
 
@@ -411,14 +435,29 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 				}
 
 				if ( this_receipt.store ) {
-					return Receipt.findOne( { store: this_receipt.store, user: this_user._id, _id: { $ne: this_receipt._id } } );
+					
+					let search = {
+						store: this_receipt.store,
+						user: this_user._id,
+						_id: { $ne: this_receipt._id.toString() }
+					};
+
+					if ( this_receipt.tweet ) {
+						search.tweet = this_receipt.tweet;
+					}
+
+					console.log( "search", search )
+
+					return Receipt.findOne( search );
 				}
 
 				return false;
 			})
 			.then( ( existing_store_receipt ) => {
 
-				if ( ! existing_store_receipt )
+				console.log( "existing_store_receipt", existing_store_receipt )
+
+				if ( ! existing_store_receipt && this_receipt.store )
 					is_new_store = true;
 
 				return this_receipt.save();
@@ -447,6 +486,8 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 						store_number: store_number,
 						stores_remaining: this_totals.stores.remaining,
 					};
+
+					console.log( "is_new_store", is_new_store )
 
 					if ( is_new_in_store ) {
 						if ( this_user.settings.tweet.unique_numbers ) {
@@ -535,7 +576,9 @@ const sendTweet = function( twitter_user, tweet ) {
 			access_token_secret: twitter_user.oauth_secret_admin,
 		});
 
-		client.post( "statuses/update", tweet, ( error, tweet ) => {
+		client.post( "statuses/update", tweet, ( error, response ) => {
+
+			console.log( "sendTweet response", response )
 
 			if ( error )
 				return reject( error );
@@ -564,12 +607,14 @@ const sendDM = function( twitter_user, dm ) {
 			"text": dm.text,
 		};
 
-		client.post( "direct_messages/new", data, ( error, tweet ) => {
+		client.post( "direct_messages/new", data, ( error, response ) => {
+
+			console.log( "sendTweet response", response )
 
 			if ( error )
 				return reject( error );
 
-			return resolve( tweet );
+			return resolve( response );
 		});
 	});
 };

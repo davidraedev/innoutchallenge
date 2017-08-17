@@ -68,15 +68,15 @@ const processQueue = function( queue ) {
 	
 	return new Promise( ( resolve, reject ) => {
 
-		let user_id;
+		let twitter_user_id;
 		if ( queue.type === 1 )
-			user_id = process.env.NEW_RECEIPT_TWEET_USER_ID;
+			twitter_user_id = process.env.NEW_RECEIPT_TWEET_USER_ID;
 		else if ( queue.type === 2 )
-			user_id = process.env.NEW_DRIVE_THRU_TWEET_USER_ID;
+			twitter_user_id = process.env.NEW_DRIVE_THRU_TWEET_USER_ID;
 		else
 			return reject( "invalid type" );
 
-		TwitterUser.findOne( { "data.id_str": user_id } )
+		TwitterUser.findOne( { "data.id_str": twitter_user_id } )
 			.then( ( twitter_user ) => {
 
 				if ( ! twitter_user )
@@ -123,12 +123,14 @@ const processQueues = function( limit ) {
 
 		findQueues( null, limit )
 			.then( ( queues ) => {
+				console.log( "queues", queues )
 
 				if ( ! queues.length )
 					return resolve();
 
 				let remaining = queues.length;
 				queues.forEach( ( queue ) => {
+					console.log( "queue", queue )
 
 					processQueue( queue )
 						.then( () => {
