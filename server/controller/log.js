@@ -1,5 +1,6 @@
 const fs = require( "fs" );
 let logStream;
+const production = ( process.env.NODE_ENV === "production" );
 
 function Logger( params ) {
 
@@ -22,11 +23,22 @@ function Logger( params ) {
 	return this.writeLog;
 }
 
-Logger.prototype.writeLog = function( message ) {
-	if ( process.env.NODE_ENV === "production" )
-		logStream.write( "["+ new Date() +"] " + message + "\n" );
+Logger.prototype.writeLog = function( message, is_error ) {
+
+	let formatted_message;
+	if ( is_error && production )
+		formatted_message = "["+ new Date() +"] " + message.toString() + "\n";
+	else if ( is_error )
+		formatted_message = "["+ new Date() +"] " + message;
+	else if ( production )
+		formatted_message = "["+ new Date() +"] " + message + "\n";
+	else 
+		formatted_message = "["+ new Date() +"] " + message;
+
+	if ( production )
+		logStream.write( formatted_message );
 	else
-		console.log( "["+ new Date() +"] " + message );
+		console.log( formatted_message );
 };
 
 module.exports = Logger;
