@@ -28,8 +28,6 @@ Logger.prototype.writeLog = function( message, is_error ) {
 	let formatted_message;
 	if ( is_error && production )
 		formatted_message = "["+ new Date() +"] " + message.toString() + "\n";
-	else if ( is_error )
-		formatted_message = "["+ new Date() +"] " + message;
 	else if ( production )
 		formatted_message = "["+ new Date() +"] " + message + "\n";
 	else 
