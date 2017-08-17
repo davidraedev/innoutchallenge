@@ -22,18 +22,7 @@ const getTweetsFromSearchApp = function( search_string ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		const TweetQueue = require( "../model/tweet_queue" );
-		Tweet.remove({})
-			.then( () => {
-				return Receipt.remove({});
-			})
-			.then( () => {
-				return TweetQueue.remove({});
-			})
-			.then( () => {
-				return getLatestSearchTweetFromDb()
-			})
-		//getLatestSearchTweetFromDb()
+		getLatestSearchTweetFromDb()
 			.then( ( last_tweet ) => {
 
 				let search_params = { q: search_string, count: 100 };

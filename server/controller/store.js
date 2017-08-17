@@ -6,10 +6,7 @@ const Utils = require( "./utils" );
 const innoutLocations = require( "innout_locations" );
 const fs = require( "fs" );
 
-const ObjectId = require( "mongoose" ).Schema.Types.ObjectId;
-
 const base = process.env.BASE || process.cwd();
-
 const cached_stores_file = base + "/data/stores/stores.json";
 
 const findStoreNearCoords = function( latitude, longitude ) {
@@ -32,71 +29,112 @@ function parseStringForStoreHashtag( tweet ) {
 	return ( matches ) ? matches[1] : false;
 }
 
-function saveTwitterPlace( tweet, store ) {
+function saveTwitterPlace( raw_twitter_place, store ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		if ( ! tweet.data.place || ! tweet.data.place.id )
+		if ( ! raw_twitter_place )
 			return resolve( null );
 
-		let twitter_place = new TwitterPlace();
-		twitter_place.last_update = new Date();
-		twitter_place.data = tweet.data.place;
-		twitter_place.save( ( error, twitter_place ) => {
-
-			if ( error )
-				return reject( error );
-
-			store.location.twitter_place = twitter_place._id;
-			store.save( ( error ) => {
-
-				if ( error )
+		let this_twitter_place;
+		TwitterPlace.create({
+				last_update: new Date(),
+				data: raw_twitter_place,
+			})
+				.then( ( twitter_place ) => {
+					this_twitter_place = twitter_place;
+					store.location.twitter_place = twitter_place._id;
+					return store.save();
+				})
+				.then( () => {
+					return resolve( this_twitter_place );
+				})
+				.catch( ( error ) => {
 					return reject( error );
-
-				return resolve( twitter_place );
-			});
-		});
+				});
 	});
 }
 
-function findSavedTwitterPlace( tweet ) {
+function boundingBoxCenter( bounding_box ) {
+
+	let lat_min = Infinity,
+		long_min = Infinity,
+		lat_max = -Infinity,
+		long_max = -Infinity;
+
+	bounding_box.forEach( ( val ) => {
+		lat_min = Math.min( lat_min, val[1] );
+		long_min = Math.min( long_min, val[0] );
+		lat_max = Math.max( lat_max, val[1] );
+		long_max = Math.max( long_max, val[0] );
+	});
+
+	return {
+		longitude: ( ( long_min + long_max ) / 2 ),
+		latitude: ( ( lat_min + lat_max ) / 2 )
+	};
+}
+
+function findSavedTwitterPlace( raw_twitter_place ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		if ( ! tweet.data.place || ! tweet.data.place.id )
+		if ( ! raw_twitter_place ) {
 			return resolve( null );
+		}
 
-		TwitterPlace.findOne( { "data.id": tweet.data.place.id }, ( error, twitter_place ) => {
+		TwitterPlace.findOne( { "data.id": raw_twitter_place.id } )
+			.then( ( twitter_place ) => {
 
-			if ( error )
+				if ( ! twitter_place )
+					return resolve( null );
+
+				return resolve( twitter_place );
+			})
+			.catch( ( error ) => {
 				return reject( error );
-
-			if ( ! twitter_place )
-				return resolve( null );
-
-			return resolve( twitter_place );
-
-		});
+			});
 	});
 }
 
 function findStoreFromTwitterPlace( tweet ) {
 
 	return new Promise( ( resolve, reject ) => {
-		findSavedTwitterPlace( tweet ).then( ( twitter_place ) => {
 
-			if ( ! twitter_place )
-				return resolve( null );
+		let raw_twitter_place = tweet.data.place;
+		let this_twitter_place;
+		let is_new_twitter_place = false;
 
-			Store.findOne( { "location.twitter_place": new ObjectId( twitter_place._id ) }, ( error, store ) => {
-				if ( error )
-					return reject( error );
-				return resolve( store );
+		if ( ! raw_twitter_place )
+			return resolve();
+
+		findSavedTwitterPlace( raw_twitter_place )
+			.then( ( twitter_place ) => {
+				this_twitter_place = twitter_place;
+				if ( ! twitter_place ) {
+					is_new_twitter_place = true;
+					let coords = boundingBoxCenter( raw_twitter_place.bounding_box.coordinates[0] );
+					return findStoreNearCoords( coords.latitude, coords.longitude );
+				}
+				else {
+					return Store.findOne( { "location.twitter_place": twitter_place._id });
+				}
+			})
+			.then( ( store ) => {
+				this_store = store;
+
+				if ( is_new_twitter_place && store ) {
+					return saveTwitterPlace( raw_twitter_place, store );
+				}
+
+				return null;
+			})
+			.then( () => {
+				return resolve( this_store );
+			})
+			.catch( ( error ) => {
+				reject( error );
 			});
-
-		}).catch( ( error ) => {
-			reject( error );
-		});
 	});
 }
 
@@ -109,28 +147,32 @@ const parseTweetForStore = function( tweet, ignore_hashtag ) {
 
 			let coords = getTweetCoords( tweet );
 			if ( ! coords ) {
-				return resolve( null );
-			}
-
-			findStoreNearCoords( coords.latitude, coords.longitude )
-				.then( ( store ) => {
-
-					if ( ! store ) {
-
-						findStoreFromTwitterPlace( tweet )
-							.then( ( store ) => {
-								return resolve( store );
-							});
-
-					}
-					else {
+				findStoreFromTwitterPlace( tweet )
+					.then( ( store ) => {
 						return resolve( store );
-					}
+					});
+			}
+			else {
+				findStoreNearCoords( coords.latitude, coords.longitude )
+					.then( ( store ) => {
 
-				})
-				.catch( ( error ) => {
-					return reject( error );
-				});
+						if ( ! store ) {
+
+							findStoreFromTwitterPlace( tweet )
+								.then( ( store ) => {
+									return resolve( store );
+								});
+
+						}
+						else {
+							return resolve( store );
+						}
+
+					})
+					.catch( ( error ) => {
+						return reject( error );
+					});
+			}
 		}
 		else {
 			Store.findOne( { number: store_number } )
