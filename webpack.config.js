@@ -1,5 +1,3 @@
-const fs = require( "fs" );
-
 if ( ! process.env.NODE_ENV )
 	throw new Error( "missing NODE_ENV" );
 
@@ -21,8 +19,18 @@ let plugins = [
 		safe: false,
 	})
 ];
-if ( ! debug )
-	plugins.push( new UglifyJSPlugin() );
+if ( ! debug ) {
+	plugins.push(
+		new webpack.DefinePlugin({
+			"process.env": {
+				NODE_ENV: JSON.stringify( "production" )
+			}
+		})
+	);
+	plugins.push(
+		new webpack.optimize.UglifyJsPlugin()
+	);
+}
 
 module.exports = {
 	node: {
