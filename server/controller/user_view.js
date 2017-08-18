@@ -19,7 +19,7 @@ exports.users_list = function( request, response ) {
 	const skip = ( ( page - 1 ) * amount );
 	const limit = ( amount + 1 );
 
-	let query = { state: 1, "totals.receipts.unique": { $ne: 0 } };
+	let query = { state: { $in: [ 1, 4 ] }, "totals.receipts.unique": { $ne: 0 } };
 	if ( search.length )
 		query.name = new RegExp( search, "i" );
 

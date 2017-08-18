@@ -1,4 +1,3 @@
-const User = require( "../model/user" );
 const accountController = require( "./account" );
 
 const get_account = function( request, response ) {

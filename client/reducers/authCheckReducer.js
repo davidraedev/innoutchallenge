@@ -15,7 +15,7 @@ export default function reducer(
 			return { ...state, fetching: false, error: action.payload }
 		}
 		case "FETCH_AUTH_CHECK_FULFILLED": {
-			return { ...state, fetching: false, fetched: true, authenticated: action.payload.authenticated }
+			return { ...state, fetching: false, fetched: true, authenticated: action.payload.authenticated, adminAuthenticated: action.payload.adminAuthenticated }
 		}
 	}
 

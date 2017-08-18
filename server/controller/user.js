@@ -10,7 +10,7 @@ const searchUser = function( name, lazy ) {
 
 		let search = ( lazy ) ? { $regex: new RegExp( name, "i" ) } : name ;
 
-		User.findOne( { state: 1, name: search }, [ "name", "totals" ] ).lean()
+		User.findOne( { state: { $in: [ 1, 4 ] }, name: search }, [ "name", "totals" ] ).lean()
 			.then( ( user ) => {
 				resolve( user );
 			})
@@ -233,7 +233,7 @@ const updateAllUsersTotals = function(){
 
 	return new Promise( ( resolve, reject ) => {
 
-		findUsers( { state: 1 } )
+		findUsers( { state: { $in: [ 1, 4 ] } } )
 			.then( ( users ) => {
 
 				if ( ! users.length ) {

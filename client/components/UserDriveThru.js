@@ -19,7 +19,7 @@ require( "../less/User.less" )
 	}
 })
 
-export default class UserReceipts extends React.Component {
+export default class UserDriveThru extends React.Component {
 
 	componentWillMount() {
 		this.props.dispatch( fetchUserDriveThru( this.props.dispatch, this.props.match.params.user, true ) )

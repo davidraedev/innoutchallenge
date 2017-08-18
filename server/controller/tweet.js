@@ -314,7 +314,8 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			})
 			.then( ( twitter_user ) => {
 				this_twitter_user = twitter_user;
-				return User.findOne( { twitter_user: twitter_user._id } );
+				// state 3 is temp_ignored, like if someone tweeted the hashtag for something else
+				return User.findOne( { twitter_user: twitter_user._id, state: { $ne: 3 } } );
 			})
 			.then( ( user ) => {
 				if ( ! user ) {
@@ -364,7 +365,7 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					receipt_data.user = this_user._id;
 					receipt_data.twitter_user = this_twitter_user._id;
 					receipt_data.date = tweet.data.created_at;
-					receipt_data.approved = ( this_user.state === 1 ) ? 2 : 0;
+					receipt_data.approved = ( this_user.state === 1 || this_user.state === 4 ) ? 2 : 0;
 
 					if ( store ) {
 						receipt_data.store = this_store._id;

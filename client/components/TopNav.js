@@ -3,12 +3,14 @@ import { connect } from "react-redux"
 import { NavLink } from "react-router-dom";
 
 import { fetchUsers, changeSearch, clearUsers } from "../actions/usersActions"
+import { createUserTwitterLink } from "./Utils"
 
 require( "../less/TopNav.less" )
 
 @connect( ( store ) => {
 	return {
 		authenticated: store.authCheck.authenticated,
+		adminAuthenticated: store.authCheck.adminAuthenticated,
 		searchText: store.users.searchText,
 	}
 })
@@ -53,19 +55,24 @@ export default class TopNav extends React.Component {
 		})
 	}
 
-	createUserTwitterLink( title ) {
-		return "https://twitter.com/"+ title.substring( 1 );
-	}
-
 	render() {
 
-		let { authenticated, searchText, title, linkTwitter } = this.props
+		let { authenticated, adminAuthenticated, searchText, title, linkTwitter } = this.props
 
 		let authLinks
+		let adminLinks
+
+		if ( adminAuthenticated ) {
+			adminLinks = (
+				<li><a href="/admin/approvals" onClick={ this.sidebarToggle }>Approvals</a></li>
+			)
+		}
+
 		if ( authenticated ) {
 			authLinks = (
 				<div>
 					<li><a href="/account/settings" onClick={ this.sidebarToggle }>Account</a></li>
+					{ adminLinks }
 					<li><a href={ process.env.REACT_APP_BACKEND_URL + "/signout" } onClick={ this.sidebarToggle }>Sign Out</a></li>
 				</div>
 			)
@@ -90,7 +97,7 @@ export default class TopNav extends React.Component {
 		else if ( linkTwitter ) {
 			title_el = (
 				<div class="text">
-					<a href={ this.createUserTwitterLink( title ) }>{ title }</a>
+					<a href={ createUserTwitterLink( title ) }>{ title }</a>
 				</div>
 			)
 		}

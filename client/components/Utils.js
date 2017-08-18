@@ -22,5 +22,10 @@ const formatCircleNumber = function( number ) {
 	return number;
 }
 
+const createUserTwitterLink = function( screen_name ) {
+	return "https://twitter.com/"+ screen_name.replace( "@", "" );
+}
+
 module.exports.convertProfileImageUrl = convertProfileImageUrl
 module.exports.formatCircleNumber = formatCircleNumber
+module.exports.createUserTwitterLink = createUserTwitterLink

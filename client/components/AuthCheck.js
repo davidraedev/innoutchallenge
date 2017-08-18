@@ -6,6 +6,7 @@ import { fetchAuthState } from "../actions/authCheckActions"
 @connect( ( store ) => {
 	return {
 		authenticated: store.authCheck.authenticated,
+		adminAuthenticated: store.authCheck.adminAuthenticated,
 		error: store.authCheck.error,
 		statusCode: store.authCheck.statusCode,
 	}

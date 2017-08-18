@@ -6,6 +6,7 @@ import users from "./usersReducer"
 import userReceipts from "./userReceiptsReducer"
 import userStores from "./userStoresReducer"
 import userDriveThru from "./userDriveThruReducer"
+import admin from "./adminReducer"
 
 export default combineReducers({
 	account,
@@ -14,4 +15,5 @@ export default combineReducers({
 	userReceipts,
 	userStores,
 	userDriveThru,
+	admin,
 })

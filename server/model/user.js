@@ -13,6 +13,7 @@ var UserSchema = new Schema({
 		1 = approved
 		2 = banned
 		3 = temp_ignored
+		4 = admin_account
 		5 = app_account
 	*/
 	settings: {

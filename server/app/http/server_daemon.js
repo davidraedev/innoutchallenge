@@ -20,6 +20,12 @@ const db = require( "../db" );
 const User = require( "../../model/user" );
 const TwitterUser = require( "../../model/twitter_user" );
 const userController = require( "../../controller/user" );
+const bodyParser = require( "body-parser" );
+const user_controller = require( "../../controller/user_view" );
+const account_controller = require( "../../controller/account_view" );
+const admin_controller = require( "../../controller/admin_view" );
+const jsonParser = bodyParser.json();
+
 
 app.use( cors( {
 	origin: true,
@@ -122,8 +128,18 @@ userPassport.use(
 	)
 );
 
-userPassport.serializeUser( ( user, callback ) => {
-	callback( null, user );
+userPassport.serializeUser( ( session_data, callback ) => {
+	TwitterUser.findOne({ "data.id_str": session_data._json.id_str })
+		.then( ( twitter_user ) => {
+			if ( ! twitter_user )
+				throw new Error( "Twitter User Not Found" );
+			return User.findOne({ twitter_user: twitter_user._id });
+		})
+		.then( ( user ) => {
+			if ( ! user )
+				throw new Error( "User Not Found" );
+			callback( null, user._id );
+		});	
 });
 
 userPassport.deserializeUser( ( obj, callback ) => {
@@ -209,8 +225,18 @@ adminPassport.use(
 	)
 );
 
-adminPassport.serializeUser( ( user, callback ) => {
-	callback( null, user );
+adminPassport.serializeUser( ( session_data, callback ) => {
+	TwitterUser.findOne({ "data.id_str": session_data._json.id_str })
+		.then( ( twitter_user ) => {
+			if ( ! twitter_user )
+				throw new Error( "Twitter User Not Found" );
+			return User.findOne({ twitter_user: twitter_user._id });
+		})
+		.then( ( user ) => {
+			if ( ! user )
+				throw new Error( "User Not Found" );
+			callback( null, user._id );
+		});	
 });
 
 adminPassport.deserializeUser( ( obj, callback ) => {
@@ -257,10 +283,6 @@ app.get( "/admin/auth/twitter/callback",
 
 
 
-const bodyParser = require( "body-parser" );
-const user_controller = require( "../../controller/user_view" );
-const account_controller = require( "../../controller/account_view" );
-const jsonParser = bodyParser.json();
 
 function checkAuthenticationView( request, response, next ) {
 	response.locals.authenticated = ( request.isAuthenticated() ) ? true : false;
@@ -276,14 +298,58 @@ function checkAuthenticationApi( request, response, next ) {
 	next();
 }
 
+function checkAuthenticationApiAdmin( request, response, next ) {
+
+	let user_id = ( request.session && request.session.passport ) ? request.session.passport.user : null;
+
+	if ( ! user_id )
+		return response.status( 403 ).end();
+
+	userIsAdmin( user_id )
+		.then( ( is_admin ) => {
+			if ( ! is_admin )
+				return response.status( 403 ).end();
+			response.locals.adminAuthenticated = true;
+			next();
+		});
+}
+
+function userIsAdmin( user_id ) {
+	return new Promise(( resolve, reject ) => {
+		User.findOne({ _id: user_id, state: 4 })
+			.then( ( user ) => {
+				if ( ! user )
+					return resolve( false );
+				return resolve( true );
+			})
+			.catch( ( error ) => {
+				return reject( error );
+			});
+	});
+}
+
 function checkAuthenticationEndpoint( request, response ) {
 
-	let data = { authenticated: false };
+	let user_id = ( request.session && request.session.passport ) ? request.session.passport.user : null;
 
-	if ( request.isAuthenticated() )
+	let data = {
+		authenticated: false,
+		adminAuthenticated: false,
+	};
+
+	if ( request.isAuthenticated() ) {
 		data.authenticated = true;
+	}
 
-	return response.json( data );
+	if ( ! user_id ) {
+		return response.json( data );
+	}
+
+	userIsAdmin( user_id )
+		.then( ( is_admin ) => {
+			data.adminAuthenticated = is_admin;
+			return response.json( data );
+		});
 }
 
 app.post( "/api/users/list", jsonParser, user_controller.users_list );
@@ -292,6 +358,8 @@ app.post( "/api/user/stores", jsonParser, user_controller.user_stores );
 app.post( "/api/user/drivethru", jsonParser, user_controller.user_drivethru_receipts );
 
 app.post( "/auth/check", checkAuthenticationEndpoint );
+
+app.post( "/api/admin/approvals/get", checkAuthenticationApiAdmin, admin_controller.get_approvals );
 
 app.post( "/api/account/get", checkAuthenticationApi, account_controller.get_account );
 app.post( "/api/account/set", checkAuthenticationApi, jsonParser, account_controller.update_account );

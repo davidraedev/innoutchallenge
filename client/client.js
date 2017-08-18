@@ -16,6 +16,7 @@ import UserStores from "./components/UserStores"
 import UserDriveThru from "./components/UserDriveThru"
 import PageNotFound from "./components/PageNotFound"
 import AdminAuth from "./components/AdminAuth"
+import AdminApprovals from "./components/AdminApprovals"
 import UserAuth from "./components/UserAuth"
 import BackendPassThru from "./components/BackendPassThru"
 import store from "./store"
@@ -45,6 +46,7 @@ ReactDOM.render(
 						<Route path="/challengers/:page(\d+)" exact component={ Users } />
 						<Route path="/challengers" component={ Users } exact />
 						<Route path="/signin" exact component={ UserAuth } />
+						<Route path="/admin/approvals" exact component={ AdminApprovals } />
 						<Route path="/admin/signin" exact component={ AdminAuth } />
 						<Route path="/admin/signin/return/:returnUrl" exact component={ BackendPassThru } />
 						<Route path="/admin/signout" exact component={ BackendPassThru } />
