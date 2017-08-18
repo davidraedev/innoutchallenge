@@ -82,6 +82,8 @@ const processQueue = function( queue ) {
 				if ( ! twitter_user )
 					throw new Error( "twitter_user not found" );
 
+				console.log( "queue", queue )
+
 				if ( queue.message_type === 1 )
 					return tweetController.sendTweet( twitter_user, queue.params );
 				else if ( queue.message_type === 2 )
@@ -91,11 +93,8 @@ const processQueue = function( queue ) {
 
 			})
 			.then( () => {
-
 				queue.send_date = new Date();
 				queue.done = true;
-				if ( queue.failed )
-					queue.fail_retries++;
 				return queue.save();
 			})
 			.then( () => {
@@ -105,7 +104,10 @@ const processQueue = function( queue ) {
 				console.log( error );
 
 				queue.failed = true;
-				queue.fail_date = new Date();
+				queue.error_list.push({
+					error: error,
+					date: new Date(),
+				})
 				queue.save()
 					.then( () => {
 						reject( error );

@@ -24,8 +24,7 @@ const TweetQueueSchema = new Schema({
 	params: { type: Mixed, default: null },
 	done: { type: Boolean, default: false },
 	failed: { type: Boolean, default: false },
-	fail_date: { type: Date, default: null },
-	fail_retries: { type: Number, default: 0 },
+	error_list: { type: Array, default: [] },
 });
 
 module.exports = mongoose.model( "TweetQueue", TweetQueueSchema );
