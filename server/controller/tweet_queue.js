@@ -82,8 +82,6 @@ const processQueue = function( queue ) {
 				if ( ! twitter_user )
 					throw new Error( "twitter_user not found" );
 
-				console.log( "queue", queue )
-
 				if ( queue.message_type === 1 )
 					return tweetController.sendTweet( twitter_user, queue.params );
 				else if ( queue.message_type === 2 )
@@ -125,14 +123,12 @@ const processQueues = function( limit ) {
 
 		findQueues( null, limit )
 			.then( ( queues ) => {
-				console.log( "queues", queues )
 
 				if ( ! queues.length )
 					return resolve();
 
 				let remaining = queues.length;
 				queues.forEach( ( queue ) => {
-					console.log( "queue", queue )
 
 					processQueue( queue )
 						.then( () => {
