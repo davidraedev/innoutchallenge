@@ -144,7 +144,7 @@ function getTwitterUsersFromLookupApp ( twitter_user_ids_array ) {
 
 			if ( error ) {
 
-				if ( error[0].code == 17 ) // twitter errors if all your users are missing/deactivated
+				if ( error[0] && error[0].code == 17 ) // twitter errors if all your users are missing/deactivated
 					return resolve( [] );
 
 				return reject( error );
