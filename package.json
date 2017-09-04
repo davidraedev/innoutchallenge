@@ -14,8 +14,8 @@
     "stop_all": "export NODE_ENV=production; export ENV_PATH='.env.production'; node server/server.js stop_all; npm run stop_database",
     "build_client": "export NODE_ENV=production; export ENV_PATH='.env.production'; webpack --config webpack.config.js",
     "start_client_dev": "export NODE_ENV=dev; export ENV_PATH='.env.dev'; node_modules/.bin/webpack-dev-server",
-    "start_database": "if ! mongo --eval 'db.stats()' &> /dev/null; then mongod --fork --config mongo.conf; fi;",
-    "stop_database": "if mongo --eval 'db.stats()' &> /dev/null; then mongo admin --eval 'db.shutdownServer()' > /dev/null; fi;",
+    "start_database": "if ! pidof mongod; then mongod --fork --config mongo.conf; fi;",
+    "stop_database": "if pidof mongod; then mongo admin --eval 'db.shutdownServer()' > /dev/null; fi;",
     "pretest": "npm run start_database",
     "test": "export NODE_ENV=testing; export ENV_PATH='.env.testing'; node_modules/mocha/bin/mocha server/test/**.js; npm run stop_database"
   },
