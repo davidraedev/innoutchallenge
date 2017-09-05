@@ -5,7 +5,7 @@ require( "dotenv" ).config( { path: process.env.ENV_PATH } );
 const connect = function( db_name ) {
 
 	db_name = db_name || process.env.DB_NAME;
-	const db_url = "mongodb://"+ process.env.DB_HOST + ":"+ process.env.DB_PORT;
+	const db_url = "mongodb://"+ process.env.DB_HOST + ":"+ process.env.DB_PORT +"/"+ db_name;
 
 	return new Promise( ( resolve, reject ) => {
 
