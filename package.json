@@ -28,9 +28,9 @@
     "status_all": "export NODE_ENV=production; export ENV_PATH='.env.production'; node server/server.js status_all",
     "build_client": "export NODE_ENV=production; export ENV_PATH='.env.production'; webpack --config webpack.config.js",
     "start_client_dev": "export NODE_ENV=dev; export ENV_PATH='.env.dev'; node_modules/.bin/webpack-dev-server",
-    "start_database": "if ! pidof mongod; then mongod --fork --config mongo.conf; fi;",
+    "start_database": "if ! pidof mongod; then mongod --fork --config mongo.conf; else echo 'Mongod is already running' fi;",
     "status_database": "if pidof mongod; then echo 'Mongod is running'; else echo 'Mongod is not running'; fi;",
-    "stop_database": "if pidof mongod; then kill $(pidof mongod); fi;",
+    "stop_database": "if pidof mongod; then kill $(pidof mongod); else echo 'Mongod was not running' fi;",
     "pretest": "npm run start_database",
     "test": "export NODE_ENV=testing; export ENV_PATH='.env.testing'; node_modules/mocha/bin/mocha server/test/**.js; npm run stop_database"
   },
