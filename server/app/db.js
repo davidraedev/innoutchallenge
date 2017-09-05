@@ -5,11 +5,17 @@ require( "dotenv" ).config( { path: process.env.ENV_PATH } );
 const connect = function( db_name ) {
 
 	db_name = db_name || process.env.DB_NAME;
-	const db_url = process.env.DB_HOST + "/" + db_name;
+	const db_url = "mongodb://"+ process.env.DB_HOST + ":"+ process.env.DB_PORT;
 
 	return new Promise( ( resolve, reject ) => {
 
-		mongoose.connect( db_url )
+		mongoose.connect( db_url, {
+			user: process.env.DB_USER,
+			pass: process.env.DB_PASSWORD,
+			auth: {
+				authdb: db_name
+			}
+		})
 			.then( () => {
 
 				if ( mongoose.connection.readyState !== 1 )

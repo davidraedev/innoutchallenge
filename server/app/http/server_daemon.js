@@ -39,9 +39,8 @@ app.use( "/font", express.static( process.env.BASE + "/server/public/font" ) );
 
 var MongoDBStore = require( "connect-mongodb-session" )( session );
 
-
 var store = new MongoDBStore({
-	uri: process.env.DB_HOST + "/innoutchallenge_sessions",
+	uri: "mongodb://"+ process.env.DB_USER +":"+ process.env.DB_PASSWORD +"@"+ process.env.DB_HOST +":"+ process.env.DB_PORT +"/"+ process.env.DB_NAME,
 	collection: "userSessions",
 });
 
