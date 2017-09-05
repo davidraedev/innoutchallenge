@@ -14,14 +14,27 @@ const storeController = require( "../../controller/store" );
 const userController = require( "../../controller/user" );
 const twitterUserController = require( "../../controller/twitter_user" );
 
+const mongo_conf = "mongo.conf";
+const mongo_conf_sample = "mongo.conf.sample";
 const mongo_log = "log/mongo.log";
 const env_file_dev = ".env.dev";
 const env_file_production = ".env.production";
 const env_template = ".env.sample";
 const use_cache = false;
 
-// check mongo log exists
-fs.access( mongo_log, fs.constants.F_OK | fs.constants.W_OK )
+// check mongo conf exists
+fs.access( mongo_conf, fs.constants.F_OK | fs.constants.W_OK )
+	.then( () => {
+		console.log( "Mongo Conf Already Exists" );
+	})
+	.catch( () => {
+		// create blank mongo log
+		fs.createReadStream( mongo_conf_sample ).pipe( fs.createWriteStream( mongo_conf ) );
+		console.log( "Mongo Conf Created" );
+	})
+	.then( () => {
+		return fs.access( mongo_log, fs.constants.F_OK | fs.constants.W_OK );
+	})
 	.then( () => {
 		console.log( "Mongo Log Already Exists" );
 	})

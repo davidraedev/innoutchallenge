@@ -10,3 +10,4 @@ server/public/img/src/
 client/build/bundle.js
 pids/*
 !.gitkeep
+mongo.conf
