@@ -7,7 +7,15 @@ const utils = require( "../../controller/utils" );
 
 const fetch_delay = 1000 * 60; // once per minute
 
+const log_loop_interval = 1000 * 60 * 10; // keepalive log every ten minutes
+let last_log = +new Date();
+
 function callback() {
+	
+	if ( ( +new Date() - log_loop_interval ) > last_log ) {
+		log( "loop" );
+		last_log = +new Date();
+	}
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -15,7 +23,9 @@ function callback() {
 			.then( () => {
 				return tweetController.parseTweets( true, true );
 			})
-			.then( () => {
+			.then( ( tweets_parsed ) => {
+				if ( tweets_parsed )
+					log( tweets_parsed +" tweets parsed" );
 				resolve();
 			})
 			.catch( ( error ) => {

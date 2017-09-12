@@ -125,7 +125,7 @@ const processQueues = function( limit ) {
 			.then( ( queues ) => {
 
 				if ( ! queues.length )
-					return resolve();
+					return resolve( 0 );
 
 				let remaining = queues.length;
 				queues.forEach( ( queue ) => {
@@ -133,7 +133,7 @@ const processQueues = function( limit ) {
 					processQueue( queue )
 						.then( () => {
 							if ( --remaining === 0 )
-								return resolve();
+								return resolve( queues.length );
 						})
 						.catch( ( error ) => {
 							throw error;

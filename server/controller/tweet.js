@@ -240,6 +240,7 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 
 	return new Promise( ( resolve, reject ) => {
 
+		let number_of_tweets = 0;
 		Tweet.find({ fetched: true, parsed: false })
 			.then( ( tweets ) => {
 
@@ -247,12 +248,14 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 					throw new PromiseEndError( "no tweets" );
 				}
 
+				number_of_tweets = tweets.length;
+
 				let i = 0;
 				let end = tweets.length;
 				function parseTweetSync() {
 
 					if ( i == end )
-						return resolve();
+						return resolve( number_of_tweets );
 
 					parseTweet( tweets[ i++ ], do_new_user_tweet, do_new_receipt_tweet )
 						.then( () => {
@@ -269,7 +272,7 @@ const parseTweets = function( do_new_user_tweet, do_new_receipt_tweet ) {
 
 				if ( error instanceof PromiseEndError ) {
 					console.log( error, true );
-					resolve();
+					resolve( number_of_tweets );
 				}
 				else {
 					reject( error );

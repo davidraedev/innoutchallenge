@@ -396,7 +396,7 @@ const updateStores = function() {
 						if ( error )
 							throw error;
 						if ( --remaining === 0 )
-							resolve();
+							resolve( json.data.length );
 					}
 				);
 			});

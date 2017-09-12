@@ -11,3 +11,4 @@ client/build/bundle.js
 pids/*
 !.gitkeep
 mongo.conf
+package-lock.json

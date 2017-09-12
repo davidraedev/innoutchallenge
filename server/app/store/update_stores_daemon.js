@@ -10,7 +10,15 @@ const moment = require( "moment" );
 
 const fetch_delay = 60 * 60 * 24; // 24 hours in seconds
 
+const log_loop_interval = 1000 * 60 * 10; // keepalive log every ten minutes
+let last_log = +new Date();
+
 function callback() {
+
+	if ( ( +new Date() - log_loop_interval ) > last_log ) {
+		log( "loop" );
+		last_log = +new Date();
+	}
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -26,7 +34,8 @@ function callback() {
 					throw new PromiseEndError();
 				}
 			})
-			.then( () => {
+			.then( ( stores_updated ) => {
+				log( stores_updated +" stores updated" );
 				return appController.setStoreFetchDate();
 			})
 			.then( () => {
