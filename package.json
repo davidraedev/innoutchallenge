@@ -28,7 +28,7 @@
     "status_all": "export NODE_ENV=production; export ENV_PATH='.env.production'; node server/server.js status_all",
     "build_client": "export NODE_ENV=production; export ENV_PATH='.env.production'; webpack --config webpack.config.js",
     "start_client_dev": "export NODE_ENV=dev; export ENV_PATH='.env.dev'; node_modules/.bin/webpack-dev-server",
-    "start_database": "if [ -z $(pidof mongod) ]; then mongod --fork --config mongo.conf; else echo 'Mongod is already running'; fi;",
+    "start_database": "if [ -z $(pidof mongod) ]; then mongod --config mongo.conf; else echo 'Mongod is already running'; fi;",
     "status_database": "if [ ! -z $(pidof mongod) ]; then echo 'Mongod is running'; else echo 'Mongod is not running'; fi;",
     "stop_database": "if [ ! -z $(pidof mongod) ]; then kill $(pidof mongod); else echo 'Mongod was not running'; fi;",
     "pretest": "npm run start_database",
@@ -81,7 +81,7 @@
     "react-router-dom": "^4.1.2",
     "redux": "^3.7.1",
     "redux-logger": "^3.0.6",
-    "redux-promise-middleware": "4.2.1",
+    "redux-promise-middleware": "^4.4.1",
     "redux-thunk": "^2.2.0",
     "sinon": "^2.2.0",
     "style-loader": "^0.18.2",
@@ -91,7 +91,7 @@
     "uglifyjs-webpack-plugin": "^0.4.6",
     "webpack": "^3.3.0",
     "webpack-dev-server": "^2.5.0",
-    "word-to-number-node": "git+https://github.com/daraeman/word-to-number-node.git"
+    "word-to-number-node": "1.0.1"
   },
   "devDependencies": {
     "chai": "^4.0.0",
