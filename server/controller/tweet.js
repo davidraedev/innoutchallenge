@@ -39,9 +39,9 @@ const getTweetsFromSearchApp = function( search_string ) {
 				client.get( "search/tweets", search_params, function( error, tweets ) {
 
 					if ( error )
-						return reject( error );
+						throw error;
 
-					if ( ! tweets.statuses.length ) {
+					if ( ! tweets || ! tweets.statuses || ! tweets.statuses.length ) {
 						return resolve();
 					}
 
@@ -53,12 +53,9 @@ const getTweetsFromSearchApp = function( search_string ) {
 						return ( new Date( a.created_at ) - new Date( b.created_at ) );
 					});
 
-
-					let stop;
 					tweets.statuses.forEach( ( tweet_data ) => {
 
-						if ( stop )
-							return;
+						remaining--;
 
 						Tweet.findOne({ "data.id_str": tweet_data.id_str })
 							.then( ( tweet ) => {
@@ -66,34 +63,30 @@ const getTweetsFromSearchApp = function( search_string ) {
 								if ( tweet === null ) {
 
 									createTweet( { data: tweet_data, source: 1, fetched: true, fetch_date: new Date() } )
-										.then(() => {
+										.then( () => {
 
-											if ( --remaining === 0 ) {
+											if ( remaining === 0 ) {
 												resolve();
 											}
 
 										})
 										.catch( ( error ) => {
-											if ( error ) {
-												stop = true;
-												return reject( error );
-											}
+											throw error;
 										});
 								}
-								else {
-									if ( --remaining === 0 )
+								else if ( remaining === 0 ) {
 										resolve();
 								}
 							})
 							.catch( ( error ) => {
 								stop = true;
-								return reject( error );
+								throw error;
 							});
 					});
 				});
 			})
 			.catch( ( error ) => {
-				throw error;
+				return reject( error );
 			});
 
 	});
