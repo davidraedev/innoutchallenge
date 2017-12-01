@@ -5,8 +5,6 @@ if ( ! process.env.ENV_PATH )
 	throw new Error( "ENV_PATH not defined" );
 
 process.env.BASE = process.env.BASE || process.cwd();
-const Logger = require( "../../controller/log" );
-const log = new Logger( { path: process.env.BASE + "/log/http_server.log" } );
 const express = require( "express" );
 const app = express();
 const session = require( "express-session" );
@@ -25,6 +23,26 @@ const user_controller = require( "../../controller/user_view" );
 const account_controller = require( "../../controller/account_view" );
 const admin_controller = require( "../../controller/admin_view" );
 const jsonParser = bodyParser.json();
+const path = require( "path" );
+const log_path = path.resolve( __dirname, "../../../log/web_server.log" );
+const winston = require( "winston" );
+const tsFormat = () => new Date();
+const log = new ( winston.Logger )( {
+	transports: [
+		new ( winston.transports.Console )( {
+			timestamp: tsFormat,
+			colorize: true,
+			level: "info",
+		} ),
+		new ( winston.transports.File )( {
+			filename: log_path,
+			timestamp: tsFormat,
+			json: true,
+			level: "debug",
+			handleExceptions: true
+		} ),
+	]
+});
 
 
 app.use( cors( {
@@ -37,27 +55,31 @@ app.disable( "x-powered-by" );
 app.use( "/img", express.static( process.env.BASE + "/server/public/img" ) );
 app.use( "/font", express.static( process.env.BASE + "/server/public/font" ) );
 
-var MongoDBStore = require( "connect-mongodb-session" )( session );
+function initSession() {
 
-var store = new MongoDBStore({
-	uri: "mongodb://"+ process.env.DB_USER +":"+ process.env.DB_PASSWORD +"@"+ process.env.DB_HOST +":"+ process.env.DB_PORT +"/"+ process.env.DB_NAME,
-	collection: "userSessions",
-});
+	var MongoDBStore = require( "connect-mongodb-session" )( session );
 
-store.on( "error", function( error ) {
-	assert.ifError( error );
-	assert.ok( false );
-});
+	var store = new MongoDBStore({
+		uri: "mongodb://"+ process.env.DB_USER +":"+ process.env.DB_PASSWORD +"@"+ process.env.DB_HOST +":"+ process.env.DB_PORT +"/"+ process.env.DB_NAME,
+		collection: "userSessions",
+	});
 
-app.use( session({
-	secret: process.env.APP_SECRET,
-	cookie: {
-		maxAge: ( 1000 * 60 * 60 * 1 ) // 1 hour 
-	},
-	store: store,
-	resave: true,
-	saveUninitialized: true
-}));
+	store.on( "error", function( error ) {
+		assert.ifError( error );
+		assert.ok( false );
+	});
+
+	app.use( session({
+		secret: process.env.APP_SECRET,
+		cookie: {
+			maxAge: ( 1000 * 60 * 60 * 1 ) // 1 hour 
+		},
+		store: store,
+		resave: true,
+		saveUninitialized: true
+	}));
+
+}
 
 
 
@@ -378,31 +400,54 @@ else {
 	});
 }
 
-db.connect()
-	.then( () => {
-		// start the server
-		return app.listen( process.env.BACKEND_PORT );
-	})
-	.then( () => {
+function start() {
 
-		log( "Server started at "+ process.env.BACKEND_URL );
+	db.connect()
+		.catch( ( error ) => {
 
-		if ( process.env.BACKEND_PORT < 1024 ) {
+			if ( error.name === "MongoError" ) {
+				if ( /failed to connect to server/.test( error.message ) ) {
+					log.error( "Failed to connect to to database, retrying in 5 seconds" );
+					setTimeout( () => {
+						start();
+					}, 5000 );
+				}
+				else {
+					log.error( "Database Error" );
+				}
+			}
 
-			// this lets us use sudo to start the server on a privileged port,
-			// then drop it down to normal permissions
-			let uid = parseInt( process.env.SUDO_UID );
+			throw error;                                                                                                       
+		})
+		.then( () => {
+			initSession();
+			// start the server
+			return app.listen( process.env.BACKEND_PORT );
+		})
+		.then( () => {
 
-			if ( uid )
-				process.setuid( uid );
+			log.info( "Server started at "+ process.env.BACKEND_URL );
 
-			log( "Server's UID is now " + process.getuid() );
+			if ( process.env.BACKEND_PORT < 1024 ) {
 
-		}
+				// this lets us use sudo to start the server on a privileged port,
+				// then drop it down to normal permissions
+				let uid = parseInt( process.env.SUDO_UID );
 
-	})
-	.catch( ( error ) => {
-		log( error );
-		db.close();
-	});
+				if ( uid )
+					process.setuid( uid );
+
+				log.info( "Server's UID is now " + process.getuid() );
+
+			}
+
+		})
+		.catch( ( error ) => {
+			log.error( error );
+			db.close();
+		});
+}
+
+start();
+
 

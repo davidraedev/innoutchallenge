@@ -91,6 +91,7 @@
     "uglifyjs-webpack-plugin": "^0.4.6",
     "webpack": "^3.3.0",
     "webpack-dev-server": "^2.5.0",
+    "winston": "^2.4.0",
     "word-to-number-node": "1.0.1"
   },
   "devDependencies": {

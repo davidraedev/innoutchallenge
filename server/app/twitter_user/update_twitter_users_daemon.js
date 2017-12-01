@@ -1,9 +1,27 @@
 process.env.BASE = process.env.BASE || process.cwd();
-const Logger = require( "../../controller/log" );
-const log = new Logger( { path: process.env.BASE + "/log/update_twitter_users.log" } );
 const twitterUsersController = require( "../../controller/twitter_user" );
 const db = require( "../db" );
 const utils = require( "../../controller/utils" );
+const path = require( "path" );
+const log_path = path.resolve( __dirname, "../../../log/update_twitter_users.log" );
+const winston = require( "winston" );
+const tsFormat = () => new Date();
+const logger = new ( winston.Logger )( {
+	transports: [
+		new ( winston.transports.Console )( {
+			timestamp: tsFormat,
+			colorize: true,
+			level: "info",
+		} ),
+		new ( winston.transports.File )( {
+			filename: log_path,
+			timestamp: tsFormat,
+			json: true,
+			level: "debug",
+			handleExceptions: true
+		} ),
+	]
+});
 
 const fetch_delay = 1000 * 60;
 
@@ -22,12 +40,34 @@ function callback() {
 
 }
 
-db.connect()
-	.then(() => {
-		log( "DB connected, starting" );
-		utils.loop( callback, fetch_delay );
-	})
-	.catch( ( error ) => {
-		log( error );
-		db.close();
-	});
+function start() {
+
+	db.connect()
+		.catch( ( error ) => {
+
+			if ( error.name === "MongoError" ) {
+				if ( /failed to connect to server/.test( error.message ) ) {
+					log.error( "Failed to connect to to database, retrying in 5 seconds" );
+					setTimeout( () => {
+						start();
+					}, 5000 );
+				}
+				else {
+					log.error( "Database Error" );
+				}
+			}
+
+			throw error;                                                                                                       
+		})
+		.then(() => {
+			log.info( "DB connected, starting" );
+			utils.loop( callback, fetch_delay );
+		})
+		.catch( ( error ) => {
+			log.error( error );
+			db.close();
+		});
+}
+
+start();
+	
