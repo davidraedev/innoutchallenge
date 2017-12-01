@@ -6,7 +6,7 @@ const path = require( "path" );
 const log_path = path.resolve( __dirname, "../../../log/tweet_queue.log" );
 const winston = require( "winston" );
 const tsFormat = () => new Date();
-const logger = new ( winston.Logger )( {
+const log = new ( winston.Logger )( {
 	transports: [
 		new ( winston.transports.Console )( {
 			timestamp: tsFormat,
