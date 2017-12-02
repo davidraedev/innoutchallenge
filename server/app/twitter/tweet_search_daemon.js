@@ -58,7 +58,7 @@ function start() {
 	db.connect()
 		.catch( ( error ) => {
 
-			if ( error.name === "MongoError" ) {
+			if ( error.name === "MongoError" || error.name = "MongooseError" ) {
 				if ( /failed to connect to server/.test( error.message ) ) {
 					log.error( "Failed to connect to to database, retrying in 5 seconds" );
 					setTimeout( () => {
