@@ -26,59 +26,32 @@ const log = new ( winston.Logger )( {
 const fetch_delay = 1000 * 20;
 const tweets_per_queue = 3;
 
-const log_loop_interval = 1000 * 60 * 10; // keepalive log every ten minutes
-let last_log = +new Date();
-
 function callback() {
 
-	if ( ( +new Date() - log_loop_interval ) > last_log ) {
-		log.info( "loop" );
-		last_log = +new Date();
-	}
+	log.info( "loop" );
 
 	return new Promise( ( resolve, reject ) => {
 
-		tweetQueueController.processQueues( tweets_per_queue )
+		db.connect()
+			.then( () => {
+				return tweetQueueController.processQueues( tweets_per_queue );
+			})
 			.then( ( queues_processed ) => {
 				if ( queues_processed )
 					log.info( queues_processed +" queues processed" );
 				resolve();
+				db.close();
 			})
 			.catch( ( error ) => { 
-				reject( error );
+				log.error( error );
+				db.close();
+				if ( error.name === "MongoError" || error.name === "MongooseError" )
+					resolve( 1000 * 5 );
+				else
+					reject( error );
 			});
 	});
 
 }
-
-function start() {
-
-	db.connect()
-		.catch( ( error ) => {
-
-			if ( error.name === "MongoError" || error.name === "MongooseError" ) {
-				if ( /failed to connect to server/.test( error.message ) ) {
-					log.error( "Failed to connect to to database, retrying in 5 seconds" );
-					setTimeout( () => {
-						start();
-					}, 5000 );
-				}
-				else {
-					log.error( "Database Error" );
-				}
-			}
-
-			throw error;                                                                                                       
-		})
-		.then(() => {
-			log.info( "DB connected, starting" );
-			utils.loop( callback, fetch_delay );
-		})
-		.catch( ( error ) => {
-			log.error( error );
-			db.close();
-		});
-}
-
-start();
+utils.loop( callback, fetch_delay );
 	

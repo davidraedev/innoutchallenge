@@ -29,45 +29,26 @@ function callback() {
 
 	return new Promise( ( resolve, reject ) => {
 
-		twitterUsersController.updateTwitterUsers()
+		db.connect()
+			.then( () => {
+				log.info( "DB connected, starting" );
+				return twitterUsersController.updateTwitterUsers();
+			})
 			.then( () => {
 				resolve();
+				db.close();
 			})
 			.catch( ( error ) => {
-				reject( error );
+				log.error( error );
+				db.close();
+				if ( error.name === "MongoError" || error.name === "MongooseError" )
+					resolve( 1000 * 5 );
+				else
+					reject( error );
 			});
 	});
 
 }
 
-function start() {
-
-	db.connect()
-		.catch( ( error ) => {
-
-			if ( error.name === "MongoError" || error.name === "MongooseError" ) {
-				if ( /failed to connect to server/.test( error.message ) ) {
-					log.error( "Failed to connect to to database, retrying in 5 seconds" );
-					setTimeout( () => {
-						start();
-					}, 5000 );
-				}
-				else {
-					log.error( "Database Error" );
-				}
-			}
-
-			throw error;                                                                                                       
-		})
-		.then(() => {
-			log.info( "DB connected, starting" );
-			utils.loop( callback, fetch_delay );
-		})
-		.catch( ( error ) => {
-			log.error( error );
-			db.close();
-		});
-}
-
-start();
+utils.loop( callback, fetch_delay );
 	
