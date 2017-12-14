@@ -1,6 +1,6 @@
 const mongoose = require( "mongoose" );
 mongoose.Promise = require( "bluebird" );
-require( "dotenv" ).config( { path: process.env.ENV_PATH } );
+require( "dotenv" ).config( { path: ".env.production" } );
 
 const connect = function( db_name ) {
 
@@ -19,7 +19,7 @@ const connect = function( db_name ) {
 			.then( () => {
 
 				if ( mongoose.connection.readyState !== 1 )
-					throw new Error( "DB not connected state["+ mongoose.connection.readyState +"]" );
+					throw new Error( "DB not connected state ["+ mongoose.connection.readyState +"]" );
 
 				resolve( null );
 			})

@@ -1,42 +1,30 @@
-const fs = require( "fs" );
-let logStream;
-const production = ( process.env.NODE_ENV === "production" );
+const winston = require( "winston" );
+const tsFormat = () => new Date();
+const log = ( log_path ) => {
 
-function Logger( params ) {
+	let config = {
+		transports: [
+			new ( winston.transports.Console )( {
+				timestamp: tsFormat,
+				colorize: true,
+				level: "info",
+			} ),
+		]
+	};
 
-	if ( process.env.NODE_ENV === "production" ) {
-
-		logStream = fs.createWriteStream( params.path );
-
-		process.on( "uncaughtException", ( error ) => {
-			this.writeLog( error.stack );
-		});
-
-		process.once( "SIGTERM", () => {
-			this.writeLog( "Stopped" );
-			logStream.end();
-			process.exit( 0 );
-		});
-
+	if ( log_path ) {
+		config.transports.push(
+			new ( winston.transports.File )( {
+				filename: log_path,
+				timestamp: tsFormat,
+				json: true,
+				level: "debug",
+				handleExceptions: true
+			} )
+		);
 	}
 
-	return this.writeLog;
-}
-
-Logger.prototype.writeLog = function( message, is_error ) {
-
-	let formatted_message;
-	if ( is_error && production )
-		formatted_message = "["+ new Date() +"] " + message.toString() + "\n";
-	else if ( production )
-		formatted_message = "["+ new Date() +"] " + message + "\n";
-	else 
-		formatted_message = "["+ new Date() +"] " + message;
-
-	if ( production )
-		logStream.write( formatted_message );
-	else
-		console.log( formatted_message );
+	return new ( winston.Logger )( config );
 };
 
-module.exports = Logger;
+module.exports = log;

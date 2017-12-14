@@ -3,27 +3,11 @@ const tweetController = require( "../../controller/tweet" );
 const db = require( "../db" );
 const utils = require( "../../controller/utils" );
 const path = require( "path" );
-const log_path = path.resolve( __dirname, "../../../log/fetch_tweets.log" );
-const winston = require( "winston" );
-const tsFormat = () => new Date();
-const log = new ( winston.Logger )( {
-	transports: [
-		new ( winston.transports.Console )( {
-			timestamp: tsFormat,
-			colorize: true,
-			level: "info",
-		} ),
-		new ( winston.transports.File )( {
-			filename: log_path,
-			timestamp: tsFormat,
-			json: true,
-			level: "debug",
-			handleExceptions: true
-		} ),
-	]
-});
+const log = require( "../../controller/log" )( path.resolve( __dirname, "../../../log/fetch_tweets.log" ) );
 
 const fetch_delay = 1000 * 60; // once per minute
+
+log.info( "Starting" );
 
 function callback() {
 
