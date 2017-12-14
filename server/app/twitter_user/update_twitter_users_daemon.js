@@ -44,7 +44,7 @@ function callback() {
 				if ( error.name === "MongoError" || error.name === "MongooseError" )
 					resolve( 1000 * 5 );
 				else
-					reject( error );
+					resolve();
 			});
 	});
 
