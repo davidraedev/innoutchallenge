@@ -50,7 +50,7 @@ function callback() {
 				}
 			})
 			.then( ( stores_updated ) => {
-				log.info( stores_updated +" stores updated" );
+				log.info( stores_updated + " stores updated" );
 				return appController.setStoreFetchDate();
 			})
 			.then( () => {
@@ -65,7 +65,7 @@ function callback() {
 				if ( error.name === "MongoError" || error.name === "MongooseError" )
 					resolve( 1000 * 5 );
 				else
-					reject( error );
+					resolve();
 			});
 	});
 
