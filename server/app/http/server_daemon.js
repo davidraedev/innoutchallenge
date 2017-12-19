@@ -37,11 +37,13 @@ app.use( "/img", express.static( process.env.BASE + "/server/public/img" ) );
 app.use( "/font", express.static( process.env.BASE + "/server/public/font" ) );
 
 function initSession() {
+	log.info( "initSession" );
 
 	var MongoDBStore = require( "connect-mongodb-session" )( session );
 
+	log.info( "mongo url: "+ db.getUrl() );
 	var store = new MongoDBStore({
-		uri: "mongodb://"+ process.env.DB_USER +":"+ process.env.DB_PASSWORD +"@"+ process.env.DB_HOST +":"+ process.env.DB_PORT +"/"+ process.env.DB_NAME,
+		uri: db.getUrl( true ),
 		collection: "userSessions",
 	});
 
@@ -150,17 +152,36 @@ userPassport.deserializeUser( ( obj, callback ) => {
 
 app.use( userPassport.initialize() );
 app.use( userPassport.session({ secret: process.env.APP_SECRET, cookie: { secure: true } }) );
-app.get( "/signin/return/:returnUrl", ( request, response, next ) => { request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next(); }, userPassport.authenticate( "twitter" ) );
-app.get( "/signin", ( request, response, next ) => { request.session.signinReturnUrl = request.headers.referer; next(); }, userPassport.authenticate( "twitter" ) );
+
+app.get( "/signin/return/:returnUrl",
+	( request, response, next ) => {
+		log.info( "signin middleware 2" );
+		request.session.signinReturnUrl = decodeURIComponent( request.params.returnUrl ); next();
+	},
+	userPassport.authenticate( "twitter" )
+);
+
+app.get( "/signin",
+	( request, response, next ) => {
+		log.info( "/signin 1" );
+		request.session.signinReturnUrl = request.headers.referer;
+		log.info( "/signin 2" );
+		next();
+	},
+	userPassport.authenticate( "twitter" )
+);
+
 app.get( "/signout", ( request, response ) => {
 	request.logout();
 	response.redirect( process.env.FRONTEND_URL );
 });
+
 app.get( "/auth/twitter/callback",
 	userPassport.authenticate(
 		"twitter",
 		{ failureRedirect: "/signin" }),
 		( request, response ) => {
+			log.info( "signin twitter_callback" );
 			let redirect = ( request.session.signinReturnUrl === process.env.FRONTEND_URL + "/signin" ) ? process.env.FRONTEND_URL : request.session.signinReturnUrl;
 			request.session.signinReturnUrl = null;
 			response.redirect( redirect );

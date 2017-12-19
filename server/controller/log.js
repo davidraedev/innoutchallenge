@@ -7,7 +7,8 @@ const log = ( log_path ) => {
 			new ( winston.transports.Console )( {
 				timestamp: tsFormat,
 				colorize: true,
-				level: "info",
+				level: "debug",
+				handleExceptions: true,
 			} ),
 		]
 	};
@@ -19,7 +20,7 @@ const log = ( log_path ) => {
 				timestamp: tsFormat,
 				json: true,
 				level: "debug",
-				handleExceptions: true
+				handleExceptions: true,
 			} )
 		);
 	}
