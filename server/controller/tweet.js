@@ -41,9 +41,8 @@ const getTweetsFromSearchApp = function( search_string ) {
 					if ( error )
 						throw error;
 
-					if ( ! tweets || ! tweets.statuses || ! tweets.statuses.length ) {
+					if ( ! tweets || ! tweets.statuses || ! tweets.statuses.length )
 						return resolve();
-					}
 
 					let remaining = tweets.statuses.length;
 					// we want to save to the db starting with the oldest,
@@ -53,7 +52,11 @@ const getTweetsFromSearchApp = function( search_string ) {
 						return ( new Date( a.created_at ) - new Date( b.created_at ) );
 					});
 
+					let stop = false;
 					tweets.statuses.forEach( ( tweet_data ) => {
+
+						if ( stop )
+							return;
 
 						remaining--;
 
@@ -65,23 +68,27 @@ const getTweetsFromSearchApp = function( search_string ) {
 									createTweet( { data: tweet_data, source: 1, fetched: true, fetch_date: new Date() } )
 										.then( () => {
 
-											if ( remaining === 0 ) {
-												resolve();
-											}
+											if ( remaining <= 0 )
+												return resolve();
 
 										})
 										.catch( ( error ) => {
 											throw error;
 										});
 								}
-								else if ( remaining === 0 ) {
-										resolve();
+								else if ( remaining <= 0 ) {
+									return resolve();
 								}
 							})
 							.catch( ( error ) => {
 								stop = true;
 								throw error;
 							});
+
+						if ( remaining <= 0 ) {
+							stop = true;
+							return resolve();
+						}
 					});
 				});
 			})

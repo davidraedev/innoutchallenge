@@ -16,9 +16,11 @@ function callback() {
 
 		db.connect()
 			.then( () => {
+				log.info( "getTweetsFromSearchApp" );
 				return tweetController.getTweetsFromSearchApp();
 			})
 			.then( () => {
+				log.info( "parseTweets" );
 				return tweetController.parseTweets( true, true );
 			})
 			.then( ( tweets_parsed ) => {
