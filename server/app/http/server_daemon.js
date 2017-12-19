@@ -24,26 +24,7 @@ const account_controller = require( "../../controller/account_view" );
 const admin_controller = require( "../../controller/admin_view" );
 const jsonParser = bodyParser.json();
 const path = require( "path" );
-const log_path = path.resolve( __dirname, "../../../log/web_server.log" );
-const winston = require( "winston" );
-const tsFormat = () => new Date();
-const log = new ( winston.Logger )( {
-	transports: [
-		new ( winston.transports.Console )( {
-			timestamp: tsFormat,
-			colorize: true,
-			level: "info",
-		} ),
-		new ( winston.transports.File )( {
-			filename: log_path,
-			timestamp: tsFormat,
-			json: true,
-			level: "debug",
-			handleExceptions: true
-		} ),
-	]
-});
-
+const log = require( "../../controller/log" )( path.resolve( __dirname, "../../../log/web_server.log" ) );
 
 app.use( cors( {
 	origin: true,
