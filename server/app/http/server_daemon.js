@@ -41,7 +41,7 @@ function initSession() {
 
 	var MongoDBStore = require( "connect-mongodb-session" )( session );
 
-	log.info( "mongo url: "+ db.getUrl() );
+	log.info( "mongo url: "+ db.getUrl( true ) );
 	var store = new MongoDBStore({
 		uri: db.getUrl( true ),
 		collection: "userSessions",

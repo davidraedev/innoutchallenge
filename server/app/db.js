@@ -1,12 +1,10 @@
 const mongoose = require( "mongoose" );
 mongoose.Promise = global.Promise;
-require( "dotenv" ).config( { path: process.env.ENV_PATH } );
-
-let db_name;
+require( "dotenv" ).config();
 
 const connect = function( custom_db_name ) {
 
-	db_name = custom_db_name || process.env.DB_NAME;
+	let db_name = custom_db_name || process.env.DB_NAME;
 
 	return new Promise( ( resolve, reject ) => {
 
@@ -43,7 +41,8 @@ const close = function() {
 	return mongoose.connection.close();
 };
 
-const getUrl = function( with_credentials ) {
+const getUrl = function( with_credentials, custom_db_name ) {
+	let db_name = custom_db_name || process.env.DB_NAME;
 	if ( with_credentials && process.env.DB_USER && process.env.DB_PASSWORD )
 		return "mongodb://"+ process.env.DB_USER +":"+ process.env.DB_PASSWORD +"@"+ process.env.DB_HOST +":"+ process.env.DB_PORT +"/"+ db_name;
 	else
