@@ -1,13 +1,13 @@
 const accountController = require( "./account" );
 
 const get_account = function( request, response ) {
-	accountController.getAccountFromTwitterID( request.user._json.id_str )
+	accountController.getAccountFromUserID( request.user )
 		.then( ( user ) => {
 			response.json( user );
 		})
 		.catch( ( error ) => {
 			console.log( "error [%s]", error );
-			if ( error == "Error: twitter_user not found" )
+			if ( error == "Error: user not found" )
 				response.status( 401 ).send();
 			else
 				response.status( 500 ).send( error );
@@ -15,7 +15,7 @@ const get_account = function( request, response ) {
 };
 
 const update_account = function( request, response ) {
-	accountController.updateAccount( request.user._json.id_str, request.body )
+	accountController.updateAccount( request.user, request.body )
 		.then( ( user ) => {
 			response.json( user );
 		})
@@ -29,7 +29,7 @@ const delete_account = function( request, response ) {
 	response.json({ success: 1 });
 	return;
 
-	accountController.deleteAccount( request.user._json.id_str )
+	accountController.deleteAccount( request.user )
 		.then( () => {
 			response.json({ success: 1 });
 		})

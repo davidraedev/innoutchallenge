@@ -7,7 +7,7 @@ const getAccountFromTwitterID = function( twitter_user_twitter_id, return_full )
 
 		let fields = ( return_full ) ? null : [ "name", "settings", "state" ] ;
 
-		TwitterUser.findOne( { "data.id_str": twitter_user_twitter_id } ).lean()
+		TwitterUser.findOne( { "data.id_str": twitter_user_twitter_id } )
 			.then( ( twitter_user ) => {
 
 				if ( ! twitter_user )
@@ -30,11 +30,33 @@ const getAccountFromTwitterID = function( twitter_user_twitter_id, return_full )
 
 };
 
-const updateAccount = function( twitter_user_twitter_id, settings ) {
+const getAccountFromUserID = function( user_id, return_full ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		getAccountFromTwitterID( twitter_user_twitter_id )
+		let fields = ( return_full ) ? null : [ "name", "settings", "state" ] ;
+
+		User.findOne( { _id: user_id }, fields )
+			.then( ( user ) => {
+
+				if ( ! user )
+					throw new Error( "user not found" );
+
+				resolve( user );
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
+		
+	});
+
+};
+
+const updateAccount = function( user_id, settings ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		getAccountFromUserID( user_id )
 			.then( ( user ) => {
 				settings.forEach( ( setting ) => {
 					user.settings[ setting.category ][ setting.option ] = setting.value;
@@ -50,11 +72,11 @@ const updateAccount = function( twitter_user_twitter_id, settings ) {
 	});
 };
 
-const deleteAccount = function( twitter_user_twitter_id ) {
+const deleteAccount = function( user_id ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		getAccountFromTwitterID( twitter_user_twitter_id )
+		getAccountFromUserID( user_id )
 			.then( ( user ) => {
 				user.remove()
 					.then( () => {
@@ -74,5 +96,6 @@ const deleteAccount = function( twitter_user_twitter_id ) {
 
 
 module.exports.getAccountFromTwitterID = getAccountFromTwitterID;
+module.exports.getAccountFromUserID = getAccountFromUserID;
 module.exports.updateAccount = updateAccount;
 module.exports.deleteAccount = deleteAccount;
