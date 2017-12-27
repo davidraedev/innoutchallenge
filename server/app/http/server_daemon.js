@@ -36,33 +36,28 @@ app.disable( "x-powered-by" );
 app.use( "/img", express.static( process.env.BASE + "/server/public/img" ) );
 app.use( "/font", express.static( process.env.BASE + "/server/public/font" ) );
 
-function initSession() {
-	log.info( "initSession" );
+var MongoDBStore = require( "connect-mongodb-session" )( session );
 
-	var MongoDBStore = require( "connect-mongodb-session" )( session );
+log.info( "mongo url: "+ db.getUrl( true ) );
+var store = new MongoDBStore({
+	uri: db.getUrl( true ),
+	collection: "userSessions",
+});
 
-	log.info( "mongo url: "+ db.getUrl( true ) );
-	var store = new MongoDBStore({
-		uri: db.getUrl( true ),
-		collection: "userSessions",
-	});
+store.on( "error", function( error ) {
+	assert.ifError( error );
+	assert.ok( false );
+});
 
-	store.on( "error", function( error ) {
-		assert.ifError( error );
-		assert.ok( false );
-	});
-
-	app.use( session({
-		secret: process.env.APP_SECRET,
-		cookie: {
-			maxAge: ( 1000 * 60 * 60 * 1 ) // 1 hour 
-		},
-		store: store,
-		resave: true,
-		saveUninitialized: true
-	}));
-
-}
+app.use( session({
+	secret: process.env.APP_SECRET,
+	cookie: {
+		maxAge: ( 1000 * 60 * 60 * 1 ) // 1 hour 
+	},
+	store: store,
+	resave: true,
+	saveUninitialized: true
+}));
 
 
 
@@ -422,7 +417,6 @@ function start() {
 			throw error;                                                                                                       
 		})
 		.then( () => {
-			initSession();
 			// start the server
 			return app.listen( process.env.BACKEND_PORT );
 		})
