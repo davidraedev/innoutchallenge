@@ -219,6 +219,22 @@ export default class Splash extends React.Component {
 
 					</div>
 
+					<div class="section">
+
+						<div class="title"><div class="text">Want to see more?</div></div>
+
+						<div class="items">
+
+							<div class="item center">
+								<div class="column">
+									<a class="button big" href="/challengers">Check Out The Challengers</a>
+								</div>
+							</div>
+
+						</div>
+
+					</div>
+
 				</div>
 			</div>
 		)
