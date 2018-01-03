@@ -91,9 +91,9 @@ export default class Splash extends React.Component {
 				<div class="container" id="splash_content">
 					
 					<div class="intro">
-						<img class="img_welcome" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_welcome.png" } />
-						<img class="img_to_the" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_to_the.png" } />
-						<img class="img_logo" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_logo.png" } />
+						<img class="img_welcome" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_welcome.png" } alt="Welcome" />
+						<img class="img_to_the" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_to_the.png" } alt="to the" />
+						<img class="img_logo" src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_logo.png" } alt="#innoutChallenge" />
 					</div>
 
 					<div class="section">
@@ -116,7 +116,7 @@ export default class Splash extends React.Component {
 
 								<div class="column image_col">
 									<div class="image">
-										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_obtain_innout.jpg" } style={ this.resizeImage( "obtain_innout" ) } />
+										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_obtain_innout.jpg" } style={ this.resizeImage( "obtain_innout" ) } alt="Person holding many In-N-Out bags and some boxes on his head" />
 									</div>
 								</div>
 
@@ -158,7 +158,7 @@ export default class Splash extends React.Component {
 
 								<div class="column image_col">
 									<div class="image">
-										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_tweet_receipt.jpg" } style={ this.resizeImage( "tweet_receipt" ) } />
+										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_tweet_receipt.jpg" } style={ this.resizeImage( "tweet_receipt" ) } alt="Person with receipt dialing on rotary phone" />
 									</div>
 								</div>
 								
@@ -178,7 +178,7 @@ export default class Splash extends React.Component {
 
 								<div class="column image_col">
 									<div class="image">
-										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_repeat.jpg" } style={ this.resizeImage( "repeat" ) } />
+										<img src={ process.env.REACT_APP_BACKEND_URL + "/img/splash_repeat.jpg" } style={ this.resizeImage( "repeat" ) } alt="Escher stairs with letters on them spelling innoutchallenge" />
 									</div>
 								</div>
 
