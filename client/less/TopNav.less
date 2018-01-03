@@ -73,6 +73,7 @@
 			.search_button {
 				cursor: pointer;
 				color: rgb( 200,200,200 );
+				margin-left: 10px;
 			}
 		}
 	}
@@ -280,6 +281,22 @@
 
 		#top_menu {
 			display: none;
+		}
+	}
+}
+
+@media screen and ( max-width: 540px ) {
+
+	#top_nav, #top_nav.full_menu {
+
+		.text {
+
+			&.search {
+
+				input {
+					width: 115px;
+				}
+			}
 		}
 	}
 }
