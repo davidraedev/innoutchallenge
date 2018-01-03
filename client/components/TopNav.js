@@ -3,7 +3,7 @@ import { connect } from "react-redux"
 import { NavLink } from "react-router-dom";
 
 import { fetchUsers, changeSearch, clearUsers } from "../actions/usersActions"
-import { createUserTwitterLink } from "./Utils"
+//import { createTweetLink } from "./Utils"
 
 require( "../less/TopNav.less" )
 
@@ -57,7 +57,7 @@ export default class TopNav extends React.Component {
 
 	render() {
 
-		let { authenticated, adminAuthenticated, searchText, title, linkTwitter, showFullMenu } = this.props
+		let { authenticated, adminAuthenticated, searchText, title, showFullMenu, lastChallengersPage } = this.props
 
 		let authLinks
 		let adminLinks
@@ -94,13 +94,6 @@ export default class TopNav extends React.Component {
 				</div>
 			)
 		}
-		else if ( linkTwitter ) {
-			title_el = (
-				<div class="text">
-					{ title }
-				</div>
-			)
-		}
 		else {
 			title_el = (
 				<div class="text">
@@ -109,13 +102,13 @@ export default class TopNav extends React.Component {
 			)
 		}
 
-		console.log( "this.props", this.props )
+		let backLink = "/challengers/" + lastChallengersPage;
 
 		return (
 			<div class="top">
 				<nav id="top_nav" class={ ( showFullMenu ) ? "full_menu" : "" }>
 					<div class="logo">
-						<NavLink to="/challengers" class={ this.state.backButtonClass }><i class="fa fa-close" aria-hidden="true"></i></NavLink>
+						<NavLink to={ backLink } class={ this.state.backButtonClass }><i class="fa fa-close" aria-hidden="true"></i></NavLink>
 					</div>
 					<ul id="top_menu">
 						<li><NavLink exact to="/" activeClassName="active">Home</NavLink></li>

@@ -13,9 +13,11 @@ import PageNotAuthorized from "./PageNotAuthorized"
 require( "../less/User.less" )
 
 @connect( ( store ) => {
+	console.log( "store", store );
 	return {
 		user: store.userReceipts.user,
 		error: store.userReceipts.error,
+		lastChallengersPage: store.users.currentPage, 
 	}
 })
 
@@ -33,7 +35,7 @@ export default class UserReceipts extends React.Component {
 
 	render() {
 
-		const { user, error } = this.props;
+		const { user, error, lastChallengersPage } = this.props;
 		let mappedReceipts = []
 		
 		if ( error ) {
@@ -87,7 +89,7 @@ export default class UserReceipts extends React.Component {
 		return	(
 			<div>
 				<Error error={ [ error ] } />
-				<TopNav title={ "@" + user.name } showBackButton={ true } linkTwitter={ true } />
+				<TopNav title={ "@" + user.name } showBackButton={ true } lastChallengersPage={ lastChallengersPage || null } />
 				<SubNav url={ this.props.match.url } type="user" />
 				<div class="container" id="main_content">
 					<div class="section totals">
