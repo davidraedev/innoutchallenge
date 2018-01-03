@@ -17,7 +17,7 @@ require( "../less/User.less" )
 	return {
 		user: store.userReceipts.user,
 		error: store.userReceipts.error,
-		lastChallengersPage: store.users.currentPage, 
+		lastChallengersPage: store.users.currentPage,
 	}
 })
 

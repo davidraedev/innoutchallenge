@@ -16,6 +16,7 @@ require( "../less/User.less" )
 	return {
 		user: store.userDriveThru.user,
 		error: store.userDriveThru.error,
+		lastChallengersPage: store.users.currentPage,
 	}
 })
 
@@ -27,7 +28,7 @@ export default class UserDriveThru extends React.Component {
 
 	render() {
 
-		const { user, error } = this.props;
+		const { user, error, lastChallengersPage } = this.props;
 
 		let mappedDriveThru = []
 
@@ -82,7 +83,7 @@ export default class UserDriveThru extends React.Component {
 		return	(
 			<div>
 				<Error error={ [ error ] } />
-				<TopNav title={ "@" + user.name } showBackButton={ true } linkTwitter={ true } />
+				<TopNav title={ "@" + user.name } showBackButton={ true } lastChallengersPage={ lastChallengersPage || null } />
 				<SubNav url={ this.props.match.url } type="user" />
 				<div class="container" id="main_content">
 					<div class="section totals">
