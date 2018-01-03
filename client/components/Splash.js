@@ -87,7 +87,7 @@ export default class Splash extends React.Component {
 					<link rel="stylesheet" href={ process.env.REACT_APP_BACKEND_URL + "/font/league-gothic/stylesheet.css" } integrity="sha384-FtHmOXxOCXs2W0piGYygAPT9dXMNmExBG+hYbKgg0e3L5CQQu5uJ9U2qlMfcAH+O" type="text/css" crossorigin="anonymous" />
 				</Helmet>
 
-				<TopNav showBackButton={ false } />
+				<TopNav showBackButton={ false } showFullMenu={ true } />
 				<div class="container" id="splash_content">
 					
 					<div class="intro">

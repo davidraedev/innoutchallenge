@@ -57,7 +57,7 @@ export default class TopNav extends React.Component {
 
 	render() {
 
-		let { authenticated, adminAuthenticated, searchText, title, linkTwitter } = this.props
+		let { authenticated, adminAuthenticated, searchText, title, linkTwitter, showFullMenu } = this.props
 
 		let authLinks
 		let adminLinks
@@ -109,13 +109,21 @@ export default class TopNav extends React.Component {
 			)
 		}
 
+		console.log( "this.props", this.props )
+
 		return (
 			<div class="top">
-				<nav id="top_nav">
+				<nav id="top_nav" class={ ( showFullMenu ) ? "full_menu" : "" }>
 					<div class="logo">
 						<NavLink to="/challengers" class={ this.state.backButtonClass }><i class="fa fa-close" aria-hidden="true"></i></NavLink>
 					</div>
-					<ul class="dropdown">
+					<ul id="top_menu">
+						<li><NavLink exact to="/" activeClassName="active">Home</NavLink></li>
+						<li><NavLink to="/challengers" activeClassName="active">Challengers</NavLink></li>
+						<li><NavLink to="/search" activeClassName="active">Search</NavLink></li>
+						{ authLinks }
+					</ul>
+					<ul class="side_nav_toggle">
 						<li onClick={ this.sidebarToggle }>
 							<i class="fa fa-bars icon" aria-hidden="true"></i>
 						</li>
