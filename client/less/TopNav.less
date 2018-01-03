@@ -11,6 +11,7 @@
 	text-align: center;
 	position: relative;
 	z-index: 2;
+	white-space: nowrap;
 
 	&:before {
 		content: "";
@@ -52,6 +53,8 @@
 		.top_nav_font;
 		color: rgb( 71,71,71 );
 		padding-bottom: 2px;
+		text-overflow: ellipsis;
+		overflow: hidden;
 
 		&.search {
 
@@ -281,6 +284,10 @@
 
 		#top_menu {
 			display: none;
+		}
+
+		.text {
+			max-width: 204px;
 		}
 	}
 }

@@ -97,7 +97,7 @@ export default class TopNav extends React.Component {
 		else if ( linkTwitter ) {
 			title_el = (
 				<div class="text">
-					<a href={ createUserTwitterLink( title ) }>{ title }</a>
+					{ title }
 				</div>
 			)
 		}
