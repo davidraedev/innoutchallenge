@@ -161,13 +161,19 @@
 
 #top_menu {
 	display: none;
-	color: @ino_red;
-	font-size: 20px;
-	font-family: sans-serif;
+	color: darken( @ino_red, 5% );
+	font-size: 21px;
+	font-family: arial;
+	font-weight: 600;
+
+	.active {
+		color: darken( @ino_red, 15% );
+		pointer-events: none;
+	}
 
 	> * {
 		display: inline-block;
-		padding: 23px 13px;
+		padding: 24px 13px;
 	}
 }
 
