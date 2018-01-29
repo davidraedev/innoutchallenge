@@ -51,11 +51,11 @@ exports.users_list = function( request, response ) {
 
 };
 
-function getUserLatestReceipt( search_params, keys) {
-	if ( keys )
-		return Receipt.findOne( search_params, keys ).populate( "tweet store" ).sort( { date: "desc" } ).limit( 1 ).lean().exec();
-	else
+function getUserLatestReceipt( search_params, type ) {
+	if ( type === "receipt" || type === "drivethru" )
 		return Receipt.findOne( search_params ).populate( "tweet store" ).sort( { date: "desc" } ).limit( 1 ).lean().exec();
+	else if ( type === "store" )
+		return Receipt.findOne( search_params ).populate( "tweet", "data.text data.id_str" ).populate( "store", "number" ).sort( { date: "desc" } ).limit( 1 ).lean().exec();
 }
 
 exports.user_instore_receipts = function( request, response ) {
@@ -99,7 +99,7 @@ exports.user_instore_receipts = function( request, response ) {
 			this_user.receipts = receipts_list;
 
 			if ( return_latest_receipt )
-				return getUserLatestReceipt( search_params );
+				return getUserLatestReceipt( search_params, "receipt" );
 			else
 				return;
 
@@ -188,8 +188,7 @@ exports.user_stores = function( request, response ) {
 			this_user.stores = final_stores;
 
 			if ( return_latest_receipt )
-				return Receipt.findOne( search_params ).populate( "tweet", "data.text" ).populate( "store", "number" ).sort( { date: "desc" } ).limit( 1 ).lean().exec();
-				//return getUserLatestReceipt( search_params, [ "tweet", "store", "number", "date" ] );
+				return getUserLatestReceipt( search_params, "store" );
 			else
 				return;
 
@@ -239,7 +238,7 @@ exports.user_drivethru_receipts = function( request, response ) {
 			this_user.drivethru = receipts;
 
 			if ( return_latest_receipt )
-				return getUserLatestReceipt( search_params );
+				return getUserLatestReceipt( search_params, "drivethru" );
 			else
 				return;
 

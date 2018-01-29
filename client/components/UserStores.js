@@ -10,6 +10,8 @@ import SubNav from "./SubNav"
 import PageNotFound from "./PageNotFound"
 import PageNotAuthorized from "./PageNotAuthorized"
 
+import { createTweetLink } from "./Utils"
+
 require( "../less/User.less" )
 
 @connect( ( store ) => {
@@ -71,10 +73,16 @@ export default class UserStores extends React.Component {
 			user.totals.stores.remaining = user.totals.stores.remaining || 0
 		}
 		else {
+
+			console.log( "latest_receipt", user.latest_receipt )
+
 			content = (
 				<div>
 					<div class="latest_tweet">
-						{ user.latest_receipt.tweet.data.text }<span class="date"> - <span title={ user.latest_receipt.date }><TimeAgo datetime={ user.latest_receipt.date } /></span></span>
+						<a href={ createTweetLink( user.name, user.latest_receipt.tweet.data.id_str ) } target="_blank">
+							{ user.latest_receipt.tweet.data.text }
+							<span class="date"> - <span title={ user.latest_receipt.date }><TimeAgo datetime={ user.latest_receipt.date } /></span></span>
+						</a>
 					</div>
 					<div class="section individuals">
 						<ul>

@@ -26,6 +26,11 @@ const createUserTwitterLink = function( screen_name ) {
 	return "https://twitter.com/"+ screen_name.replace( "@", "" );
 }
 
+const createTweetLink = function( screen_name, tweet_id ) {
+	return "https://twitter.com/"+ screen_name.replace( "@", "" ) +"/status/"+ tweet_id;
+}
+
 module.exports.convertProfileImageUrl = convertProfileImageUrl
 module.exports.formatCircleNumber = formatCircleNumber
 module.exports.createUserTwitterLink = createUserTwitterLink
+module.exports.createTweetLink = createTweetLink

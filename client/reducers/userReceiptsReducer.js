@@ -15,6 +15,7 @@ export default function reducer(
 				tweet: {
 					data: {
 						text: null,
+						id_str: null,
 					}
 				}
 			},
