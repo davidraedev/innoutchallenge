@@ -27,7 +27,7 @@ const createUserTwitterLink = function( screen_name ) {
 }
 
 const createTweetLink = function( screen_name, tweet_id ) {
-	return "https://twitter.com/"+ screen_name.replace( "@", "" ) +"/status/"+ tweet_id;
+	return createUserTwitterLink( screen_name ) +"/status/"+ tweet_id;
 }
 
 module.exports.convertProfileImageUrl = convertProfileImageUrl
