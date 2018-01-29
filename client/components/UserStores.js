@@ -74,8 +74,6 @@ export default class UserStores extends React.Component {
 		}
 		else {
 
-			console.log( "latest_receipt", user.latest_receipt )
-
 			content = (
 				<div>
 					<div class="latest_tweet">

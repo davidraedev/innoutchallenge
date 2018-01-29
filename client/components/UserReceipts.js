@@ -15,7 +15,6 @@ import { createTweetLink } from "./Utils"
 require( "../less/User.less" )
 
 @connect( ( store ) => {
-	console.log( "store", store );
 	return {
 		user: store.userReceipts.user,
 		error: store.userReceipts.error,
