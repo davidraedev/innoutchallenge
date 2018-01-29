@@ -29,7 +29,6 @@ export default function reducer(
 			return { ...state, fetching: false, error: action.payload }
 		}
 		case "FETCH_ACCOUNT_FULFILLED": {
-			console.log( "action", action )
 			return { ...state, fetching: false, fetched: true, account: action.payload }
 		}
 		case "CHANGE_ACCOUNT_PENDING": {
@@ -39,7 +38,6 @@ export default function reducer(
 			return { ...state, fetching: false, error: action.payload }
 		}
 		case "CHANGE_ACCOUNT_FULFILLED": {
-			console.log( "action", action )
 			return { ...state, fetching: false, fetched: true, account: action.payload }
 		}
 		case "DELETE_ACCOUNT_PENDING": {
@@ -49,7 +47,6 @@ export default function reducer(
 			return { ...state, fetching: false, error: action.payload }
 		}
 		case "DELETE_ACCOUNT_FULFILLED": {
-			console.log( "action", action )
 			return { ...state, fetching: false, fetched: true, account: action.payload }
 		}
 	}

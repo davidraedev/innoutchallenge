@@ -16,7 +16,6 @@ export default function reducer(
 			return { ...state, fetching: false, error: action.payload }
 		}
 		case "FETCH_APPROVALS_FULFILLED": {
-			console.log( "action", action )
 			return { ...state, fetching: false, fetched: true, account: action.payload }
 		}
 	}
