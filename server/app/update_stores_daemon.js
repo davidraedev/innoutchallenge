@@ -1,12 +1,12 @@
 process.env.BASE = process.env.BASE || process.cwd();
-const db = require( "../db" );
-const storeController = require( "../../controller/store" );
-const utils = require( "../../controller/utils" );
-const appController = require( "../../controller/app" );
-const PromiseEndError = require( "../error/PromiseEndError" );
+const db = require( "./db" );
+const storeController = require( "../controller/store" );
+const utils = require( "../controller/utils" );
+const appController = require( "../controller/app" );
+const PromiseEndError = require( "../controller/PromiseEndError" );
 const moment = require( "moment" );
 const path = require( "path" );
-const log = require( "../../controller/log" )( path.resolve( __dirname, "../../../log/update_stores.log" ) );
+const log = require( "../controller/log" )( path.resolve( __dirname, "../../log/update_stores.log" ) );
 
 const fetch_delay = 1000 * 60 * 60 * 24; // 24 hours in seconds
 

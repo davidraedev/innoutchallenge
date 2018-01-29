@@ -1,12 +1,4 @@
-if ( ! process.env.NODE_ENV )
-	throw new Error( "missing NODE_ENV" );
-
-if ( ! process.env.ENV_PATH )
-	throw new Error( "missing ENV_PATH" );
-
-let env_path = ( process.env.ENV_PATH === ".env.production" ) ? ".env.production" : ".env.dev";
-
-require( "dotenv" ).config( { path: env_path } );
+require( "dotenv" ).config();
 const debug = process.env.NODE_ENV !== "production";
 const webpack = require( "webpack" );
 const path = require( "path" );
@@ -14,10 +6,7 @@ const UglifyJSPlugin = require( "uglifyjs-webpack-plugin" );
 const Dotenv = require( "dotenv-webpack" );
 
 let plugins = [
-	new Dotenv({
-		path: env_path, 
-		safe: false,
-	})
+	new Dotenv()
 ];
 if ( ! debug ) {
 	plugins.push(

@@ -1,9 +1,3 @@
-
-if ( ! process.env.NODE_ENV )
-	throw new Error( "NODE_ENV not defined" );
-if ( ! process.env.ENV_PATH )
-	throw new Error( "ENV_PATH not defined" );
-
 process.env.BASE = process.env.BASE || process.cwd();
 const express = require( "express" );
 const app = express();
@@ -14,17 +8,17 @@ const passport = require( "passport" );
 const TwitterStrategy = require( "passport-twitter" ).Strategy;
 const userPassport = new passport.Passport();
 const adminPassport = new passport.Passport();
-const db = require( "../db" );
-const User = require( "../../model/user" );
-const TwitterUser = require( "../../model/twitter_user" );
-const userController = require( "../../controller/user" );
+const db = require( "./db" );
+const User = require( "../model/user" );
+const TwitterUser = require( "../model/twitter_user" );
+const userController = require( "../controller/user" );
 const bodyParser = require( "body-parser" );
-const user_controller = require( "../../controller/user_view" );
-const account_controller = require( "../../controller/account_view" );
-const admin_controller = require( "../../controller/admin_view" );
+const user_controller = require( "../controller/user_view" );
+const account_controller = require( "../controller/account_view" );
+const admin_controller = require( "../controller/admin_view" );
 const jsonParser = bodyParser.json();
 const path = require( "path" );
-const log = require( "../../controller/log" )( path.resolve( __dirname, "../../../log/web_server.log" ) );
+const log = require( "../controller/log" )( path.resolve( __dirname, "../../log/web_server.log" ) );
 
 app.use( cors( {
 	origin: true,

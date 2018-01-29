@@ -1,36 +1,31 @@
-if ( ! process.env.NODE_ENV )
-	throw new Error( "NODE_ENV not defined" );
-if ( ! process.env.ENV_PATH )
-	throw new Error( "ENV_PATH not defined" );
-
-require( "dotenv" ).config( { path: process.env.ENV_PATH } );
+require( "dotenv" ).config();
 
 const base = process.cwd();
 process.env.BASE = base;
 
 let apps = {
 	http_server: {
-		main: base + "/server/app/http/server_daemon.js",
+		main: base + "/server/app/server_daemon.js",
 		name: "http_server",
 		pidfile: base + "/pids/http_server.pid",
 	},
 	fetch_tweets: {
-		main: base + "/server/app/twitter/tweet_search_daemon.js",
+		main: base + "/server/app/tweet_search_daemon.js",
 		name: "fetch_tweets",
 		pidfile: base + "/pids/fetch_tweets.pid",
 	},
 	tweet_queue: {
-		main: base + "/server/app/tweet_queue/tweet_queue_daemon.js",
+		main: base + "/server/app/tweet_queue_daemon.js",
 		name: "tweet_queue",
 		pidfile: base + "/pids/tweet_queue.pid",
 	},
 	fetch_stores: {
-		main: base + "/server/app/store/update_stores_daemon.js",
+		main: base + "/server/app/update_stores_daemon.js",
 		name: "fetch_stores",
 		pidfile: base + "/pids/fetch_stores.pid",
 	},
 	update_twitter_users: {
-		main: base + "/server/app/twitter_user/update_twitter_users_daemon.js",
+		main: base + "/server/app/update_twitter_users_daemon.js",
 		name: "update_twitter_users",
 		pidfile: base + "/pids/update_twitter_users.pid",
 	}

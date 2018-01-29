@@ -13,8 +13,8 @@ const storeController = require( "./store" );
 const userController = require( "./user" );
 const tweetQueueController = require( "./tweet_queue" );
 const utils = require( "./utils" );
-const PromiseBreakError = require( "../app/error/PromiseBreakError" );
-const PromiseEndError = require( "../app/error/PromiseEndError" );
+const PromiseBreakError = require( "./PromiseBreakError" );
+const PromiseEndError = require( "./PromiseEndError" );
 
 const getTweetsFromSearchApp = function( search_string ) {
 

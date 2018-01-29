@@ -3,7 +3,7 @@ const Receipt = require( "../model/receipt" );
 const Store = require( "../model/store" );
 const userController = require( "./user" );
 
-const PromiseEndError = require( "../app/error/PromiseEndError" );
+const PromiseEndError = require( "./PromiseEndError" );
 
 exports.users_list = function( request, response ) {
 

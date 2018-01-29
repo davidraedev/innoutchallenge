@@ -1,9 +1,9 @@
 process.env.BASE = process.env.BASE || process.cwd();
-const twitterUsersController = require( "../../controller/twitter_user" );
-const db = require( "../db" );
-const utils = require( "../../controller/utils" );
+const twitterUsersController = require( "../controller/twitter_user" );
+const db = require( "./db" );
+const utils = require( "../controller/utils" );
 const path = require( "path" );
-const log = require( "../../controller/log" )( path.resolve( __dirname, "../../../log/update_twitter_users.log" ) );
+const log = require( "../controller/log" )( path.resolve( __dirname, "../../log/update_twitter_users.log" ) );
 
 const fetch_delay = 1000 * 60;
 
