@@ -50,29 +50,33 @@ export default class Users extends React.Component {
 		return number;
 	}
 
+	componentWillReceiveNewProps( new_props ) {
+		const { users } = new_props;
+		if ( ! users || ! users[0] || ! users[0].name ) {
+			console.log( "Changing to page 1" );
+			this.changePage( 1 );
+			if ( this.props.location.pathname !== "/challengers" )
+				this.props.history.push( "/challengers" );
+		}
+	}
+
 	render() {
 
 		const { users, error, hasPreviousPage, hasNextPage } = this.props;
 
 		let content
 
-		if ( ! users || ! users[0] || ! users[0].name ) {
-			this.changePage( 1 )
-			if ( this.props.location.pathname != "/challengers" )
-				this.props.history.push( "/challengers" )
-		}
-		else {
-			content = users.map( ( user ) => {
-				return (
-					<NavLink className="item challenger" key={ user.name } to={ "/@" + user.name + "/receipts" }>
-						<div className="number" style={ { backgroundImage: "url("+ convertProfileImageUrl( user.settings.avatar, 200 ) +")" } }>
-						 	<div class="text">{ formatCircleNumber( user.totals.receipts.unique ) }</div>
-						 </div>
-						<div className="name">{ user.name }</div>
-					</NavLink>
-				)
-			})
-		}
+		content = users.map( ( user ) => {
+			console.log( "user", user )
+			return (
+				<NavLink className="item challenger" key={ user.name } to={ "/@" + user.name + "/receipts" }>
+					<div className="number" style={ { backgroundImage: "url("+ convertProfileImageUrl( user.settings.avatar, 200 ) +")" } }>
+					 	<div class="text">{ formatCircleNumber( user.totals.receipts.unique ) }</div>
+					 </div>
+					<div className="name">{ user.name }</div>
+				</NavLink>
+			)
+		})
 
 		const max_pages = 5
 		const min_page = 1

@@ -1,13 +1,6 @@
 export default function reducer(
 	state = {
-		users: [{
-			name: null,
-			totals: {
-				receipts: {
-					unique: null,
-				}
-			}
-		}],
+		users: [],
 		fetching: false,
 		fetched: false,
 		error: null,
