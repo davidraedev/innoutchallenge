@@ -6,7 +6,6 @@ import { fetchStoreInfo } from "../actions/storeActions"
 require( "../less/StoreOverlay.less" )
 
 @connect( ( store ) => {
-	console.log( "StoreOverlay store a" , store)
 	return {
 		store: store.overlayStore,
 	}
@@ -21,7 +20,11 @@ export default class StoreOverlay extends React.Component {
 		})
 	}
 
-	hideOverlay() {
+	hideOverlay( target ) {
+
+		if ( target.className !== "store_overlay" )
+			return;
+
 		this.setState({
 			display: false,
 		})
@@ -29,23 +32,18 @@ export default class StoreOverlay extends React.Component {
 
 	componentWillReceiveProps( new_props ) {
 		if ( new_props.number ) {
-			console.log( "StoreOverlay new_props a", new_props )
+
 			if ( new_props.number !== this.state.number ) {
-				console.log( "StoreOverlay new_props b" )
 				this.setState({
 					number: new_props.number,
 				})
 				this.props.dispatch( fetchStoreInfo( this.props.dispatch, new_props.number ) )
 			}
 			else {
-				console.log( "StoreOverlay new_props c" )
 				this.setState({
 					display: true,
 				})
 			}
-		}
-		else {
-			console.log( "StoreOverlay new_props d" )
 		}
 	}
 
@@ -60,11 +58,8 @@ export default class StoreOverlay extends React.Component {
 			meridian = ( hour <= 1159 ) ? "pm" : "am";
 
 		let number_parts = hour_string.split( "" );
-		console.log( "number_parts", number_parts )
 		let colon_pos = ( number_parts.length === 3 ) ? 1 : 2;
-		console.log( "colon_pos", colon_pos )
 		number_parts.splice( colon_pos, 0, ":" );
-		console.log( "number_parts", number_parts )
 		return number_parts.join( "" ) + " " + meridian;
 	}
 
@@ -75,27 +70,25 @@ export default class StoreOverlay extends React.Component {
 	hoursHtml( data, exists ) {
 
 		let html = (
-			<div class="table">
-				<div class="row">
-					<div class="cell">None at this store</div>
+			<div class="group">
+				<div class="column">
+					<div>None at this store</div>
 				</div>
 			</div>
 		);
 
 		if ( exists ) {
 			html = (
-				<div class="table">
-					<div class="row">
-						<div class="cell">Mon - Thu:</div>
-						<div class="cell">{ this.formatHourString( data.monday.start, data.monday.end ) }</div>
+				<div class="group">
+					<div class="column">
+						<div class="day">Mon - Thu:</div>
+						<div class="day">Fri - Sat:</div>
+						<div class="day">Sunday:</div>
 					</div>
-					<div class="row">
-						<div class="cell">Fri - Sat:</div>
-						<div class="cell">{ this.formatHourString( data.friday.start, data.friday.end ) }</div>
-					</div>
-					<div class="row">
-						<div class="cell">Sunday:</div>
-						<div class="cell">{ this.formatHourString( data.sunday.start, data.sunday.end ) }</div>
+					<div class="column">
+						<div class="hour">{ this.formatHourString( data.monday.start, data.monday.end ) }</div>
+						<div class="hour">{ this.formatHourString( data.friday.start, data.friday.end ) }</div>
+						<div class="hour">{ this.formatHourString( data.sunday.start, data.sunday.end ) }</div>
 					</div>
 				</div>
 			)
@@ -109,7 +102,7 @@ export default class StoreOverlay extends React.Component {
 		console.log( "StoreOverlay2 props b", this.props )
 
 		const { number, store } = this.props;
-		console.log( "StoreOverlay2 store", store )
+		let store_number = number || 0;
 		let location = store.store.location
 
 		console.log( "store.store", store.store )
@@ -117,19 +110,22 @@ export default class StoreOverlay extends React.Component {
 		let instore_hours = this.hoursHtml( store.store.dining_room_hours, store.store.dining_room );
 		let drive_thru_hours = this.hoursHtml( store.store.drive_thru_hours, store.store.drive_thru );
 
+		let number_words = [ "one", "two", "three", "four" ];
+		let store_number_class = number_words[ store_number.toString().length - 1 ] + "_digits";
+
 		let content = null;
 		if ( this.state.display ) {
 			content = (
 				<div>
-					<div class="store_overlay_background" onClick={ () => { this.hideOverlay(); } }></div>
-					<div class="store_overlay">
+					<div class="store_overlay_background"></div>
+					<div class="store_overlay" onClickCapture={ ( event ) => { this.hideOverlay( event.target ); } }>
 						<div class="outer container">
 
 							<div class="inner container">
 
 								<div class="number_container">
 									<div class="background"></div>
-									<div class="number">{ number }</div>
+									<div class={ "number " + store_number_class }>{ number }</div>
 								</div>
 
 								<div class="address_container">

@@ -15,10 +15,13 @@
 	width: 100%;
 	height: 100%;
 	z-index: 5;
+	font-family: sans-serif;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 
 	.container {
-		min-height: 200px;
-		width: 500px;
+		width: 600px;
 		background: rgb( 63,63,63 );
 		color: rgb( 255,255,255 );
 		border-radius: 30px;
@@ -34,17 +37,11 @@
 		}
 
 		&.outer {
-			min-height: 200px;
-			margin-left: -235px;
-			position: absolute;
-			top: 50px;
-			left: 50%;
+			margin: 40px 0px;
 			border-radius: 30px 10px 10px 10px;
 		}
 
 		&.map {
-			height: 200px;
-			top: 325px;
 
 			.inner {
 				border-top-left-radius: 10px;
@@ -54,7 +51,6 @@
 	}
 
 	.title {
-		font-family: sans-serif;
 		font-size: 13px;
 		display: inline-block;
 		font-weight: bold;
@@ -101,12 +97,24 @@
 			color: #970303;
 			margin: 30px 0px 0px 40px;
 			position: relative;
-			font-family: sans-serif;
 			font-weight: bold;
 
+			&.one_digits {
+				margin-left: 60px;
+			}
+
+			&.two_digits {
+				//margin: 30px 0px 0px 33px;
+			}
+
 			&.three_digits {
-				font-size: 65px;
-				margin: 30px 0px 0px 33px;
+				font-size: 64px;
+				margin: 32px 0px 0px 24px;
+			}
+
+			&.four_digits {
+				font-size: 54px;
+				margin: 34px 0px 0px 20px;
 			}
 		}
 
@@ -116,7 +124,7 @@
 		display: inline-block;
 		vertical-align: top;
 		text-align: center;
-		width: 220px;
+		width: 340px;
 		margin-top: 16px;
 
 		.address {
@@ -128,38 +136,47 @@
 	}
 
 	.hours_container {
-		margin: 0px 3px 10px;
+		margin: 7px 3px 19px;
 		text-align: center;
+		display: flex;
 
 		.hours {
-			display: inline-block;
+			display: flex;
 			margin: 0px 17px;
+			flex-direction: column;
+			flex: 1;
 
 			.title {
-				border-bottom: 1px solid;
 				margin-bottom: 25px;
 				font-size: 18px;
 				color: rgb( 255,255,255 );
 				padding-bottom: 8px;
 				font-weight: 400;
-				font-family: serif;
 				width: 84%;
+				height: 7px;
 			}
 
-			.table {
-				display: table;
+			.group {
+				border: 1px solid rgb( 183,0,0 );
+				border-width: 1px 0px;
+				flex: 1;
+				padding: 8px 5px;
+				display: flex;
+				justify-content: center;
 
-				.row {
-					display: table-row;
+				.column {
 
-					.cell {
-						display: table-cell;
+					.day, .hour {
 						line-height: 20px;
+					}
 
-						&:first-child {
-							padding-right: 6px;
-							text-align: right;
-						}
+					.day {
+						padding-right: 6px;
+						text-align: right;
+					}
+
+					.none {
+						text-align: center;
 					}
 				}
 			}
