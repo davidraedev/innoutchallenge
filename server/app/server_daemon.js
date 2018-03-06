@@ -16,6 +16,7 @@ const bodyParser = require( "body-parser" );
 const user_controller = require( "../controller/user_view" );
 const account_controller = require( "../controller/account_view" );
 const admin_controller = require( "../controller/admin_view" );
+const store_controller = require( "../controller/store_view" );
 const jsonParser = bodyParser.json();
 const path = require( "path" );
 const log = require( "../controller/log" )( path.resolve( __dirname, "../../log/web_server.log" ) );
@@ -368,6 +369,8 @@ app.post( "/api/users/list", jsonParser, user_controller.users_list );
 app.post( "/api/user/receipts", jsonParser, user_controller.user_instore_receipts );
 app.post( "/api/user/stores", jsonParser, user_controller.user_stores );
 app.post( "/api/user/drivethru", jsonParser, user_controller.user_drivethru_receipts );
+
+app.post( "/api/store/info", jsonParser, store_controller.info );
 
 app.post( "/auth/check", checkAuthenticationEndpoint );
 

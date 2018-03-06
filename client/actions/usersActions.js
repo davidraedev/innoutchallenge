@@ -25,7 +25,19 @@ export function fetchUsers( dispatch, search, amount, page ) {
 			})
 			.catch( ( error ) => {
 				console.log( "error", error )
-				dispatch({ type: "FETCH_USERS_REJECTED", payload: { message: error.response.data, status: error.response.status } })
+
+				let message;
+				let status;
+				if ( error.response ) {
+					message = "["+ error.response.status +"] "+ error.response.data;
+					status = error.response.status;
+				}
+				else {
+					message = error.message;
+					status: -1;
+				}
+
+				dispatch({ type: "FETCH_USERS_REJECTED", payload: { message: message, status: status } })
 			});
 	}
 }

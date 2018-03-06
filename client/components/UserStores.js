@@ -9,6 +9,7 @@ import TopNav from "./TopNav"
 import SubNav from "./SubNav"
 import PageNotFound from "./PageNotFound"
 import PageNotAuthorized from "./PageNotAuthorized"
+import StoreOverlay from "./StoreOverlay"
 
 import { createTweetLink } from "./Utils"
 
@@ -26,6 +27,16 @@ export default class UserStores extends React.Component {
 
 	componentWillMount() {
 		this.props.dispatch( fetchUserStores( this.props.dispatch, this.props.match.params.user, true ) )
+		this.setState({
+			storeOverlayNumber: null,
+		})
+	}
+
+	showStoreOverlay( number ) {
+		console.log( "showStoreOverlay", number )
+		this.setState({
+			storeOverlayNumber: number
+		})
 	}
 
 	render() {
@@ -33,15 +44,13 @@ export default class UserStores extends React.Component {
 		const { user, error, lastChallengersPage } = this.props;
 
 		if ( error ) {
-			console.log( "error", error )
+			console.error( "error", error.status, error )
 			if ( error.status === 404 ) {
-				console.log( "404" )
 				return (
 					<PageNotFound error="Page was not found yo!" />
 				)
 			}
 			else if ( error.status === 401 ) {
-				console.log( "401" )
 				return (
 					<PageNotAuthorized returnUrl={ this.props.location.pathname } />
 				)
@@ -50,7 +59,7 @@ export default class UserStores extends React.Component {
 
 		const store_keys = Object.keys( user.stores ).sort( ( a, b ) => { return a - b });
 		let has_stores = false;
-		let mappedStores = []
+		let mappedStores = [];
 		store_keys.forEach( ( number ) => {
 			let store = user.stores[ number ];
 			let classes = [ "number", "store" ];
@@ -61,10 +70,11 @@ export default class UserStores extends React.Component {
 			if ( store.amount > 1 ) {
 				classes.push( "multiple" );
 			}
-			if ( user.latest_receipt && user.latest_receipt.store.number == number )
+			if ( user.latest_receipt && user.latest_receipt.store.number == number ) {
 				classes.push( "latest" );
-			mappedStores.push( ( <li className={ classes.join( " " ) } key={ number }>{ number }</li> ) )
-		})
+			}
+			mappedStores.push( ( <li className={ classes.join( " " ) } key={ number } onClick={ () => { this.showStoreOverlay( number ) } }>{ number }</li> ) )
+		});
 
 		let content
 		if ( ! has_stores ) {
@@ -125,6 +135,7 @@ export default class UserStores extends React.Component {
 					</div>
 					{ content }
 				</div>
+				<StoreOverlay number={ this.state.storeOverlayNumber } />
 			</div>
 		)
 	}
