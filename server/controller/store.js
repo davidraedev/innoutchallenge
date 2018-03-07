@@ -325,6 +325,7 @@ function parseHours( hours_string ) {
 				hours.end = 130;
 			else
 				hours.end = 100;
+			hours.manual = false;
 		}
 		// non-standard hours
 		else {
