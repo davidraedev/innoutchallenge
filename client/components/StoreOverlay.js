@@ -3,8 +3,6 @@ import { connect } from "react-redux"
 
 import { fetchStoreInfo } from "../actions/storeActions"
 
-import { Map, TileLayer, Marker, Popup } from "react-leaflet"
-
 require( "../less/StoreOverlay.less" )
 
 @connect( ( store ) => {
@@ -19,13 +17,12 @@ export default class StoreOverlay extends React.Component {
 		this.setState({
 			display: ( this.props.number ),
 			number: null,
-			map_zoom: 13,
 		})
 	}
 
-	hideOverlay( target ) {
+	hideOverlay( target, className ) {
 
-		if ( target.className !== "store_overlay" )
+		if ( target.className !== className && target.className !== className )
 			return;
 
 		this.setState({
@@ -80,18 +77,26 @@ export default class StoreOverlay extends React.Component {
 			</div>
 		);
 
-		if ( exists ) {
+		// unknown store configuration
+		if ( data.monday.manual ) {
+			html = (
+				<div class="group">
+				<div class="column">
+					<div>Unknown Hours</div>
+				</div>
+			</div>
+			)
+		}
+		else if ( exists ) {
 			html = (
 				<div class="group">
 					<div class="column">
-						<div class="day">Mon - Thu:</div>
+						<div class="day">Sun - Thu:</div>
 						<div class="day">Fri - Sat:</div>
-						<div class="day">Sunday:</div>
 					</div>
 					<div class="column">
 						<div class="hour">{ this.formatHourString( data.monday.start, data.monday.end ) }</div>
 						<div class="hour">{ this.formatHourString( data.friday.start, data.friday.end ) }</div>
-						<div class="hour">{ this.formatHourString( data.sunday.start, data.sunday.end ) }</div>
 					</div>
 				</div>
 			)
@@ -102,13 +107,9 @@ export default class StoreOverlay extends React.Component {
 
 	render() {
 
-		console.log( "StoreOverlay2 props b", this.props )
-
-		const { number, store } = this.props;
+		const { number, position, store } = this.props;
 		let store_number = number || 0;
 		let location = store.store.location
-
-		console.log( "store.store", store.store )
 
 		let instore_hours = this.hoursHtml( store.store.dining_room_hours, store.store.dining_room );
 		let drive_thru_hours = this.hoursHtml( store.store.drive_thru_hours, store.store.drive_thru );
@@ -116,15 +117,15 @@ export default class StoreOverlay extends React.Component {
 		let number_words = [ "one", "two", "three", "four" ];
 		let store_number_class = number_words[ store_number.toString().length - 1 ] + "_digits";
 
-		let map_center = store.store.loc;
-
 		let content = null;
 		if ( this.state.display ) {
 			content = (
 				<div>
-					<div class="store_overlay_background"></div>
-					<div class="store_overlay" onClickCapture={ ( event ) => { this.hideOverlay( event.target ); } }>
-						<div class="outer container">
+					<div class="store_overlay_background" onClickCapture={ ( event ) => { this.hideOverlay( event.target, "store_overlay_background" ); } }></div>
+					<div class="store_overlay" onClickCapture={ ( event ) => { this.hideOverlay( event.target, "store_overlay" ); } }>
+						<div class="outer container" style={{
+							marginTop: ( position + 40 ) + "px",
+						}}>
 
 							<div class="inner container">
 
@@ -163,36 +164,6 @@ export default class StoreOverlay extends React.Component {
 									<p>O</p>
 									<p>R</p>
 									<p>E</p>
-								</div>
-							</div>
-
-						</div>
-
-						<div class="map container outer">
-
-							<div class="inner container">
-
-								<Map center={ map_center } zoom={ this.state.map_zoom }>
-									<TileLayer
-									attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
-									url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-									/>
-										<Marker position={ map_center }>
-										<Popup>
-											<span>
-												A pretty CSS3 popup. <br /> Easily customizable.
-											</span>
-										</Popup>
-									</Marker>
-								</Map>
-
-							</div>
-
-							<div class="title">
-								<div class="text">
-									<p>M</p>
-									<p>A</p>
-									<p>P</p>
 								</div>
 							</div>
 

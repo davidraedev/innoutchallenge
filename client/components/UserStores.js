@@ -29,13 +29,15 @@ export default class UserStores extends React.Component {
 		this.props.dispatch( fetchUserStores( this.props.dispatch, this.props.match.params.user, true ) )
 		this.setState({
 			storeOverlayNumber: null,
+			overlayPosition: 0,
 		})
 	}
 
 	showStoreOverlay( number ) {
 		console.log( "showStoreOverlay", number )
 		this.setState({
-			storeOverlayNumber: number
+			storeOverlayNumber: number,
+			overlayPosition: ( document.documentElement.scrollTop + 50 ),
 		})
 	}
 
@@ -73,7 +75,9 @@ export default class UserStores extends React.Component {
 			if ( user.latest_receipt && user.latest_receipt.store.number == number ) {
 				classes.push( "latest" );
 			}
-			mappedStores.push( ( <li className={ classes.join( " " ) } key={ number } onClick={ () => { this.showStoreOverlay( number ) } }>{ number }</li> ) )
+			mappedStores.push( ( <li className={ classes.join( " " ) } key={ number } onClick={ ( event ) => {
+				this.showStoreOverlay( number )
+			} }>{ number }</li> ) )
 		});
 
 		let content
@@ -135,7 +139,7 @@ export default class UserStores extends React.Component {
 					</div>
 					{ content }
 				</div>
-				<StoreOverlay number={ this.state.storeOverlayNumber } />
+				<StoreOverlay number={ this.state.storeOverlayNumber } position={ this.state.overlayPosition } />
 			</div>
 		)
 	}
