@@ -74,6 +74,7 @@ var StoreSchema = new Schema({
 	drive_thru: { type: Boolean, default: false },
 	remote_image_url: { type: String, default: null },
 	popup: { type: ObjectId, ref: "Popup" },
+	opened: { type: Date, default: null }
 });
 
 module.exports = mongoose.model( "Store", StoreSchema );

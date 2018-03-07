@@ -6,7 +6,7 @@ const info = function( request, response ) {
 
 	console.log( "number", number )
 
-	Store.findOne( { number: number } )
+	Store.findOne( { number: number, opened: { $ne: null } } )
 		.then( ( store ) => {
 
 			if ( ! store )

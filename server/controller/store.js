@@ -175,7 +175,7 @@ const parseTweetForStore = function( tweet, ignore_hashtag ) {
 			}
 		}
 		else {
-			Store.findOne( { number: store_number } )
+			Store.findOne( { number: store_number, opened: { $ne: null } } )
 				.then( ( store ) => {
 					if ( ! store ) {
 						return parseTweetForStore( tweet, true )
@@ -363,8 +363,7 @@ function parseStore( data ) {
 		store.drive_thru_hours = parseHours( data.DriveThruHours, "drive_thru" );
 
 	// stores without an open date aren't open yet
-	let open_date = data.OpenDate || "1900-01-01";
-	store.opened = Date.parse( open_date.substring( 0, 10 ) );
+	store.opened = ( data.OpenDate ) ? Date.parse( data.OpenDate.substring( 0, 10 ) ) : null;
 	store.under_remodel = data.UnderRemodel;
 	store.dining_room = data.HasDiningRoom;
 	store.drive_thru = data.HasDriveThru;
@@ -471,7 +470,7 @@ const findStoresFromTweetText = function() {
 
 							this_receipt = receipt;
 
-							return Store.findOne( { number: matches[1] } );
+							return Store.findOne( { number: matches[1], opened: { $ne: null } } );
 
 						})
 						.then( ( store ) => {
