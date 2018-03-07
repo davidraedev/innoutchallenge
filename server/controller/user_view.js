@@ -142,7 +142,7 @@ exports.user_stores = function( request, response ) {
 
 			search_params.user = user._id;
 			this_user = user;
-			return Store.find({ popup: { $exists: false } }).lean();
+			return Store.find({ popup: { $exists: false }, opened: { $ne: null } }).lean();
 		})
 		.catch( ( error ) => {
 			throw error;

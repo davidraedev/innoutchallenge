@@ -8,7 +8,7 @@ const moment = require( "moment" );
 const path = require( "path" );
 const log = require( "../controller/log" )( path.resolve( __dirname, "../../log/update_stores.log" ) );
 
-const fetch_delay = 1000 * 60 * 60 * 24; // 24 hours in seconds
+const fetch_delay = 60 * 60 * 24; // 24 hours in seconds
 
 log.info( "Starting" );
 
@@ -26,10 +26,12 @@ function callback() {
 
 				let fetch_cutoff = moment().subtract( fetch_delay, "seconds" );
 
-				if ( ! store_fetch_date || fetch_cutoff.isAfter( store_fetch_date ) )
+				if ( ! store_fetch_date || fetch_cutoff.isAfter( store_fetch_date ) ) {
 					return storeController.updateStores();
-				else
+				}
+				else {
 					throw new PromiseEndError();
+				}
 
 			})
 			.then( ( stores_updated ) => {
@@ -59,4 +61,4 @@ function callback() {
 
 }
 
-utils.loop( callback, fetch_delay );
+utils.loop( callback, ( fetch_delay * 1000 ) );

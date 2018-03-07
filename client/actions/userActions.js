@@ -47,12 +47,16 @@ export function fetchUserStores( dispatch, name, latest_receipt ) {
 			.catch( ( error ) => {
 
 				let message;
-				if ( error.response )
-					message = "["+ error.response.status +"] "+ error.response.data
-				else
+				let status = -1;
+				if ( error.response ) {
+					message = "["+ error.response.status +"] "+ error.response.data;
+					status = error.response.status;
+				}
+				else {
 					message = error.message;
+				}
 
-				dispatch({ type: "FETCH_USER_STORES_REJECTED", payload: { error: message, status: error.response.status || 500 } })
+				dispatch({ type: "FETCH_USER_STORES_REJECTED", payload: { error: message, status: status || 500 } })
 			});
 	}
 }
@@ -68,12 +72,16 @@ export function fetchUserDriveThru( dispatch, name, latest_receipt ) {
 			.catch( ( error ) => {
 
 				let message;
-				if ( error.response )
-					message = "["+ error.response.status +"] "+ error.response.data
-				else
+				let status = -1;
+				if ( error.response ) {
+					message = "["+ error.response.status +"] "+ error.response.data;
+					status = error.response.status;
+				}
+				else {
 					message = error.message;
+				}
 
-				dispatch({ type: "FETCH_USER_DRIVETHRU_REJECTED", payload: { error: message, status: error.response.status || 500 } })
+				dispatch({ type: "FETCH_USER_DRIVETHRU_REJECTED", payload: { error: message, status: status || 500 } })
 			});
 	}
 }
