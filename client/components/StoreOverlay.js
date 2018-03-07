@@ -3,6 +3,8 @@ import { connect } from "react-redux"
 
 import { fetchStoreInfo } from "../actions/storeActions"
 
+import { Map, TileLayer, Marker, Popup } from "react-leaflet"
+
 require( "../less/StoreOverlay.less" )
 
 @connect( ( store ) => {
@@ -17,6 +19,7 @@ export default class StoreOverlay extends React.Component {
 		this.setState({
 			display: ( this.props.number ),
 			number: null,
+			map_zoom: 13,
 		})
 	}
 
@@ -113,6 +116,8 @@ export default class StoreOverlay extends React.Component {
 		let number_words = [ "one", "two", "three", "four" ];
 		let store_number_class = number_words[ store_number.toString().length - 1 ] + "_digits";
 
+		let map_center = store.store.loc;
+
 		let content = null;
 		if ( this.state.display ) {
 			content = (
@@ -167,7 +172,19 @@ export default class StoreOverlay extends React.Component {
 
 							<div class="inner container">
 
-								
+								<Map center={ map_center } zoom={ this.state.map_zoom }>
+									<TileLayer
+									attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
+									url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+									/>
+										<Marker position={ map_center }>
+										<Popup>
+											<span>
+												A pretty CSS3 popup. <br /> Easily customizable.
+											</span>
+										</Popup>
+									</Marker>
+								</Map>
 
 							</div>
 
