@@ -30,7 +30,12 @@ const createTweetLink = function( screen_name, tweet_id ) {
 	return createUserTwitterLink( screen_name ) +"/status/"+ tweet_id;
 }
 
+const createGoogleMapsLink = function( address ) {
+	return "https://www.google.com/maps/place/" + encodeURIComponent( address );
+}
+
 module.exports.convertProfileImageUrl = convertProfileImageUrl
 module.exports.formatCircleNumber = formatCircleNumber
 module.exports.createUserTwitterLink = createUserTwitterLink
 module.exports.createTweetLink = createTweetLink
+module.exports.createGoogleMapsLink = createGoogleMapsLink

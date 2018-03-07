@@ -1,5 +1,6 @@
 import React from "react"
 import { connect } from "react-redux"
+import { createGoogleMapsLink } from "./Utils"
 
 import { fetchStoreInfo } from "../actions/storeActions"
 
@@ -55,7 +56,7 @@ export default class StoreOverlay extends React.Component {
 		if ( type === "start" )
 			meridian = ( hour <= 1159 ) ? "am" : "pm";
 		else
-			meridian = ( hour <= 1159 ) ? "pm" : "am";
+			meridian = ( hour >= 200 && hour <= 1159 ) ? "pm" : "am";
 
 		let number_parts = hour_string.split( "" );
 		let colon_pos = ( number_parts.length === 3 ) ? 1 : 2;
@@ -135,10 +136,10 @@ export default class StoreOverlay extends React.Component {
 								</div>
 
 								<div class="address_container">
-									<div class="address">
+									<a class="address" href={ createGoogleMapsLink( [ location.address, location.city, location.state, location.zipcode ].join(" ") ) } target="_blank">
 										<p>{ location.address }</p>
 										<p>{ location.city }, { location.state } { location.zipcode }</p>
-									</div>
+									</a>
 								</div>
 
 								<div class="hours_container">
