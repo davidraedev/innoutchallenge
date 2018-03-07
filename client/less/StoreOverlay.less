@@ -161,6 +161,7 @@
 
 					.day, .hour {
 						line-height: 20px;
+						white-space: nowrap;
 					}
 
 					.day {
@@ -175,5 +176,53 @@
 			}
 		}
 	}
+}
 
+
+@media only screen and ( max-width: 618px ) {
+
+	.store_overlay {
+
+		.container {
+			width: auto;
+
+			&.inner {
+
+			}
+
+			&.outer {
+				margin-left: 10px;
+				margin-right: 10px;
+			}
+
+		}
+
+		.address_container {
+			width: 100%;
+			float: none;
+			margin-bottom: 10px;
+
+			.address {
+				text-align: center;
+			}
+		}
+
+		.hours_container {
+			flex-direction: column;
+
+			.hours {
+				margin-bottom: 30px;
+			}
+		}
+	}
+}
+
+@media only screen and ( max-width: 501px ) {
+
+	.store_overlay {
+
+		.address_container {
+			
+		}
+	}
 }
