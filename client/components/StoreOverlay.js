@@ -78,14 +78,16 @@ export default class StoreOverlay extends React.Component {
 			</div>
 		);
 
+		console.log( data )
+
 		// unknown store configuration
 		if ( data.monday.manual ) {
 			html = (
 				<div class="group">
-				<div class="column">
-					<div>Unknown Hours</div>
+					<div class="column">
+						<div>Unknown Hours</div>
+					</div>
 				</div>
-			</div>
 			)
 		}
 		else if ( exists ) {
