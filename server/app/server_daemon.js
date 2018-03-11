@@ -368,6 +368,7 @@ function checkAuthenticationEndpoint( request, response ) {
 app.post( "/api/users/list", jsonParser, user_controller.users_list );
 app.post( "/api/user/receipts", jsonParser, user_controller.user_instore_receipts );
 app.post( "/api/user/stores", jsonParser, user_controller.user_stores );
+app.post( "/api/user/mapstores", jsonParser, user_controller.user_map_stores );
 app.post( "/api/user/drivethru", jsonParser, user_controller.user_drivethru_receipts );
 
 app.post( "/api/store/info", jsonParser, store_controller.info );

@@ -19,6 +19,7 @@ import AdminAuth from "./components/AdminAuth"
 import AdminApprovals from "./components/AdminApprovals"
 import UserAuth from "./components/UserAuth"
 import BackendPassThru from "./components/BackendPassThru"
+import Map from "./components/Map"
 import store from "./store"
 
 require( "./less/main.less" )
@@ -35,6 +36,7 @@ ReactDOM.render(
 						<Route path="/@:user(\w+)/stores" exact component={ UserStores } />
 						<Route path="/@:user(\w+)/receipts" exact component={ UserReceipts } />
 						<Route path="/@:user(\w+)/drivethru" exact component={ UserDriveThru } />
+						<Route path="/@:user(\w+)/map" exact component={ Map } />
 						<Redirect from="/@:user(\w+)" to={ document.location.pathname + "/receipts" } exact />
 						<Route path="/account/settings" component={ Account } exact />
 						<Route path="/account/receipts" component={ AccountReceipts } exact />

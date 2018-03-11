@@ -8,6 +8,7 @@ import userStores from "./userStoresReducer"
 import userDriveThru from "./userDriveThruReducer"
 import admin from "./adminReducer"
 import overlayStore from "./storeReducer"
+import userMapStores from "./userMapStoresReducer"
 
 export default combineReducers({
 	account,
@@ -18,4 +19,5 @@ export default combineReducers({
 	userDriveThru,
 	admin,
 	overlayStore,
+	userMapStores,
 })

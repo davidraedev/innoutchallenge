@@ -21,7 +21,6 @@ export default function reducer(
 	},
 	action
 ) {
-	console.log( "action", action )
 	switch ( action.type ) {
 		case "FETCH_STORE_INFO_PENDING": {
 			return { ...state, fetching: true }

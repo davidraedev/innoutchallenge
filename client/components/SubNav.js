@@ -13,6 +13,7 @@ export default class SubNav extends React.Component {
 				{ url: "receipts", text: "receipts" },
 				{ url: "stores", text: "stores" },
 				{ url: "drivethru", text: "drive-thru" },
+				{ url: "map", text: "map" },
 			])
 		}
 		else if ( this.props.type === "account" ) {
@@ -22,7 +23,7 @@ export default class SubNav extends React.Component {
 			])
 		}
 
-		let path = this.props.url.replace( /(\/receipts|\/stores|\/drivethru|\/settings)$/, "" )
+		let path = this.props.url.replace( /(\/receipts|\/stores|\/drivethru|\/settings|\/map)$/, "" )
 
 		const mappedLinks = paths.map( ( link, index ) => (
 			<li key={ index }>
