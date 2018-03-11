@@ -20,6 +20,7 @@ require( "../less/User.less" )
 		user: store.userStores.user,
 		error: store.userStores.error,
 		lastChallengersPage: store.users.currentPage,
+		showOverlay: false,
 	}
 })
 
@@ -34,10 +35,11 @@ export default class UserStores extends React.Component {
 	}
 
 	showStoreOverlay( number ) {
-		console.log( "showStoreOverlay", number )
+
 		this.setState({
 			storeOverlayNumber: number,
 			overlayPosition: ( document.documentElement.scrollTop + 50 ),
+			showOverlay: 1 + Math.random(),
 		})
 	}
 
@@ -139,7 +141,7 @@ export default class UserStores extends React.Component {
 					</div>
 					{ content }
 				</div>
-				<StoreOverlay number={ this.state.storeOverlayNumber } position={ this.state.overlayPosition } />
+				<StoreOverlay number={ this.state.storeOverlayNumber } position={ this.state.overlayPosition } show={ this.state.showOverlay } />
 			</div>
 		)
 	}

@@ -16,7 +16,7 @@ export default class StoreOverlay extends React.Component {
 
 	componentWillMount() {
 		this.setState({
-			display: ( this.props.number ),
+			display: ( this.props.number || this.props.show ),
 			number: null,
 		})
 	}
@@ -32,18 +32,21 @@ export default class StoreOverlay extends React.Component {
 	}
 
 	componentWillReceiveProps( new_props ) {
+
+		this.setState({
+			display: ( this.props.show ),
+		});
+
 		if ( new_props.number ) {
 
 			if ( new_props.number !== this.state.number ) {
+
 				this.setState({
 					number: new_props.number,
-				})
-				this.props.dispatch( fetchStoreInfo( this.props.dispatch, new_props.number ) )
-			}
-			else {
-				this.setState({
-					display: true,
-				})
+				});
+
+				this.props.dispatch( fetchStoreInfo( this.props.dispatch, new_props.number ) );
+
 			}
 		}
 	}
@@ -77,8 +80,6 @@ export default class StoreOverlay extends React.Component {
 				</div>
 			</div>
 		);
-
-		console.log( data )
 
 		// unknown store configuration
 		if ( data.monday.manual ) {
@@ -124,8 +125,8 @@ export default class StoreOverlay extends React.Component {
 		if ( this.state.display ) {
 			content = (
 				<div>
-					<div class="store_overlay_background" onClickCapture={ ( event ) => { this.hideOverlay( event.target, "store_overlay_background" ); } }></div>
-					<div class="store_overlay" onClickCapture={ ( event ) => { this.hideOverlay( event.target, "store_overlay" ); } }>
+					<div class="store_overlay_background" onClick={ ( event ) => { this.hideOverlay( event.target, "store_overlay_background" ); } }></div>
+					<div class="store_overlay" onClick={ ( event ) => { this.hideOverlay( event.target, "store_overlay" ); } }>
 						<div class="outer container" style={{
 							marginTop: ( position + 40 ) + "px",
 						}}>
