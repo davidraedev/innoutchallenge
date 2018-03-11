@@ -4,8 +4,6 @@ const info = function( request, response ) {
 
 	let number = request.body.number;
 
-	console.log( "number", number )
-
 	Store.findOne( { number: number, opened: { $ne: null } } )
 		.then( ( store ) => {
 

@@ -254,3 +254,70 @@ exports.user_drivethru_receipts = function( request, response ) {
 		});
 
 };
+
+
+exports.user_map_stores = function( request, response ) {
+
+	const name = request.body.name;
+
+	if ( ! name )
+		return response.status( 500 ).send( "Invalid name" );
+
+	let this_user;
+	let this_receipts;
+	userController.searchUser( name )
+		.then( ( user ) => {
+
+			if ( ! user ) {
+				response.status( 404 ).send( "User Not Found" );
+				throw new PromiseEndError();
+			}
+
+			this_user = user;
+			return Receipt.find( { user: user._id, approved: { $in: [ 1, 2 ] }, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } }, "store" ).lean();
+
+		})
+		.then( ( receipts ) => {
+
+			if ( ! receipts ) {
+				response.json([]);
+				throw new PromiseEndError();
+			}
+
+			this_receipts = receipts;
+
+			return Store.find({ popup: { $exists: false }, opened: { $ne: null } }, "location.latitude location.longitude number" ).lean();
+
+		})
+		.then( ( stores ) => {
+
+			if ( ! stores.length ) {
+				response.json( [] );
+				throw new PromiseEndError();
+			}
+
+			let response_stores = stores.map( ( store ) => {
+
+				store.has_receipt = false;
+				this_receipts.forEach( ( receipt ) => {
+
+					if ( store._id == receipt.store.toString() ) {
+						store.has_receipt = true;
+						return true;
+					}
+
+				});
+
+				return store;
+
+			});
+
+			return response.json( response_stores );
+
+		})
+		.catch( ( error ) => {
+			if ( ! ( error instanceof PromiseEndError ) )
+				return response.status( 500 ).send( error );
+		});
+
+};

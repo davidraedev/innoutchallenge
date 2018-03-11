@@ -60,6 +60,7 @@
     "express": "^4.15.4",
     "express-session": "^1.15.3",
     "fs.promised": "^3.0.0",
+    "google-map-react": "^0.33.0",
     "innout_locations": "git+https://github.com/daraeman/innout_locations.git",
     "json": "^9.0.6",
     "leaflet": "^1.3.1",
