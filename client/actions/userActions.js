@@ -85,3 +85,28 @@ export function fetchUserDriveThru( dispatch, name, latest_receipt ) {
 			});
 	}
 }
+
+export function fetchUserMapStores( dispatch, name, latest_receipt ) {
+
+	dispatch({ type: "FETCH_USER_MAP_STORES_PENDING" })
+	return function ( dispatch ) {
+		axios( process.env.REACT_APP_BACKEND_URL + "/api/user/mapstores", { method: "post", data: { name: name, return_latest_receipt: false }, withCredentials: true } )
+			.then( ( response ) => {
+				dispatch({ type: "FETCH_USER_MAP_STORES_FULFILLED", payload: response.data })
+			})
+			.catch( ( error ) => {
+
+				let message;
+				let status = -1;
+				if ( error.response ) {
+					message = "["+ error.response.status +"] "+ error.response.data;
+					status = error.response.status;
+				}
+				else {
+					message = error.message;
+				}
+
+				dispatch({ type: "FETCH_USER_MAP_STORES_REJECTED", payload: { error: message, status: status || 500 } })
+			});
+	}
+}
