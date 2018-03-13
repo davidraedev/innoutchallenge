@@ -28,8 +28,8 @@ app.use( cors( {
 
 app.disable( "x-powered-by" );
 
-app.use( "/img", express.static( process.env.BASE + "/server/public/img" ) );
-app.use( "/font", express.static( process.env.BASE + "/server/public/font" ) );
+app.use( "/img", express.static( process.env.BASE + "/server/public/img", { maxage: "1y" } ) );
+app.use( "/font", express.static( process.env.BASE + "/server/public/font", { maxage: "1y" } ) );
 
 var MongoDBStore = require( "connect-mongodb-session" )( session );
 
