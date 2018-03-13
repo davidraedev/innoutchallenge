@@ -1,6 +1,7 @@
 process.env.BASE = process.env.BASE || process.cwd();
 const express = require( "express" );
 const app = express();
+const compression = require( "compression" );
 const session = require( "express-session" );
 const cors = require( "cors" );
 const assert = require( "assert" );
@@ -20,6 +21,8 @@ const store_controller = require( "../controller/store_view" );
 const jsonParser = bodyParser.json();
 const path = require( "path" );
 const log = require( "../controller/log" )( path.resolve( __dirname, "../../log/web_server.log" ) );
+
+app.use( compression() );
 
 app.use( cors( {
 	origin: true,
