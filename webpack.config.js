@@ -22,6 +22,7 @@ if ( ! debug ) {
 }
 
 module.exports = {
+	mode: ( debug ) ? "development" : "production",
 	node: {
 		fs: "empty",
 	},
@@ -29,7 +30,7 @@ module.exports = {
 	devtool: debug ? "inline-sourcemap" : false,
 	entry: "./client.js",
 	module: {
-		loaders: [
+		rules: [
 			{
 				test: /\.jsx?$/,
 				loader: "babel-loader",
