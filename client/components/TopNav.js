@@ -78,7 +78,7 @@ export default class TopNav extends React.Component {
 		}
 		else {
 			authLinks = (
-				<div>
+				<div class="group">
 					<li><a href={ process.env.REACT_APP_BACKEND_URL + "/signin" } onClick={ this.sidebarToggle }>Sign In</a></li>
 				</div>
 			)
