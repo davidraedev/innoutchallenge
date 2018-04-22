@@ -1,9 +1,8 @@
 import React from "react"
 import { connect } from "react-redux"
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom"
 
 import { fetchUsers, changeSearch, clearUsers } from "../actions/usersActions"
-//import { createTweetLink } from "./Utils"
 
 require( "../less/TopNav.less" )
 
@@ -70,7 +69,7 @@ export default class TopNav extends React.Component {
 
 		if ( authenticated ) {
 			authLinks = (
-				<div>
+				<div class="group">
 					<li><a href="/account/settings" onClick={ this.sidebarToggle }>Account</a></li>
 					{ adminLinks }
 					<li><a href={ process.env.REACT_APP_BACKEND_URL + "/signout" } onClick={ this.sidebarToggle }>Sign Out</a></li>
@@ -111,10 +110,12 @@ export default class TopNav extends React.Component {
 						<NavLink to={ backLink } class={ this.state.backButtonClass }><i class="fa fa-close" aria-hidden="true"></i></NavLink>
 					</div>
 					<ul id="top_menu">
-						<li><NavLink exact to="/" activeClassName="active">Home</NavLink></li>
-						<li><NavLink to="/challengers" activeClassName="active">Challengers</NavLink></li>
-						<li><NavLink to="/search" activeClassName="active">Search</NavLink></li>
-						{ authLinks }
+						<div class="group">
+							<li><NavLink exact to="/" activeClassName="active">Home</NavLink></li>
+							<li><NavLink to="/challengers" activeClassName="active">Challengers</NavLink></li>
+							<li><NavLink to="/search" activeClassName="active">Search</NavLink></li>
+							{ authLinks }
+						</div>
 					</ul>
 					<ul class="side_nav_toggle">
 						<li onClick={ this.sidebarToggle }>
