@@ -13,6 +13,12 @@ import StoreOverlay from "./StoreOverlay"
 
 require( "../less/Map.less" )
 
+// this is the default map center for all stores ( as of Apr 22, 2018 )
+const default_center = {
+	lat: 35.978735,
+	lng:  -109.88482,
+};
+
 @connect( ( store ) => {
 	return {
 		data: store.userMapStores,
@@ -31,14 +37,8 @@ export default class Map extends React.Component {
 
 		this.setState({
 			center: {
-				all: {
-					lat: 0,
-					lng: 0,
-				},
-				user: {
-					lat: 0,
-					lng: 0,
-				},
+				all: default_center,
+				user: default_center,
 			},
 			bounds: {
 				all: {
@@ -70,7 +70,6 @@ export default class Map extends React.Component {
 			storeOverlayNumber: null,
 			storeOverlayPosition: 0,
 		});
-
 		this.props.dispatch( fetchUserMapStores( this.props.dispatch, this.props.match.params.user, true ) );
 	}
 
@@ -85,6 +84,7 @@ export default class Map extends React.Component {
 			min_user_lon = Infinity,
 			max_user_lon = -Infinity;
 
+		
 		let all_center = {
 			lat: 0,
 			lng: 0,
@@ -190,7 +190,6 @@ export default class Map extends React.Component {
 	}
 
 	showStoreOverlay( number ) {
-		console.log( "showStoreOverlay number", number )
 		this.setState({
 			storeOverlayNumber: number,
 			overlayPosition: ( document.documentElement.scrollTop + 50 ),
