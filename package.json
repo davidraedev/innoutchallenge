@@ -99,6 +99,7 @@
   "devDependencies": {
     "babel-plugin-dev-expression": "^0.2.1",
     "chai": "^4.0.0",
-    "nodemon": "^1.17.3"
+    "nodemon": "^1.17.3",
+    "webpack-cli": "^2.0.15"
   }
 }
