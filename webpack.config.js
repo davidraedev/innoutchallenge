@@ -16,9 +16,6 @@ if ( ! debug ) {
 			}
 		})
 	);
-	plugins.push(
-		new webpack.optimize.UglifyJsPlugin()
-	);
 }
 
 module.exports = {
@@ -54,6 +51,11 @@ module.exports = {
 	output: {
 		path: path.resolve( __dirname, "client/build" ),
 		filename: "bundle.js",
+	},
+	optimization: {
+		minimizer: [
+			new UglifyJSPlugin(),
+		],
 	},
 	devServer: {
 		contentBase: path.resolve( __dirname, "client/build" ),
