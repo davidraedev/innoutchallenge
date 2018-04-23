@@ -1,7 +1,7 @@
 import React from "react"
 import { connect } from "react-redux"
-
 import GoogleMapReact from "google-map-react"
+import supercluster from "supercluster"
 
 import { fetchUserMapStores } from "../actions/userActions"
 
@@ -9,6 +9,7 @@ import Error from "./Error"
 import TopNav from "./TopNav"
 import SubNav from "./SubNav"
 import MapStoreMarker from "./MapStoreMarker"
+import MapClusterMarker from "./MapClusterMarker"
 import StoreOverlay from "./StoreOverlay"
 
 require( "../less/Map.less" )
@@ -66,11 +67,15 @@ export default class Map extends React.Component {
 				all: 5,
 				user: 5,
 			},
-			fit_user_only: true,
+			zoom_type: "all",
 			storeOverlayNumber: null,
 			storeOverlayPosition: 0,
+			clusters: [],
+			lastCoordinates: null,
+			lastZoom: null,
 		});
 		this.props.dispatch( fetchUserMapStores( this.props.dispatch, this.props.match.params.user, true ) );
+		this.handleMapChange = this.handleMapChange.bind( this );
 	}
 
 	calculateMapCenter( stores ) {
@@ -119,7 +124,7 @@ export default class Map extends React.Component {
 
 			if ( ! user_has_receipts ) {
 				this.setState({
-					fit_user_only: false,
+					zoom_type: "all",
 				});
 			}
 		}
@@ -151,14 +156,19 @@ export default class Map extends React.Component {
 					},
 				},
 			},
-		}, () => {
-			this.calculateZoom( "all", () => this.calculateZoom( "user" ));
+		},
+		() => {
+			this.calculateZoom( () => {
+				this.setState({ zoom_type: "user" }, () => {
+					this.calculateZoom();
+				});
+			});
 		});
 	}
 
-	calculateZoom( type, callback ) {
+	calculateZoom( callback ) {
 
-		let bounds = this.state.bounds[ type ];
+		let bounds = this.state.bounds[ this.state.zoom_type ];
 
 		let width = this.mapContainer.offsetWidth;
 		let height = this.mapContainer.offsetHeight;
@@ -178,7 +188,7 @@ export default class Map extends React.Component {
 		let zoom = ( z1 > z0 ) ? z1 : z0;
 
 		let data = { ...this.state.zoom };
-		data[ type ] = zoom;
+		data[ this.state.zoom_type ] = zoom;
 
 		this.setState({
 			zoom: data,
@@ -186,33 +196,157 @@ export default class Map extends React.Component {
 	}
 
 	componentWillReceiveProps( new_props ) {
-		this.calculateMapCenter( new_props.data.stores );
+		console.log( "componentWillReceiveProps" )
+
+		console.log( "new_props", JSON.stringify( new_props ) )
+		console.log( "this.props", JSON.stringify( this.props ) )
+
+		if ( JSON.stringify( new_props ) === JSON.stringify( this.props ) )
+			return;
+
+		this.calculateMapCenter( new_props.data.stores, () => {
+			this.updateClusters( new_props.data.stores, this.state.zoom[ this.state.zoom_type ] );
+		});
 	}
 
-	showStoreOverlay( number ) {
+	showStoreOverlay( key, props ) {
+
+		console.log( "showStoreOverlay", props )
+
+		if ( props.isCluster )
+			return;
+
 		this.setState({
-			storeOverlayNumber: number,
+			storeOverlayNumber: props.number,
 			overlayPosition: ( document.documentElement.scrollTop + 50 ),
 		})
+	}
+
+	createGeoJSONPoint( latitude, longitude, properties ) {
+
+		if ( ! properties )
+			properties = {};
+
+		return {
+			type: "Feature",
+			geometry: {
+				type: "Point",
+				coordinates: [ longitude, latitude ],
+			},
+			properties: properties,
+		};
+	}
+
+	updateClusters( stores, zoom ) {
+
+		console.log( "updateClusters", stores, zoom );
+
+		this.setState({ 
+			clusters: this.createClusters( stores, zoom )
+		});
+	}
+
+	createClusters( stores, zoom ) {
+
+		console.log( "createClusters", stores, zoom );
+
+		if ( ! stores.length )
+			return [];
+
+		let points = stores.map( ( store ) => {
+						return this.createGeoJSONPoint(
+							store.location.latitude,
+							store.location.longitude,
+							{ number: store.number }
+						);
+					});
+
+		const clusterObj = supercluster({
+			radius: 80,
+			maxZoom: 16
+		});
+
+		clusterObj.load( points );
+
+		let bounds = this.state.bounds[ this.state.zoom_type ];
+	
+		let bounding_box = [
+			bounds.lon.min,
+			bounds.lat.min,
+			bounds.lon.max,
+			bounds.lat.max,
+		];
+
+		console.log( "bounding_box", bounding_box )
+
+		let clusters = clusterObj.getClusters( [ -180, -85, 180, 85 ], zoom );
+
+		console.log( "createClusters clusters", clusters )
+
+		return clusters;
+	}
+
+	handleMapChange( newOptions ) {
+
+		console.log( "newOptions", newOptions );
+
+		if (
+			JSON.stringify( newOptions.center ) !== JSON.stringify( this.state.lastCoordinates ) ||
+			JSON.stringify( newOptions.zoom ) !== JSON.stringify( this.state.lastZoom )
+		) {
+
+			console.log( "setting new data" );
+
+			let newState = {
+				lastCoordinates: newOptions.center,
+				lastZoom: newOptions.zoom,
+			};
+			newState.zoom = { ...this.state.zoom };
+			newState.zoom[ this.state.zoom_type ] = newOptions.zoom;
+
+			console.log( "newState", newState );
+
+			this.setState( newState );
+			this.updateClusters( this.props.data.stores, this.state.zoom[ this.state.zoom_type ] );
+		}
 	}
 
 	render() {
 
 		const { data, error } = this.props;
 
-		let zoom = ( this.state.fit_user_only ) ? this.state.zoom.user : this.state.zoom.all;
-		let center = ( this.state.fit_user_only ) ? this.state.center.user : this.state.center.all;
+		let { zoom_type, clusters } = this.state;
+		let zoom = this.state.zoom[ zoom_type ];
+
+		let center = this.state.center[ zoom_type ];
+
+		console.log( "clusters", clusters )
+		console.log( "this.state", this.state )
 
 		let marker_html;
-		if ( data.stores.length ) {
-			marker_html = data.stores.map( ( store ) => {
-				return <MapStoreMarker
-							lat={ store.location.latitude }
-							lng={ store.location.longitude }
-							number={ store.number }
-							key={ store.number }
-							visited={ store.has_receipt }
+		if ( clusters.length ) {
+			marker_html = clusters.map( ( store, index ) => {
+				if ( store.properties.cluster ) {
+					console.log( "MapClusterMarker" )
+					return <MapClusterMarker
+							lat={ store.geometry.coordinates[1] }
+							lng={ store.geometry.coordinates[0] }
+							key={ index }
+							isCluster={ true }
+							amount={ store.properties.point_count }
+							visited={ store.properties.has_receipt }
 						/>
+				}
+				else {
+					console.log( "MapStoreMarker" )
+					return <MapStoreMarker
+							lat={ store.geometry.coordinates[1] }
+							lng={ store.geometry.coordinates[0] }
+							number={ store.properties.number }
+							key={ index }
+							visited={ store.properties.has_receipt }
+						/>
+				}
 			});
 		}
 
@@ -227,6 +361,7 @@ export default class Map extends React.Component {
 						center={ center }
 						zoom={ 5 }
 						onChildClick={ this.showStoreOverlay }
+						onChange={ this.handleMapChange }
 					>
 						{ marker_html }
 					</GoogleMapReact>

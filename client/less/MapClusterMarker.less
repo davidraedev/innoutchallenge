@@ -1,0 +1,25 @@
+.map_cluster_marker {
+	background: rgb( 50,50,50 );
+	color: rgb( 255,255,255 );
+	border-radius: 50px;
+	line-height: 29px;
+	height: 29px;
+	width: 29px;
+	text-align: center;
+	position: relative;
+
+	&.visited {
+		background: rgb( 0,190,0 );
+	}
+
+	&:before {
+		content: "";
+		position: absolute;
+		top: -4px;
+		left: -4px;
+		border: 2px solid rgb( 50,50,50 );
+		border-radius: 50px;
+		width: 33px;
+		height: 33px;
+	}
+}
