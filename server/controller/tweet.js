@@ -4,7 +4,7 @@ const Tweet = require( "../model/tweet" );
 const Store = require( "../model/store" );
 const User = require( "../model/user" );
 const Receipt = require( "../model/receipt" );
-require( "dotenv" ).config( { path: process.env.ENV_PATH } );
+require( "dotenv" ).config();
 const TwitterUser = require( "../model/twitter_user" );
 const wordToNumber = require( "word-to-number-node" );
 const w2n = new wordToNumber();
