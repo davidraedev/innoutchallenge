@@ -30,19 +30,23 @@ export default class PriceLogger extends React.Component {
 	render() {
 
 		//const { account, error } = this.props;
-
 		let date = new Date();
 		let date_formatted = date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
 
 		return	(
 			<div>
-				<Error error={ [ error ] } />
 				<TopNav title="Price Logger" showBackButton={ false } />
-				<SubNav url={ this.props.match.url } type="account" />
 				<div class="container" /*id="account_content"*/>
 					<div class="section">
-						Date: <div class="input">
-							<input type="date" value={ date_formatted }>
+						<div>
+							Date: <div class="input">
+								<input type="date" value={ date_formatted } />
+							</div>
+						</div>
+						<div>
+							Store: <div class="input">
+								<input type="number" placeholder="0" />
+							</div>
 						</div>
 					</div>
 					<div class="section">
@@ -52,7 +56,7 @@ export default class PriceLogger extends React.Component {
 									<div class="title">DOUBLE-DOUBLE</div>
 									<div class="price">
 										<div class="input">
-											$<input type="number" placeholder="1.00">
+											$<input type="number" placeholder="1.00" />
 										</div>
 									</div>
 								</div>
@@ -60,7 +64,7 @@ export default class PriceLogger extends React.Component {
 									<div class="title">CHEESEBURGER</div>
 									<div class="price">
 										<div class="input">
-											$<input type="number" placeholder="1.00">
+											$<input type="number" placeholder="1.00" />
 										</div>
 									</div>
 								</div>
@@ -68,7 +72,7 @@ export default class PriceLogger extends React.Component {
 									<div class="title">HAMBURGER</div>
 									<div class="price">
 										<div class="input">
-											$<input type="number" placeholder="1.00">
+											$<input type="number" placeholder="1.00" />
 										</div>
 									</div>
 								</div>
@@ -76,7 +80,7 @@ export default class PriceLogger extends React.Component {
 									<div class="title">FRENCH FRIES</div>
 									<div class="price">
 										<div class="input">
-											$<input type="number" placeholder="1.00">
+											$<input type="number" placeholder="1.00" />
 										</div>
 									</div>
 								</div>
@@ -98,7 +102,7 @@ export default class PriceLogger extends React.Component {
 											<div class="title">SM</div>
 											<div class="price">
 												<div class="input">
-													$<input type="number" placeholder="1.00">
+													$<input type="number" placeholder="1.00" />
 												</div>
 											</div>
 										</div>
@@ -106,7 +110,7 @@ export default class PriceLogger extends React.Component {
 											<div class="title">MED</div>
 											<div class="price">
 												<div class="input">
-													$<input type="number" placeholder="1.00">
+													$<input type="number" placeholder="1.00" />
 												</div>
 											</div>
 										</div>
@@ -114,7 +118,7 @@ export default class PriceLogger extends React.Component {
 											<div class="title">LG</div>
 											<div class="price">
 												<div class="input">
-													$<input type="number" placeholder="1.00">
+													$<input type="number" placeholder="1.00" />
 												</div>
 											</div>
 										</div>
@@ -122,7 +126,7 @@ export default class PriceLogger extends React.Component {
 											<div class="title">X-LG</div>
 											<div class="price">
 												<div class="input">
-													$<input type="number" placeholder="1.00">
+													$<input type="number" placeholder="1.00" />
 												</div>
 											</div>
 										</div>
@@ -132,7 +136,7 @@ export default class PriceLogger extends React.Component {
 									<div class="title">SHAKES</div>
 									<div class="price">
 										<div class="input">
-											$<input type="number" placeholder="1.00">
+											$<input type="number" placeholder="1.00" />
 										</div>
 									</div>
 								</div>
@@ -140,7 +144,7 @@ export default class PriceLogger extends React.Component {
 									<div class="title">MILK</div>
 									<div class="price">
 										<div class="input">
-											$<input type="number" placeholder="1.00">
+											$<input type="number" placeholder="1.00" />
 										</div>
 									</div>
 								</div>
@@ -148,7 +152,7 @@ export default class PriceLogger extends React.Component {
 									<div class="title">COFFEE</div>
 									<div class="price">
 										<div class="input">
-											$<input type="number" placeholder="1.00">
+											$<input type="number" placeholder="1.00" />
 										</div>
 									</div>
 								</div>
@@ -156,7 +160,7 @@ export default class PriceLogger extends React.Component {
 									<div class="title">HOT COCOA</div>
 									<div class="price">
 										<div class="input">
-											$<input type="number" placeholder="1.00">
+											$<input type="number" placeholder="1.00" />
 										</div>
 									</div>
 								</div>

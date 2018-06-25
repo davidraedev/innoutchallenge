@@ -20,6 +20,7 @@ import AdminApprovals from "./components/AdminApprovals"
 import UserAuth from "./components/UserAuth"
 import BackendPassThru from "./components/BackendPassThru"
 import Map from "./components/Map"
+import PriceLogger from "./components/PriceLogger"
 import store from "./store"
 
 require( "./less/main.less" )
@@ -53,6 +54,7 @@ ReactDOM.render(
 						<Route path="/admin/signin/return/:returnUrl" exact component={ BackendPassThru } />
 						<Route path="/admin/signout" exact component={ BackendPassThru } />
 						<Route path="/admin/auth/twitter/callback" exact component={ BackendPassThru } />
+						<Route path="/prices/add" exact component={ PriceLogger } />
 						<Route path="/img/*" exact component={ BackendPassThru } />
 						<Route path="/404" exact component={ PageNotFound } />
 					</Switch>
