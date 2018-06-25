@@ -9,7 +9,7 @@ import SubNav from "./SubNav"
 //import PageNotFound from "./PageNotFound"
 //import PageNotAuthorized from "./PageNotAuthorized"
 
-//require( "../less/PriceLogger.less" )
+require( "../less/PriceLogger.less" )
 /*
 @connect( ( store ) => {
 	console.log( "store", store )
@@ -33,11 +33,87 @@ export default class PriceLogger extends React.Component {
 		let date = new Date();
 		let date_formatted = date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
 
+		let burgers = [
+			{
+				name: "Double-Double",
+			},{
+				name: "Cheeseburger",
+			},{
+				name: "Hamburger",
+			},{
+				name: "French Fries",
+			},
+		];
+		let burgers_html = burgers.map( ( burger ) => {
+			return (
+				<div class="item">
+					<div class="title">{ burger.name.toUpperCase() }</div>
+					<div class="price">
+						$<div class="input">
+							<input type="number" placeholder="1.00" />
+						</div>
+					</div>
+				</div>
+			)
+		});
+
+		let other_drinks = [
+			{ name: "Shakes" },
+			{ name: "Milk" },
+			{ name: "Coffee" },
+			{ name: "Hot Cocoa" },
+		];
+		let other_drinks_html = other_drinks.map( ( other_drink ) => {
+			return (
+				<div class="item">
+					<div class="title">{ other_drink.name.toUpperCase() }</div>
+					<div class="price">
+						<div class="input">
+							$<input type="number" placeholder="1.00" />
+						</div>
+					</div>
+				</div>
+			);
+		});
+
+		let sodas = [
+			{ name: "Coke" },
+			{ name: "Root Beer" },
+			{ name: "Lemonade" },
+			{ name: "Iced Tea" },
+			{ name: "Seven-Up" },
+			{ name: "Dr Pepper" },
+		];
+		let sodas_html = sodas.map( ( soda ) => {
+			return (
+				<div class="soda">{ soda.name.toUpperCase() }</div>
+			);
+		});
+
+		let soda_prices = [
+			{ name: "SM" },
+			{ name: "MED" },
+			{ name: "LG" },
+			{ name: "X-LG" },
+		];
+		let soda_prices_html = soda_prices.map( ( soda_price ) => {
+			return (
+				<div class="item">
+					<div class="title">{ soda_price.name }</div>
+					<div class="price">
+						<div class="input">
+							$<input type="number" placeholder="1.00" />
+						</div>
+					</div>
+				</div>
+			);
+		});
+
 		return	(
 			<div>
 				<TopNav title="Price Logger" showBackButton={ false } />
-				<div class="container" /*id="account_content"*/>
-					<div class="section">
+				<div class="container" id="price_logger">
+					<div class="section options">
 						<div>
 							Date: <div class="input">
 								<input type="date" value={ date_formatted } />
@@ -52,38 +128,7 @@ export default class PriceLogger extends React.Component {
 					<div class="section">
 						<div class="ino_menu">
 							<div class="burgers">
-								<div class="item">
-									<div class="title">DOUBLE-DOUBLE</div>
-									<div class="price">
-										<div class="input">
-											$<input type="number" placeholder="1.00" />
-										</div>
-									</div>
-								</div>
-								<div class="item">
-									<div class="title">CHEESEBURGER</div>
-									<div class="price">
-										<div class="input">
-											$<input type="number" placeholder="1.00" />
-										</div>
-									</div>
-								</div>
-								<div class="item">
-									<div class="title">HAMBURGER</div>
-									<div class="price">
-										<div class="input">
-											$<input type="number" placeholder="1.00" />
-										</div>
-									</div>
-								</div>
-								<div class="item">
-									<div class="title">FRENCH FRIES</div>
-									<div class="price">
-										<div class="input">
-											$<input type="number" placeholder="1.00" />
-										</div>
-									</div>
-								</div>
+								{ burgers_html }
 							</div>
 							<div class="middle">
 								<div class="item top"></div>
@@ -91,79 +136,12 @@ export default class PriceLogger extends React.Component {
 							</div>
 							<div class="drinks">
 								<div class="sodas">
-									<div class="soda">COKE</div>
-									<div class="soda">ROOT BEER</div>
-									<div class="soda">LEMONADE</div>
-									<div class="soda">ICED TEA</div>
-									<div class="soda">SEVEN-UP</div>
-									<div class="soda">DR PEPPER</div>
+									{ sodas_html }
 									<div class="prices">
-										<div class="item">
-											<div class="title">SM</div>
-											<div class="price">
-												<div class="input">
-													$<input type="number" placeholder="1.00" />
-												</div>
-											</div>
-										</div>
-										<div class="item">
-											<div class="title">MED</div>
-											<div class="price">
-												<div class="input">
-													$<input type="number" placeholder="1.00" />
-												</div>
-											</div>
-										</div>
-										<div class="item">
-											<div class="title">LG</div>
-											<div class="price">
-												<div class="input">
-													$<input type="number" placeholder="1.00" />
-												</div>
-											</div>
-										</div>
-										<div class="item">
-											<div class="title">X-LG</div>
-											<div class="price">
-												<div class="input">
-													$<input type="number" placeholder="1.00" />
-												</div>
-											</div>
-										</div>
+										{ soda_prices_html }
 									</div>
 								</div>
-								<div class="item">
-									<div class="title">SHAKES</div>
-									<div class="price">
-										<div class="input">
-											$<input type="number" placeholder="1.00" />
-										</div>
-									</div>
-								</div>
-								<div class="item">
-									<div class="title">MILK</div>
-									<div class="price">
-										<div class="input">
-											$<input type="number" placeholder="1.00" />
-										</div>
-									</div>
-								</div>
-								<div class="item">
-									<div class="title">COFFEE</div>
-									<div class="price">
-										<div class="input">
-											$<input type="number" placeholder="1.00" />
-										</div>
-									</div>
-								</div>
-								<div class="item">
-									<div class="title">HOT COCOA</div>
-									<div class="price">
-										<div class="input">
-											$<input type="number" placeholder="1.00" />
-										</div>
-									</div>
-								</div>
+								{ other_drinks_html }
 							</div>
 						</div>
 					</div>

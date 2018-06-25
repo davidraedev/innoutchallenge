@@ -1,0 +1,54 @@
+#price_logger {
+
+	.section {
+
+		&.options {
+			display: flex;
+			flex-direction: row;
+
+			> div {
+
+			}
+		}
+	}
+
+	.input {
+		display: inline-block;
+		border-radius: 5px;
+		padding: 5px;
+	}
+
+	.ino_menu {
+		display: flex;
+		border: 10px solid rgb( 255,0,0 );
+		color: rgb( 255,0,0 );
+		font-size: 25px;
+
+		.burgers, .middle, .drinks {
+			border: 10px solid rgb( 255,30,30 );
+		}
+
+		.item {
+			display: flex;
+
+			.title {
+				padding: 8px;
+			}
+
+			.price {
+				width: 80px;
+				font-size: 16px;
+				margin-left: auto;
+
+				.input {
+					width: 50px;
+					font-size: 25px;
+
+					input {
+						width: 50px;
+					}
+				}
+			}
+		}
+	}
+}
