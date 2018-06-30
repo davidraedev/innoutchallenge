@@ -1,7 +1,7 @@
 import React from "react"
 import { connect } from "react-redux"
 
-//import { fetchAccount, changeSetting, deleteAccount } from "../actions/accountActions"
+import { fetchStoresList } from "../actions/storeActions"
 
 //import Error from "./Error"
 import TopNav from "./TopNav"
@@ -10,22 +10,18 @@ import SubNav from "./SubNav"
 //import PageNotAuthorized from "./PageNotAuthorized"
 
 require( "../less/PriceLogger.less" )
-/*
+
 @connect( ( store ) => {
-	console.log( "store", store )
 	return {
-		stores: store.stores,
+		stores: store.storesListReducer.stores,
 	}
 })
-*/
+
 export default class PriceLogger extends React.Component {
 
 	componentWillMount() {
 
-		//this.props.dispatch( fetchAccount( this.props.dispatch ) )
-
-		//this.changeSettingHandler = this.changeSettingHandler.bind( this )
-		//this.deleteAccountHandler = this.deleteAccountHandler.bind( this )
+		this.props.dispatch( fetchStoresList( this.props.dispatch ) )
 	}
 
 	priceInputHtml( value = "", tabindex = 0 ) {
@@ -42,16 +38,12 @@ export default class PriceLogger extends React.Component {
 
 		let tabindex = 3;
 
-		//const { account, error } = this.props;
+		const { stores, error } = this.props;
 		let date = new Date();
 
-		let stores = [];
-		for ( let i = 0; i < 300; i++ )
-			stores.push( { number: i } );
-
-		let store_select_html = stores.map( ( store, index ) => {
+		let store_select_html = stores.map( ( store ) => {
 			return (
-				<option value={ store.number } key={ index }>{ store.number }</option>
+				<option value={ store._id } key={ store._id }>{ store.number }</option>
 			)
 		});
 

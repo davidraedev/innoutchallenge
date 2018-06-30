@@ -50,13 +50,9 @@ export function fetchStoresList( dispatch ) {
 		axios( process.env.REACT_APP_BACKEND_URL + "/api/stores/list", { method: "post" })
 				.then( ( response ) => {
 
-					console.log( "response", response )
-
 					let stores_sorted = response.data.sort( ( a, b ) => {
 						return ( a.number - b.number );
 					});
-
-					console.log( "stores_sorted", stores_sorted )
 
 					dispatch({ type: "FETCH_STORES_LIST_FULFILLED", payload: stores_sorted })
 				})
