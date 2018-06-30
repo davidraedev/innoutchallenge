@@ -27,11 +27,20 @@ export default class PriceLogger extends React.Component {
 		//this.deleteAccountHandler = this.deleteAccountHandler.bind( this )
 	}
 
+	priceInputHtml( value = "" ) {
+		return (
+			<div class="price">
+				<div class="input">
+					<input type="number" placeholder="1.00" step="0.01" defaultValue={ value } />
+				</div>
+			</div>
+		)
+	}
+
 	render() {
 
 		//const { account, error } = this.props;
 		let date = new Date();
-		let date_formatted = date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
 
 		let burgers = [
 			{
@@ -48,11 +57,7 @@ export default class PriceLogger extends React.Component {
 			return (
 				<div class="item">
 					<div class="title">{ burger.name.toUpperCase() }</div>
-					<div class="price">
-						$<div class="input">
-							<input type="number" placeholder="1.00" />
-						</div>
-					</div>
+					{ this.priceInputHtml() }
 				</div>
 			)
 		});
@@ -67,11 +72,7 @@ export default class PriceLogger extends React.Component {
 			return (
 				<div class="item">
 					<div class="title">{ other_drink.name.toUpperCase() }</div>
-					<div class="price">
-						<div class="input">
-							$<input type="number" placeholder="1.00" />
-						</div>
-					</div>
+					{ this.priceInputHtml() }
 				</div>
 			);
 		});
@@ -84,7 +85,13 @@ export default class PriceLogger extends React.Component {
 			{ name: "Seven-Up" },
 			{ name: "Dr Pepper" },
 		];
-		let sodas_html = sodas.map( ( soda ) => {
+		let soda_row_length = 4;
+		let sodas_row_1 = sodas.slice( 0, soda_row_length ).map( ( soda ) => {
+			return (
+				<div class="soda">{ soda.name.toUpperCase() }</div>
+			);
+		});
+		let sodas_row_2 = sodas.slice( soda_row_length ).map( ( soda ) => {
 			return (
 				<div class="soda">{ soda.name.toUpperCase() }</div>
 			);
@@ -100,11 +107,7 @@ export default class PriceLogger extends React.Component {
 			return (
 				<div class="item">
 					<div class="title">{ soda_price.name }</div>
-					<div class="price">
-						<div class="input">
-							$<input type="number" placeholder="1.00" />
-						</div>
-					</div>
+					{ this.priceInputHtml() }
 				</div>
 			);
 		});
@@ -116,7 +119,7 @@ export default class PriceLogger extends React.Component {
 					<div class="section options">
 						<div>
 							Date: <div class="input">
-								<input type="date" value={ date_formatted } />
+								<input type="date" defaultValue={ date.toISOString().substr( 0, 10 ) } />
 							</div>
 						</div>
 						<div>
@@ -136,12 +139,19 @@ export default class PriceLogger extends React.Component {
 							</div>
 							<div class="drinks">
 								<div class="sodas">
-									{ sodas_html }
-									<div class="prices">
-										{ soda_prices_html }
+									<div class="names_wrap">
+										<div class="names">
+											<div class="column">{ sodas_row_1 }</div>
+											<div class="column">{ sodas_row_2 }</div>
+										</div>
+										<div class="prices">
+											{ soda_prices_html }
+										</div>
 									</div>
 								</div>
-								{ other_drinks_html }
+								<div class="other_drinks">
+									{ other_drinks_html }
+								</div>
 							</div>
 						</div>
 					</div>
