@@ -24,6 +24,7 @@
 
 	.ino_menu {
 		display: flex;
+		flex-direction: row;
 		border: 10px solid @base_red;
 		color: @base_red;
 		font-size: 25px;
@@ -32,6 +33,7 @@
 			border: 10px solid @base_red;
 			flex-basis: 0;
 			flex-grow: 1;
+			padding-bottom: 12px;
 		}
 
 		.burgers, .drinks {
@@ -43,11 +45,14 @@
 
 			.title {
 				padding: 8px;
+				white-space: nowrap;
+				margin-right: 10px;
 			}
 
 			.price {
 				width: 80px;
 				margin-left: auto;
+				position: relative;
 
 				.input {
 					width: 53px;
@@ -62,16 +67,20 @@
 				&:before {
 					content: "$";
 					font-size: 20px;
-					position: relative;
-					top: -4px;
+					position: absolute;
+					top: 7px;
+					left: -7px;
 				}
 			}
 		}
 
 		.burgers {
 			font-size: 33px;
+			padding-top: 4px;
 
 			.item {
+				padding: 10px 12px 0px;
+
 
 				.input {
 
@@ -137,6 +146,9 @@
 
 						.price {
 
+							&:before {
+								left: 3px;
+							}
 						}
 					}
 				}
@@ -160,6 +172,84 @@
 			.input {
 				padding-top: 1px;
 				padding-bottom: 1px;
+			}
+
+			.price {
+
+				&:before {
+					top: 3px;
+				}
+			}
+		}
+	}
+}
+
+@media screen and ( max-width: 805px ) {
+
+	#price_logger {
+
+		.ino_menu {
+
+			.middle {
+				display: none;
+			}
+		}
+	}
+}
+
+@media screen and ( max-width: 785px ) {
+
+	#price_logger {
+
+		.ino_menu {
+			flex-direction: column;
+
+			.sodas {
+
+				.price {
+					margin-left: 0px;
+				}
+			}
+		}
+	}
+}
+
+@media screen and ( max-width: 400px ) {
+
+	#price_logger {
+
+		.ino_menu {
+			font-size: 21px;
+
+			.burgers {
+				font-size: 23px;
+			}
+
+			.item {
+
+				.price {
+					width: 61px;
+				}
+			}
+
+			.sodas {
+
+				.names_wrap {
+
+					.prices {
+
+						.item {
+
+							.price {
+
+								&:before {
+									left: -4px;
+									top: 5px;
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
