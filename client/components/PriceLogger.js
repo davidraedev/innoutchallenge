@@ -45,15 +45,25 @@ export default class PriceLogger extends React.Component {
 		//const { account, error } = this.props;
 		let date = new Date();
 
+		let stores = [];
+		for ( let i = 0; i < 300; i++ )
+			stores.push( { number: i } );
+
+		let store_select_html = stores.map( ( store, index ) => {
+			return (
+				<option value={ store.number } key={ index }>{ store.number }</option>
+			)
+		});
+
 		let burgers = [
 			{ name: "Double-Double" },
 			{ name: "Cheeseburger" },
 			{ name: "Hamburger" },
 			{ name: "French Fries" },
 		];
-		let burgers_html = burgers.map( ( burger ) => {
+		let burgers_html = burgers.map( ( burger, index ) => {
 			return (
-				<div class="item">
+				<div class="item" key={ index }>
 					<div class="title">{ burger.name.toUpperCase() }</div>
 					{ this.priceInputHtml( "", tabindex++ ) }
 				</div>
@@ -69,14 +79,14 @@ export default class PriceLogger extends React.Component {
 			{ name: "Dr Pepper" },
 		];
 		let soda_row_length = 4;
-		let sodas_row_1 = sodas.slice( 0, soda_row_length ).map( ( soda ) => {
+		let sodas_row_1 = sodas.slice( 0, soda_row_length ).map( ( soda, index ) => {
 			return (
-				<div class="soda">{ soda.name.toUpperCase() }</div>
+				<div class="soda" key={ index }>{ soda.name.toUpperCase() }</div>
 			);
 		});
-		let sodas_row_2 = sodas.slice( soda_row_length ).map( ( soda ) => {
+		let sodas_row_2 = sodas.slice( soda_row_length ).map( ( soda, index ) => {
 			return (
-				<div class="soda">{ soda.name.toUpperCase() }</div>
+				<div class="soda" key={ index + soda_row_length }>{ soda.name.toUpperCase() }</div>
 			);
 		});
 
@@ -86,9 +96,9 @@ export default class PriceLogger extends React.Component {
 			{ name: "LG" },
 			{ name: "X-LG" },
 		];
-		let soda_prices_html = soda_prices.map( ( soda_price ) => {
+		let soda_prices_html = soda_prices.map( ( soda_price, index ) => {
 			return (
-				<div class="item">
+				<div class="item" key={ index }>
 					<div class="title">{ soda_price.name }</div>
 					{ this.priceInputHtml( "", tabindex++ ) }
 				</div>
@@ -101,9 +111,9 @@ export default class PriceLogger extends React.Component {
 			{ name: "Coffee" },
 			{ name: "Hot Cocoa" },
 		];
-		let other_drinks_html = other_drinks.map( ( other_drink ) => {
+		let other_drinks_html = other_drinks.map( ( other_drink, index ) => {
 			return (
-				<div class="item">
+				<div class="item" key={ index }>
 					<div class="title">{ other_drink.name.toUpperCase() }</div>
 					{ this.priceInputHtml( "", tabindex++ ) }
 				</div>
@@ -116,13 +126,17 @@ export default class PriceLogger extends React.Component {
 				<div class="container" id="price_logger">
 					<div class="section options">
 						<div>
-							Date: <div class="input">
+							Date: 
+							<div class="input">
 								<input type="date" defaultValue={ date.toISOString().substr( 0, 10 ) } tabIndex="1" />
 							</div>
 						</div>
 						<div>
-							Store: <div class="input">
-								<input type="number" placeholder="0" tabIndex="2" />
+							Store: 
+							<div class="input">
+								<select tabIndex="2">
+									{ store_select_html }
+								</select>
 							</div>
 						</div>
 					</div>
