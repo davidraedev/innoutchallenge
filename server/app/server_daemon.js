@@ -398,8 +398,7 @@ else {
 	});
 }
 
-function start() {
-
+(function(){
 	db.connect()
 		.catch( ( error ) => {
 
@@ -443,8 +442,5 @@ function start() {
 			log.error( error );
 			db.close();
 		});
-}
-
-start();
-
+})();
 
