@@ -1,5 +1,5 @@
 const Store = require( "../model/store" );
-const Price = require( "../model/Price" );
+const Price = require( "../model/price" );
 
 const info = function( request, response ) {
 
