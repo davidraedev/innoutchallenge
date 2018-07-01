@@ -1,7 +1,6 @@
 const mongoose = require( "mongoose" );
 const Schema = mongoose.Schema;
-
-const ObjectId = mongoose.Schema.Types.ObjectId;
+const ObjectId = Schema.Types.ObjectId;
 
 const ReceiptSchema = new Schema({
 	number: { type: Number, required: true },

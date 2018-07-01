@@ -368,18 +368,22 @@ function checkAuthenticationEndpoint( request, response ) {
 		});
 }
 
+// frontend
 app.post( "/api/users/list", jsonParser, user_controller.users_list );
 app.post( "/api/user/receipts", jsonParser, user_controller.user_instore_receipts );
 app.post( "/api/user/stores", jsonParser, user_controller.user_stores );
 app.post( "/api/user/mapstores", jsonParser, user_controller.user_map_stores );
 app.post( "/api/user/drivethru", jsonParser, user_controller.user_drivethru_receipts );
-
 app.post( "/api/store/info", jsonParser, store_controller.info );
+app.post( "/api/stores/list", store_controller.list_all );
 
+// authentication
 app.post( "/auth/check", checkAuthenticationEndpoint );
 
+// admin
 app.post( "/api/admin/approvals/get", checkAuthenticationApiAdmin, admin_controller.get_approvals );
 
+// account
 app.post( "/api/account/get", checkAuthenticationApi, account_controller.get_account );
 app.post( "/api/account/set", checkAuthenticationApi, jsonParser, account_controller.update_account );
 app.post( "/api/account/delete", checkAuthenticationApi, account_controller.delete_account );
@@ -398,8 +402,7 @@ else {
 	});
 }
 
-function start() {
-
+(function(){
 	db.connect()
 		.catch( ( error ) => {
 
@@ -443,8 +446,5 @@ function start() {
 			log.error( error );
 			db.close();
 		});
-}
-
-start();
-
+})();
 

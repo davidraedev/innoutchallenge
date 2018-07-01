@@ -40,3 +40,30 @@ export function fetchStoreInfo( dispatch, number ) {
 				});
 	}
 }
+
+
+export function fetchStoresList( dispatch ) {
+
+	dispatch({ type: "FETCH_STORES_LIST_PENDING" })
+
+	return function ( dispatch ) {
+		axios( process.env.REACT_APP_BACKEND_URL + "/api/stores/list", { method: "post" })
+				.then( ( response ) => {
+
+					let stores_sorted = response.data.sort( ( a, b ) => {
+						return ( a.number - b.number );
+					});
+
+					dispatch({ type: "FETCH_STORES_LIST_FULFILLED", payload: stores_sorted })
+				})
+				.catch( ( error ) => {
+
+					let data = {
+						error: error.response.data,
+						status: error.response.status
+					}
+
+					dispatch({ type: "FETCH_STORES_LIST_REJECTED", payload: data })
+				});
+	}
+}

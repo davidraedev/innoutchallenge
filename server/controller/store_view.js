@@ -18,5 +18,22 @@ const info = function( request, response ) {
 		});
 }
 
+const listAll = function( request, response ) {
+
+	Store.find( { opened: { $ne: null } }, "number" )
+		.then( ( stores ) => {
+
+			if ( ! stores.length )
+				return response.status( 500 ).send({ error: "No Stores Found" });
+
+			return response.json( stores );
+
+		})
+		.catch( ( error ) => {
+			response.status( 500 ).send( error );
+		});
+}
+
 
 module.exports.info = info;
+module.exports.list_all = listAll;
