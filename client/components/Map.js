@@ -327,7 +327,6 @@ export default class Map extends React.Component {
 		if ( clusters.length ) {
 			marker_html = clusters.map( ( store, index ) => {
 				if ( store.properties.cluster ) {
-					console.log( "MapClusterMarker" )
 					return <MapClusterMarker
 							lat={ store.geometry.coordinates[1] }
 							lng={ store.geometry.coordinates[0] }
@@ -338,7 +337,6 @@ export default class Map extends React.Component {
 						/>
 				}
 				else {
-					console.log( "MapStoreMarker" )
 					return <MapStoreMarker
 							lat={ store.geometry.coordinates[1] }
 							lng={ store.geometry.coordinates[0] }
