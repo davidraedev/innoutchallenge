@@ -67,3 +67,56 @@ export function fetchStoresList( dispatch ) {
 				});
 	}
 }
+
+export function getStorePrice( dispatch, store_id ) {
+
+	dispatch({ type: "FETCH_STORE_PRICE_PENDING" })
+
+	return function ( dispatch ) {
+		axios( process.env.REACT_APP_BACKEND_URL + "/api/store/price/get", {
+					method: "post",
+					data: {
+						store: store_id,
+					},
+				})
+				.then( ( response ) => {
+					dispatch({ type: "FETCH_STORE_PRICE_FULFILLED", payload: response.data })
+				})
+				.catch( ( error ) => {
+
+					let data = {
+						error: error.response.data,
+						status: error.response.status
+					}
+
+					dispatch({ type: "FETCH_STORE_PRICE_REJECTED", payload: data })
+				});
+	}
+}
+
+export function saveStorePrice( dispatch, store_id, prices ) {
+
+	dispatch({ type: "SAVE_STORE_PRICE_PENDING" })
+
+	return function ( dispatch ) {
+		axios( process.env.REACT_APP_BACKEND_URL + "/api/store/price/save", {
+					method: "post",
+					data: {
+						store: store_id,
+						prices: prices,
+					},
+				})
+				.then( ( response ) => {
+					dispatch({ type: "SAVE_STORE_PRICE_FULFILLED", payload: response.data })
+				})
+				.catch( ( error ) => {
+
+					let data = {
+						error: error.response.data,
+						status: error.response.status
+					}
+
+					dispatch({ type: "SAVE_STORE_PRICE_REJECTED", payload: data })
+				});
+	}
+}

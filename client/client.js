@@ -55,7 +55,8 @@ ReactDOM.render(
 						<Route path="/admin/signin/return/:returnUrl" exact component={ BackendPassThru } />
 						<Route path="/admin/signout" exact component={ BackendPassThru } />
 						<Route path="/admin/auth/twitter/callback" exact component={ BackendPassThru } />
-						<PrivateRoute path="/prices/add" exact component={ PriceLogger } />
+						<Route path="/prices/add" exact component={ PriceLogger } />
+						<Redirect from="/prices" to="/prices/add" exact />
 						<Route path="/img/*" exact component={ BackendPassThru } />
 						<Route path="/404" exact component={ PageNotFound } />
 					</Switch>
