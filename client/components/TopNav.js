@@ -114,6 +114,7 @@ export default class TopNav extends React.Component {
 							<li><NavLink exact to="/" activeClassName="active">Home</NavLink></li>
 							<li><NavLink to="/challengers" activeClassName="active">Challengers</NavLink></li>
 							<li><NavLink to="/search" activeClassName="active">Search</NavLink></li>
+							<li><NavLink to="/prices/add" activeClassName="active">Prices</NavLink></li>
 							{ authLinks }
 						</div>
 					</ul>
@@ -129,6 +130,7 @@ export default class TopNav extends React.Component {
 					<li><NavLink exact to="/" activeClassName="active" onClick={ this.sidebarToggle }>Home</NavLink></li>
 					<li><NavLink to="/challengers" activeClassName="active" onClick={ this.sidebarToggle }>Challengers</NavLink></li>
 					<li><NavLink to="/search" activeClassName="active" onClick={ this.sidebarToggle }>Search</NavLink></li>
+					<li><NavLink to="/prices/add" activeClassName="active" onClick={ this.sidebarToggle }>Prices</NavLink></li>
 					{ authLinks }
 				</ul>
 			</div>

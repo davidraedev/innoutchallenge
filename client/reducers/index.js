@@ -10,6 +10,8 @@ import admin from "./adminReducer"
 import overlayStore from "./storeReducer"
 import userMapStores from "./userMapStoresReducer"
 import storesListReducer from "./storesListReducer"
+import storePriceReducer from "./storePriceReducer"
+import saveStorePriceReducer from "./saveStorePriceReducer"
 
 export default combineReducers({
 	account,
@@ -22,4 +24,6 @@ export default combineReducers({
 	overlayStore,
 	userMapStores,
 	storesListReducer,
+	storePriceReducer,
+	saveStorePriceReducer,
 })

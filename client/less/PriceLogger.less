@@ -8,10 +8,13 @@
 
 		&.options {
 			display: flex;
-			flex-direction: row;
+			flex-direction: column;
+			align-items: center;
+			padding: 10px;
+			font-size: 18px;
 
-			> div {
-
+			.item {
+				padding: 10px;
 			}
 		}
 	}
@@ -28,8 +31,10 @@
 		border: 10px solid @base_red;
 		color: @base_red;
 		font-size: 25px;
+		max-width: 802px;
+		margin: 0 auto;
 
-		.burgers, .middle, .drinks {
+		.burgers, .drinks {
 			border: 10px solid @base_red;
 			flex-basis: 0;
 			flex-grow: 1;
@@ -182,18 +187,12 @@
 			}
 		}
 	}
-}
 
-@media screen and ( max-width: 805px ) {
-
-	#price_logger {
-
-		.ino_menu {
-
-			.middle {
-				display: none;
-			}
-		}
+	.submit {
+		cursor: pointer;
+		border: 1px solid rgb( 100,100,100 );
+		border-radius: 5px;
+		padding: 6px 14px;
 	}
 }
 

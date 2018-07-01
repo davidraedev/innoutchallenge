@@ -16,6 +16,7 @@ import { fetchAuthState } from "../actions/authCheckActions"
 export default class PrivateRoute extends React.Component {
 
 	componentWillMount() {
+		console.log( "PrivateRoute componentWillMount" );
 
 		this.setState({
 			initial: true,
@@ -25,7 +26,7 @@ export default class PrivateRoute extends React.Component {
 	}
 
 	componentDidUpdate( new_props ) {
-		console.log( "componentDidUpdate", this.props, new_props );
+		console.log( "PrivateRoute componentDidUpdate", this.props, new_props );
 		if ( this.props.adminAuthenticated !== undefined && this.state.initial !== false ) {
 			this.setState({
 				initial: false,
@@ -34,6 +35,7 @@ export default class PrivateRoute extends React.Component {
 	}
 
 	render() {
+		console.log( "PrivateRoute render" )
 
 		if ( this.state.initial === true ) {
 			return (
