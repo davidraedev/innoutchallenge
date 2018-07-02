@@ -69,6 +69,7 @@ export default class Map extends React.Component {
 			fit_user_only: true,
 			storeOverlayNumber: null,
 			storeOverlayPosition: 0,
+			overlayVisible: false,
 		});
 		this.props.dispatch( fetchUserMapStores( this.props.dispatch, this.props.match.params.user, true ) );
 	}
@@ -194,6 +195,7 @@ export default class Map extends React.Component {
 		this.setState({
 			storeOverlayNumber: number,
 			overlayPosition: ( document.documentElement.scrollTop + 50 ),
+			overlayVisible: true,
 		})
 	}
 
@@ -231,7 +233,7 @@ export default class Map extends React.Component {
 					>
 						{ marker_html }
 					</GoogleMapReact>
-					<StoreOverlay number={ this.state.storeOverlayNumber } position={ this.state.overlayPosition } />
+					<StoreOverlay number={ this.state.storeOverlayNumber } position={ this.state.overlayPosition } show={ this.state.overlayVisible } />
 				</div>
 			</div>
 		)

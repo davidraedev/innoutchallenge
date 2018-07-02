@@ -22,30 +22,40 @@ export default class StoreOverlay extends React.Component {
 	}
 
 	hideOverlay( target, className ) {
+		console.log( "hideOverlay" )
 
 		if ( target.className !== className && target.className !== className )
 			return;
+
+		console.log( "hideOverlay b" )
 
 		this.setState({
 			display: false,
 		})
 	}
 
-	componentWillReceiveProps( new_props ) {
+	componentDidUpdate( old_props, old_state ) {
 
-		this.setState({
-			display: ( this.props.show ),
-		});
+		console.log( "componentDidUpdate a" )
 
-		if ( new_props.number ) {
+		if ( this.state.display === old_state.display && this.state.display !== ( this.props.show ) ) {
+			console.log( "componentDidUpdate b" )
+			this.setState({
+				display: ( this.props.show ),
+			});
+		}
 
-			if ( new_props.number !== this.state.number ) {
+		if ( this.props.number ) {
+			console.log( "componentDidUpdate c" )
+
+			if ( this.props.number !== this.state.number ) {
+				console.log( "componentDidUpdate d" )
 
 				this.setState({
-					number: new_props.number,
+					number: this.props.number,
 				});
 
-				this.props.dispatch( fetchStoreInfo( this.props.dispatch, new_props.number ) );
+				this.props.dispatch( fetchStoreInfo( this.props.dispatch, this.props.number ) );
 
 			}
 		}
