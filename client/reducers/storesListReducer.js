@@ -4,6 +4,11 @@ export default function reducer(
 			{
 				_id: null,
 				number: null,
+				location: {
+					address: "",
+					city: "",
+					state: "",
+				},
 			},
 		],
 		fetching: false,

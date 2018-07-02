@@ -10,7 +10,7 @@ export default function reducer(
 			return { ...state, fetching: false, error: action.payload }
 		}
 		case "SAVE_STORE_PRICE_FULFILLED": {
-			return { ...state, fetching: false, fetched: true }
+			return { ...state, fetching: false, fetched: true, success: true }
 		}
 	}
 

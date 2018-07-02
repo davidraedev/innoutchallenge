@@ -1,3 +1,4 @@
+const store_controller = require( "./store" );
 const Store = require( "../model/store" );
 const Price = require( "../model/price" );
 
@@ -21,7 +22,7 @@ const info = function( request, response ) {
 
 const list_all = function( request, response ) {
 
-	Store.find( { opened: { $ne: null } }, "number" )
+	Store.find( { opened: { $ne: null } }, "number location" )
 		.then( ( stores ) => {
 
 			if ( ! stores.length )
@@ -104,7 +105,34 @@ const save_price = function( request, response ) {
 		});
 }
 
+const closest = function( request, response ) {
+
+	console.log( "request.body", request.body )
+
+	if ( ! request.body.latitude )
+		return response.status( 500 ).send( "Latitude not specified" );
+
+	if ( ! request.body.longitude )
+		return response.status( 500 ).send( "Longitude not specified" );
+
+	let { latitude, longitude } = request.body;
+
+	store_controller.findStoreNearCoords( latitude, longitude, 5000 )
+		.then( ( store ) => {
+
+			if ( ! store )
+				return response.status( 500 ).send( "Store not found" );
+
+			return response.json( store );
+
+		})
+		.catch( ( error ) => {
+			response.status( 500 ).send( error );
+		});
+}
+
 module.exports.info = info;
 module.exports.list_all = list_all;
 module.exports.get_price = get_price;
 module.exports.save_price = save_price;
+module.exports.closest = closest;

@@ -12,6 +12,7 @@ import userMapStores from "./userMapStoresReducer"
 import storesListReducer from "./storesListReducer"
 import storePriceReducer from "./storePriceReducer"
 import saveStorePriceReducer from "./saveStorePriceReducer"
+import storeClosestReducer from "./storeClosestReducer"
 
 export default combineReducers({
 	account,
@@ -26,4 +27,5 @@ export default combineReducers({
 	storesListReducer,
 	storePriceReducer,
 	saveStorePriceReducer,
+	storeClosestReducer,
 })

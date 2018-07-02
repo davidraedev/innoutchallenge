@@ -1,8 +1,11 @@
 import React from "react"
 import { connect } from "react-redux"
+import { geolocated } from "react-geolocated"
 
-import { fetchStoresList, saveStorePrice, getStorePrice } from "../actions/storeActions"
+import { fetchStoresList, saveStorePrice, getStorePrice, getClosestStore } from "../actions/storeActions"
 
+import Error from "./Error"
+import Success from "./Success"
 import TopNav from "./TopNav"
 import SubNav from "./SubNav"
 import PageNotAuthorized from "./PageNotAuthorized"
@@ -14,10 +17,13 @@ require( "../less/PriceLogger.less" )
 		prices: store.storePriceReducer.price,
 		stores: store.storesListReducer.stores,
 		error: store.storesListReducer.error,
+		closest: store.storeClosestReducer.store,
+		saveError: store.saveStorePriceReducer.error,
+		saveSuccess: store.saveStorePriceReducer.success,
 	}
 })
 
-export default class PriceLogger extends React.Component {
+class PriceLogger extends React.Component {
 
 	componentWillMount() {
 
@@ -26,6 +32,7 @@ export default class PriceLogger extends React.Component {
 		this.setState({
 			store: "",
 			prices: this.props.prices,
+			did_request_coords: 0,
 		});
 
 		this.savePrice = this.savePrice.bind( this );
@@ -55,19 +62,55 @@ export default class PriceLogger extends React.Component {
 	}
 
 	componentDidUpdate( old_props ) {
+
+		window.scrollTo( 0, 0 );
+
+		// show error
 		if ( this.props.error && this.props.error !== old_props.error ) {
-			alert( this.props.error );
+			console.error( this.props.error );
+		}
+
+		// user did allow geolocation
+		if ( this.props.isGeolocationAvailable && this.props.isGeolocationEnabled && this.state.did_request_coords === 0 ) {
+			this.setState({
+				did_request_coords: 1,
+			});
+
+			// send geolocation request once the coordinates have been retrieved
+			let interval = setInterval( () => {
+
+
+				if ( ! this.props.coords )
+					return;
+
+				this.props.dispatch( getClosestStore( this.props.dispatch, this.props.coords.latitude, this.props.coords.longitude ) );
+				clearInterval( interval );
+
+			}, 300 );
+		}
+
+		// geolocation request returned, set store dynamically
+		if ( ! old_props.closest._id && this.props.closest._id ) {
+			this.setState({
+				store: this.props.closest._id,
+			});
 		}
 	}
 
 	render() {
 
-		console.log( "this.props", this.props )
-
 		let tabindex = 3;
+		let errors = [];
+		let successes = [];
 
-		const { stores, error } = this.props;
+		const { stores, error, coords, saveError, saveSuccess } = this.props;
 		const { prices } = this.state;
+
+		if ( saveError )
+			errors.push( "Failed to save Store Price ["+ saveError +"]" );
+
+		if ( saveSuccess )
+			successes.push( "Price Saved" );
 
 		if ( error ) {
 			console.log( "error", error )
@@ -83,7 +126,7 @@ export default class PriceLogger extends React.Component {
 
 		let store_select_html = stores.map( ( store ) => {
 			return (
-				<option value={ store._id } key={ store._id }>{ store.number }</option>
+				<option value={ store._id } key={ store._id }>{ store.number + " - " + store.location.address + " (" + store.location.city + ", " + store.location.state + ")" }</option>
 			)
 		});
 
@@ -167,6 +210,8 @@ export default class PriceLogger extends React.Component {
 		return	(
 			<div>
 				<TopNav title="Price Logger (beta)" showBackButton={ false } />
+				<Error messages={ errors }/>
+				<Success messages={ successes }/>
 				<div class="container" id="price_logger">
 					<div class="section options">
 						<div class="item">
@@ -220,3 +265,10 @@ export default class PriceLogger extends React.Component {
 		)
 	}
 }
+
+export default geolocated({
+	positionOptions: {
+		enableHighAccuracy: false,
+	},
+	userDecisionTimeout: 5000,
+})( PriceLogger );

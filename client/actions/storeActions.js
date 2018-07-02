@@ -120,3 +120,31 @@ export function saveStorePrice( dispatch, store_id, prices ) {
 				});
 	}
 }
+
+
+export function getClosestStore( dispatch, latitude, longitude ) {
+
+	dispatch({ type: "FETCH_CLOSEST_STORE_PENDING" })
+
+	return function ( dispatch ) {
+		axios( process.env.REACT_APP_BACKEND_URL + "/api/store/closest", {
+					method: "post",
+					data: {
+						latitude: latitude,
+						longitude: longitude,
+					},
+				})
+				.then( ( response ) => {
+					dispatch({ type: "FETCH_CLOSEST_STORE_FULFILLED", payload: response.data })
+				})
+				.catch( ( error ) => {
+
+					let data = {
+						error: error.response.data,
+						status: error.response.status
+					}
+
+					dispatch({ type: "FETCH_CLOSEST_STORE_REJECTED", payload: data })
+				});
+	}
+}

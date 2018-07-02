@@ -17,7 +17,7 @@ export default class Error extends React.Component {
 
 	render() {
 
-		let errors = this.props.error
+		let errors = this.props.messages
 
 		let new_messages = []
 		errors.forEach( ( error ) => {
@@ -25,13 +25,13 @@ export default class Error extends React.Component {
 		})
 
 		const content = new_messages.map( ( message, index ) => (
-			<div class="error" key={ index }>
+			<div class="message" key={ index }>
 				{ message }
 			</div>
 		))
 
 		return (
-			<div class="errors">
+			<div class="error">
 				{ content }
 			</div>
 		)

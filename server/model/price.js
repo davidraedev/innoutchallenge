@@ -11,7 +11,7 @@ const PriceSchema = new Schema({
 		double_double: { type: Number, default: null },
 		cheeseburger: { type: Number, default: null },
 		hamburger: { type: Number, default: null },
-		french_fries: { type: Number, default: null },
+		fries: { type: Number, default: null },
 	},
 	sodas: {
 		small: { type: Number, default: null },

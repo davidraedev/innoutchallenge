@@ -377,6 +377,7 @@ app.post( "/api/user/drivethru", jsonParser, user_controller.user_drivethru_rece
 app.post( "/api/store/info", jsonParser, store_controller.info );
 app.post( "/api/store/price/get", jsonParser, store_controller.get_price );
 app.post( "/api/store/price/save", /*checkAuthenticationApi, */jsonParser, store_controller.save_price );
+app.post( "/api/store/closest", jsonParser, store_controller.closest );
 app.post( "/api/stores/list", store_controller.list_all );
 
 // authentication
