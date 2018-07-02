@@ -405,7 +405,7 @@ else {
 	});
 }
 
-(function(){
+function start() {
 	db.connect()
 		.catch( ( error ) => {
 
@@ -449,5 +449,7 @@ else {
 			log.error( error );
 			db.close();
 		});
-})();
+}
+
+start();
 
