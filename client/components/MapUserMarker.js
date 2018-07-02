@@ -10,14 +10,8 @@ export default class MapUserMarker extends React.Component {
 
 	render() {
 
-		const { number, visited } = this.props;
-
-		let className = "map_user_marker";
-
 		return (
-			<div class={ className }>
-				{ number }
-			</div>
+			<img src="/img/map_user_marker.png" class="map_user_marker" />
 		)
 	}
 }

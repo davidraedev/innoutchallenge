@@ -36,20 +36,15 @@ export default class StoreOverlay extends React.Component {
 
 	componentDidUpdate( old_props, old_state ) {
 
-		console.log( "componentDidUpdate a" )
-
 		if ( this.state.display === old_state.display && this.state.display !== ( this.props.show ) ) {
-			console.log( "componentDidUpdate b" )
 			this.setState({
 				display: ( this.props.show ),
 			});
 		}
 
 		if ( this.props.number ) {
-			console.log( "componentDidUpdate c" )
 
 			if ( this.props.number !== this.state.number ) {
-				console.log( "componentDidUpdate d" )
 
 				this.setState({
 					number: this.props.number,

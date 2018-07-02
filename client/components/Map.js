@@ -1,5 +1,6 @@
 import React from "react"
 import { connect } from "react-redux"
+import { geolocated } from "react-geolocated"
 
 import GoogleMapReact from "google-map-react"
 
@@ -9,6 +10,7 @@ import Error from "./Error"
 import TopNav from "./TopNav"
 import SubNav from "./SubNav"
 import MapStoreMarker from "./MapStoreMarker"
+import MapUserMarker from "./MapUserMarker"
 import StoreOverlay from "./StoreOverlay"
 
 require( "../less/Map.less" )
@@ -26,7 +28,7 @@ const default_center = {
 	}
 })
 
-export default class Map extends React.Component {
+class Map extends React.Component {
 
 	constructor() {
 		super();
@@ -70,6 +72,11 @@ export default class Map extends React.Component {
 			storeOverlayNumber: null,
 			storeOverlayPosition: 0,
 			overlayVisible: false,
+			user: {
+				latitude: null,
+				longitude: null,
+			},
+			did_request_coords: 0,
 		});
 		this.props.dispatch( fetchUserMapStores( this.props.dispatch, this.props.match.params.user, true ) );
 	}
@@ -186,17 +193,49 @@ export default class Map extends React.Component {
 		}, callback );
 	}
 
-	componentWillReceiveProps( new_props ) {
-		this.calculateMapCenter( new_props.data.stores );
+	componentDidUpdate( old_props ) {
+		if ( JSON.stringify( old_props ) !== JSON.stringify( this.props ) )
+			this.calculateMapCenter( this.props.data.stores );
+
+		// user did allow geolocation
+		if ( this.props.isGeolocationAvailable && this.props.isGeolocationEnabled && this.state.did_request_coords === 0 ) {
+			this.setState({
+				did_request_coords: 1,
+			});
+
+			// send geolocation request once the coordinates have been retrieved
+			let interval = setInterval( () => {
+				console.log( "a" );
+
+				if ( ! this.props.coords )
+					return;
+
+				this.setState({
+					user: {
+						latitude: this.props.coords.latitude,
+						longitude: this.props.coords.longitude,
+					},
+					did_request_coords: 2,
+				});
+
+				clearInterval( interval );
+
+			}, 300 );
+		}
 	}
 
 	showStoreOverlay( number ) {
+
 		console.log( "Show Store Overlay" )
+		if ( number === "user" )
+			return;
+
 		this.setState({
 			storeOverlayNumber: number,
 			overlayPosition: ( document.documentElement.scrollTop + 50 ),
 			overlayVisible: true,
-		})
+		});
+		
 	}
 
 	render() {
@@ -208,6 +247,7 @@ export default class Map extends React.Component {
 
 		let marker_html;
 		if ( data.stores.length ) {
+
 			marker_html = data.stores.map( ( store ) => {
 				return <MapStoreMarker
 							lat={ store.location.latitude }
@@ -217,6 +257,17 @@ export default class Map extends React.Component {
 							visited={ store.has_receipt }
 						/>
 			});
+
+			if ( this.state.user.latitude ) {
+				marker_html.push(
+					<MapUserMarker
+							lat={ this.state.user.latitude }
+							lng={ this.state.user.longitude }
+							key="user"
+						/>
+				);
+			}
+
 		}
 
 		return (
@@ -239,3 +290,10 @@ export default class Map extends React.Component {
 		)
 	}
 }
+
+export default geolocated({
+	positionOptions: {
+		enableHighAccuracy: false,
+	},
+	userDecisionTimeout: 5000,
+})( Map );
