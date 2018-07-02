@@ -50,7 +50,7 @@ export default class SearchUsers extends React.Component {
 
 		return (
 			<div>
-				<Error error={ [ error ] } />
+				<Error messages={ [ error ] } />
 				<TopNav search={ true } showBackButton={ false } userPerPage={ this.state.usersPerPage } currentPage={ this.state.currentPage } />
 				<div className="container" id="main_content">
 					<div className="challengers">

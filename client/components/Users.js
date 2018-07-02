@@ -99,7 +99,7 @@ export default class Users extends React.Component {
 
 		return (
 			<div>
-				<Error error={ [ error ] } />
+				<Error messages={ [ error ] } />
 				<TopNav title="Challengers" showBackButton={ false } />
 				<div className="container" id="main_content">
 					<div className="challengers">

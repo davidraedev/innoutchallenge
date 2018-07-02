@@ -190,6 +190,7 @@ export default class Map extends React.Component {
 	}
 
 	showStoreOverlay( number ) {
+		console.log( "Show Store Overlay" )
 		this.setState({
 			storeOverlayNumber: number,
 			overlayPosition: ( document.documentElement.scrollTop + 50 ),
@@ -218,7 +219,7 @@ export default class Map extends React.Component {
 
 		return (
 			<div>
-				<Error error={ [ error ] } />
+				<Error messages={ [ error ] } />
 				<TopNav title="Map (very beta)" showBackButton={ false } />
 				<SubNav url={ this.props.match.url } type="user" />
 				<div className="container" id="main_content" ref={ input => { this.mapContainer = input } }>

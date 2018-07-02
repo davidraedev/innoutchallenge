@@ -87,7 +87,7 @@ export default class AdminReceipts extends React.Component {
 
 		return	(
 			<div>
-				<Error error={ [ error ] } />
+				<Error messages={ [ error ] } />
 				<TopNav title="Admin Approvals" />
 				<div class="container" id="main_content">
 					<div>

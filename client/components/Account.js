@@ -93,7 +93,7 @@ export default class Account extends React.Component {
 
 		return	(
 			<div>
-				<Error error={ [ error ] } />
+				<Error messages={ [ error ] } />
 				<TopNav title="Account" showBackButton={ false } />
 				<SubNav url={ this.props.match.url } type="account" />
 				<div class="container" id="account_content">
