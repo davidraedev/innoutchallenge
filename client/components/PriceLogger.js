@@ -11,7 +11,6 @@ import SubNav from "./SubNav"
 import PageNotAuthorized from "./PageNotAuthorized"
 
 require( "../less/PriceLogger.less" )
-
 @connect( ( store ) => {
 	return {
 		prices: store.storePriceReducer.price,
@@ -220,7 +219,7 @@ class PriceLogger extends React.Component {
 								<input type="date" defaultValue={ date.toISOString().substr( 0, 10 ) } tabIndex="1" />
 							</div>
 						</div>
-						<div class="item">
+						<div class="item select">
 							Store: 
 							<div class="input">
 								<select tabIndex="2" onChange={ this.setStore } value={ this.state.store }>

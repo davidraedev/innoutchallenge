@@ -1,3 +1,5 @@
+@import (css) url( "https://fonts.googleapis.com/css?family=Archivo+Narrow:700" );
+
 @base_red: rgb( 200,0,0 );
 
 #price_logger {
@@ -215,6 +217,18 @@
 
 @media screen and ( max-width: 400px ) {
 
+	.select {
+		max-width: calc( ~"100% - 10px" );
+
+		.input {
+			max-width: calc( ~"100% - 10px" );
+
+			select {
+				max-width: calc( ~"100% - 10px" );
+			}
+		}
+	}
+
 	#price_logger {
 
 		.ino_menu {
@@ -236,14 +250,27 @@
 				.names_wrap {
 
 					.prices {
+						margin-left: 9px;
 
 						.item {
+							width: 56px;
 
 							.price {
 
 								&:before {
 									left: -4px;
 									top: 5px;
+								}
+
+								.price {
+
+									.input {
+										width: 43px;
+
+										input {
+											width: 46px;
+										}
+									}
 								}
 							}
 						}
