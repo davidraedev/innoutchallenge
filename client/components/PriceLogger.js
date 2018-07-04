@@ -1,6 +1,7 @@
 import React from "react"
 import { connect } from "react-redux"
 import { geolocated } from "react-geolocated"
+import Webcam from "react-webcam"
 
 import { fetchStoresList, saveStorePrice, getStorePrice, getClosestStore } from "../actions/storeActions"
 
@@ -32,10 +33,13 @@ class PriceLogger extends React.Component {
 			store: "",
 			prices: this.props.prices,
 			did_request_coords: 0,
+			menu_image: "",
 		});
 
 		this.savePrice = this.savePrice.bind( this );
 		this.setStore = this.setStore.bind( this );
+		this.capture = this.capture.bind( this );
+		this.setRef = this.setRef.bind( this );
 	}
 
 	priceInputHtml( value = "", tabindex = 0, changeHandler ) {
@@ -96,7 +100,25 @@ class PriceLogger extends React.Component {
 		}
 	}
 
+	capture() {
+		console.log( "capture" );
+		console.log( this.webcam.getScreenshot() );
+		this.setState({
+			menu_image: this.webcam.getScreenshot(),
+		});
+	}
+
+	setRef( webcam ) {
+		this.webcam = webcam;
+	}
+
 	render() {
+
+		const videoConstraints = {
+			width: 1280,
+			height: 720,
+			facingMode: 'user',
+		};
 
 		let tabindex = 3;
 		let errors = [];
@@ -206,12 +228,28 @@ class PriceLogger extends React.Component {
 			);
 		});
 
-		return	(
+		return (
 			<div>
 				<TopNav title="Price Logger (beta)" showBackButton={ false } />
-				<Error messages={ errors }/>
-				<Success messages={ successes }/>
+				<Error messages={ errors } />
+				<Success messages={ successes } />
 				<div class="container" id="price_logger">
+					<div class="section camera">
+						<div class={ ( this.state.menu_image.length ) ? "hide" : "show" }>
+							<Webcam
+								audio={false}
+								height={720}
+								ref={this.setRef}
+								screenshotFormat="image/jpeg"
+								width={1280}
+								videoConstraints={videoConstraints}
+							/>
+							<button onClick={ this.capture }>Capture photo</button>
+						</div>
+						<div class={ ( this.state.menu_image.length ) ? "show" : "hide" }>
+							<img src={ this.state.menu_image } />
+						</div>
+					</div>
 					<div class="section options">
 						<div class="item">
 							Date: 
