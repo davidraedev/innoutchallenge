@@ -243,8 +243,8 @@ class PriceLogger extends React.Component {
 								screenshotFormat="image/jpeg"
 								width={1280}
 								videoConstraints={videoConstraints}
+								onClick={ this.capture }
 							/>
-							<button onClick={ this.capture }>Capture photo</button>
 						</div>
 						<div class={ ( this.state.menu_image.length ) ? "show" : "hide" }>
 							<img src={ this.state.menu_image } />
