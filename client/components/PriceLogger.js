@@ -117,7 +117,7 @@ class PriceLogger extends React.Component {
 		const videoConstraints = {
 			width: 1280,
 			height: 720,
-			facingMode: 'user',
+			facingMode: "environment",
 		};
 
 		let tabindex = 3;
