@@ -1,15 +1,15 @@
-import React from "react"
-import { connect } from "react-redux"
-import { geolocated } from "react-geolocated"
-import Webcam from "react-webcam"
+import React from "react";
+import { connect } from "react-redux";
+import Webcam from "react-webcam";
 
-import { fetchStoresList, saveStorePrice, getStorePrice, getClosestStore } from "../actions/storeActions"
+import { fetchStoresList, saveStorePrice, getStorePrice, getClosestStore } from "../actions/storeActions";
 
-import Error from "./Error"
-import Success from "./Success"
-import TopNav from "./TopNav"
-import SubNav from "./SubNav"
-import PageNotAuthorized from "./PageNotAuthorized"
+import Error from "./Error";
+import Success from "./Success";
+import TopNav from "./TopNav";
+import SubNav from "./SubNav";
+import PageNotAuthorized from "./PageNotAuthorized";
+import Geolocation from "./Geolocation";
 
 require( "../less/PriceLogger.less" )
 @connect( ( store ) => {
@@ -34,12 +34,38 @@ class PriceLogger extends React.Component {
 			prices: this.props.prices,
 			did_request_coords: 0,
 			menu_image: "",
+			allow_camera: false,
+			geolocation: {},
 		});
 
 		this.savePrice = this.savePrice.bind( this );
 		this.setStore = this.setStore.bind( this );
 		this.capture = this.capture.bind( this );
-		this.setRef = this.setRef.bind( this );
+		this.setWebcamRef = this.setWebcamRef.bind( this );
+		this.enableGeoLocation = this.enableGeoLocation.bind( this );
+
+		this.getGeolocationInnerRef = this.getGeolocationInnerRef.bind( this );
+		this.getLocation = this.getLocation.bind( this );
+
+		this.geolocationHandler = this.geolocationHandler.bind( this );
+	}
+
+	geolocationHandler() {
+		console.log( "geolocationHandler", this.geolocationInnerRef.state )
+		this.setState({
+			geolocation: this.geolocationInnerRef.state,
+		}, () => { console.log( "statev", this.state ) });
+	}
+
+	geolocationInnerRef;
+
+	getGeolocationInnerRef( ref ) {
+		console.log( "ref", ref )
+		this.geolocationInnerRef = ref;
+	}
+
+	getLocation() {
+		this.geolocationInnerRef && this.geolocationInnerRef.getLocation();
 	}
 
 	priceInputHtml( value = "", tabindex = 0, changeHandler ) {
@@ -64,7 +90,14 @@ class PriceLogger extends React.Component {
 		this.props.dispatch( getStorePrice( this.props.dispatch, store_id ) );
 	}
 
+	enableGeoLocation() {
+		console.log( "this", this )
+		this.getLocation();
+	}
+
 	componentDidUpdate( old_props ) {
+
+		console.log( "componentDidUpdate", this.props )
 
 		window.scrollTo( 0, 0 );
 
@@ -74,7 +107,7 @@ class PriceLogger extends React.Component {
 		}
 
 		// user did allow geolocation
-		if ( this.props.isGeolocationAvailable && this.props.isGeolocationEnabled && this.state.did_request_coords === 0 ) {
+		if ( this.state.geolocation.isGeolocationAvailable && this.state.geolocation.isGeolocationEnabled && this.state.did_request_coords === 0 ) {
 			this.setState({
 				did_request_coords: 1,
 			});
@@ -82,11 +115,10 @@ class PriceLogger extends React.Component {
 			// send geolocation request once the coordinates have been retrieved
 			let interval = setInterval( () => {
 
-
-				if ( ! this.props.coords )
+				if ( ! this.state.geolocation.coords )
 					return;
 
-				this.props.dispatch( getClosestStore( this.props.dispatch, this.props.coords.latitude, this.props.coords.longitude ) );
+				this.props.dispatch( getClosestStore( this.props.dispatch, this.state.geolocation.coords.latitude, this.state.geolocation.coords.longitude ) );
 				clearInterval( interval );
 
 			}, 300 );
@@ -108,7 +140,7 @@ class PriceLogger extends React.Component {
 		});
 	}
 
-	setRef( webcam ) {
+	setWebcamRef( webcam ) {
 		this.webcam = webcam;
 	}
 
@@ -228,27 +260,54 @@ class PriceLogger extends React.Component {
 			);
 		});
 
+		console.log( "this.state.allow_camera", this.state.allow_camera )
+		console.log( "this.state.menu_image", this.state.menu_image )
+
+		let camera_html;
+		if ( ! this.state.allow_camera ) {
+			console.log( "A" )
+			camera_html = (
+				<div>
+					<button onClick={ () => { this.setState({
+						allow_camera: true,
+					}) } }>Take Photo of Menu</button>
+				</div>
+			)
+		}
+		else if ( this.state.allow_camera && ! this.state.menu_image.length ) {
+			console.log( "B" )
+			camera_html = (
+				<div>
+					<Webcam
+						audio={ false }
+						height={ "auto" }
+						ref={ this.setWebcamRef }
+						screenshotFormat="image/jpeg"
+						width={ "auto" }
+						videoConstraints={ videoConstraints }
+					/>
+					<button onClick={ this.capture }>Capture photo</button>
+				</div>
+			)
+		}
+		else if ( this.state.allow_camera && this.state.menu_image.length ) {
+			console.log( "C" )
+			camera_html = (
+				<div>
+					<img src={ this.state.menu_image } />
+				</div>
+			)
+		}
+
 		return (
 			<div>
+				<Geolocation ref={ this.getGeolocationInnerRef } handler={ this.geolocationHandler } />
 				<TopNav title="Price Logger (beta)" showBackButton={ false } />
 				<Error messages={ errors } />
 				<Success messages={ successes } />
 				<div class="container" id="price_logger">
 					<div class="section camera">
-						<div class={ ( this.state.menu_image.length ) ? "hide" : "show" }>
-							<Webcam
-								audio={false}
-								height={"auto"}
-								ref={this.setRef}
-								screenshotFormat="image/jpeg"
-								width={"auto"}
-								videoConstraints={videoConstraints}
-							/>
-							<button onClick={ this.capture }>Capture photo</button>
-						</div>
-						<div class={ ( this.state.menu_image.length ) ? "show" : "hide" }>
-							<img src={ this.state.menu_image } />
-						</div>
+						{ camera_html }
 					</div>
 					<div class="section options">
 						<div class="item">
@@ -264,6 +323,7 @@ class PriceLogger extends React.Component {
 									<option disabled="disabled" value="">select a store</option>
 									{ store_select_html }
 								</select>
+								<button onClick={ () => { this.enableGeoLocation() } } >Find Nearby Stores</button>
 							</div>
 						</div>
 					</div>
@@ -303,9 +363,4 @@ class PriceLogger extends React.Component {
 	}
 }
 
-export default geolocated({
-	positionOptions: {
-		enableHighAccuracy: false,
-	},
-	userDecisionTimeout: 5000,
-})( PriceLogger );
+export default PriceLogger;
