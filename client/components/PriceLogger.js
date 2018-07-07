@@ -238,13 +238,13 @@ class PriceLogger extends React.Component {
 						<div class={ ( this.state.menu_image.length ) ? "hide" : "show" }>
 							<Webcam
 								audio={false}
-								height={720}
+								height={"auto"}
 								ref={this.setRef}
 								screenshotFormat="image/jpeg"
-								width={1280}
+								width={"auto"}
 								videoConstraints={videoConstraints}
-								onClick={ this.capture }
 							/>
+							<button onClick={ this.capture }>Capture photo</button>
 						</div>
 						<div class={ ( this.state.menu_image.length ) ? "show" : "hide" }>
 							<img src={ this.state.menu_image } />
