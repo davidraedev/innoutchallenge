@@ -323,7 +323,7 @@ class PriceLogger extends React.Component {
 									<option disabled="disabled" value="">select a store</option>
 									{ store_select_html }
 								</select>
-								<button onClick={ () => { this.enableGeoLocation() } } >Find Nearby Stores</button>
+								<button onClick={ () => { this.enableGeoLocation() } } >Find Closest Store</button>
 							</div>
 						</div>
 					</div>
