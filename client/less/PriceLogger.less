@@ -1,14 +1,37 @@
 @import (css) url( "https://fonts.googleapis.com/css?family=Archivo+Narrow:700" );
 
 @base_red: rgb( 200,0,0 );
+@button_border_color: rgb( 180,180,180 );
 
 #price_logger {
 	font-family: "Archivo Narrow", serif;
 	font-weight: bold;
 
-	.section {
+	.button {
+		display: inline-block;
+		border: 1px solid @button_border_color;
+		border-radius: 4px;
+		cursor: pointer;
 
-		&.options {
+		.text, .icon {
+			display: inline-block;
+		}
+
+		.text {
+			vertical-align: top;
+			padding: 10px 16px;
+		}
+
+		.icon {
+			padding: 6px 10px;
+			border-left: 1px solid lighten( @button_border_color, 10% );
+		}
+	}
+
+	.section {
+		padding: 10px 0px;
+
+		&.options, &.camera {
 			display: flex;
 			flex-direction: column;
 			align-items: center;
@@ -26,14 +49,12 @@
 
 		&.camera {
 			text-align: center;
-			display: flex;
-			flex-direction: row;
 
 			video {
 				width: 90%;
 			}
-
 		}
+
 	}
 
 	.input {
@@ -208,7 +229,7 @@
 
 	.submit {
 		cursor: pointer;
-		border: 1px solid rgb( 100,100,100 );
+		border: 1px solid @button_border_color;
 		border-radius: 5px;
 		padding: 6px 14px;
 	}

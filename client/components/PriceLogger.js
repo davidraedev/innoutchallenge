@@ -260,24 +260,22 @@ class PriceLogger extends React.Component {
 			);
 		});
 
-		console.log( "this.state.allow_camera", this.state.allow_camera )
-		console.log( "this.state.menu_image", this.state.menu_image )
-
 		let camera_html;
 		if ( ! this.state.allow_camera ) {
-			console.log( "A" )
 			camera_html = (
-				<div>
-					<button onClick={ () => { this.setState({
-						allow_camera: true,
-					}) } }>Take Photo of Menu</button>
+				<div class="item">
+					<div class="button" onClick={ () => this.setState({ allow_camera: true }) }>
+						<div class="text">Take Photo of Menu</div>
+						<div class="icon">
+							<img src="/img/camera_icon.png" />
+						</div>
+					</div>
 				</div>
 			)
 		}
 		else if ( this.state.allow_camera && ! this.state.menu_image.length ) {
-			console.log( "B" )
 			camera_html = (
-				<div>
+				<div class="item">
 					<Webcam
 						audio={ false }
 						height={ "auto" }
@@ -286,14 +284,13 @@ class PriceLogger extends React.Component {
 						width={ "auto" }
 						videoConstraints={ videoConstraints }
 					/>
-					<button onClick={ this.capture }>Capture photo</button>
+					<div class="button" onClick={ this.capture }><div class="text">Capture photo</div></div>
 				</div>
 			)
 		}
 		else if ( this.state.allow_camera && this.state.menu_image.length ) {
-			console.log( "C" )
 			camera_html = (
-				<div>
+				<div class="item">
 					<img src={ this.state.menu_image } />
 				</div>
 			)
