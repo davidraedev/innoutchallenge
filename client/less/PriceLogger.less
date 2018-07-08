@@ -1,4 +1,5 @@
 @import (css) url( "https://fonts.googleapis.com/css?family=Archivo+Narrow:700" );
+@import url( "./Spinners.less" );
 
 @base_red: rgb( 200,0,0 );
 @button_border_color: rgb( 180,180,180 );
@@ -12,12 +13,19 @@
 	}
 
 	.button {
+		position: relative;
 		display: inline-block;
 		border: 1px solid @button_border_color;
 		border-radius: 4px;
 		cursor: pointer;
 		vertical-align: middle;
 		margin: 5px;
+
+		&.disabled {
+			cursor: default;
+			pointer-events: none;
+			color: rgb( 150,150,150 );
+		}
 
 		.text, .icon {
 			display: inline-block;

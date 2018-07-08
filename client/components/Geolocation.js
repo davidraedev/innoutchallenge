@@ -20,5 +20,6 @@ export default geolocated({
 		enableHighAccuracy: false,
 	},
 	userDecisionTimeout: 5000,
-	suppressLocationOnMount: true
+	suppressLocationOnMount: true,
+	watchPosition: true,
 })( Geolocation );

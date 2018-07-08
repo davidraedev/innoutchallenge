@@ -38,6 +38,7 @@ class PriceLogger extends React.Component {
 			menu_image: "",
 			allow_camera: false,
 			geolocation: {},
+			loading_position: false,
 		});
 
 		this.savePrice = this.savePrice.bind( this );
@@ -53,10 +54,11 @@ class PriceLogger extends React.Component {
 	}
 
 	geolocationHandler() {
-		console.log( "geolocationHandler", this.geolocationInnerRef.state )
+		console.log( "geolocationHandler", this.geolocationInnerRef.state );
 		this.setState({
 			geolocation: this.geolocationInnerRef.state,
-		}, () => { console.log( "statev", this.state ) });
+			loading_position: false,
+		});
 	}
 
 	geolocationInnerRef;
@@ -67,7 +69,12 @@ class PriceLogger extends React.Component {
 	}
 
 	getLocation() {
-		this.geolocationInnerRef && this.geolocationInnerRef.getLocation();
+		console.log( "getLocation" );
+		this.setState({
+			loading_position: true,
+		}, () => {
+			this.geolocationInnerRef && this.geolocationInnerRef.getLocation();
+		});
 	}
 
 	priceInputHtml( value = "", tabindex = 0, changeHandler ) {
@@ -299,6 +306,15 @@ class PriceLogger extends React.Component {
 			)
 		}
 
+		console.log( "this.state.geolocation", this.state.geolocation )
+
+		let locationSpinnerClass = "spinner_wrap";
+		if ( this.state.loading_position )
+			locationSpinnerClass += " show";
+		let locationButtonClass = "button";
+		if ( this.state.geolocation.hasOwnProperty( "isGeolocationEnabled" ) && ! this.state.geolocation.isGeolocationEnabled )
+			locationButtonClass += " disabled";
+
 		return (
 			<div>
 				<Geolocation ref={ this.getGeolocationInnerRef } handler={ this.geolocationHandler } />
@@ -328,9 +344,12 @@ class PriceLogger extends React.Component {
 								placeholder="select your store"
 								autosize={ false }
 							/>
-							<div class="button" onClick={ () => { this.enableGeoLocation() } }>
+							<div class={ locationButtonClass } onClick={ () => { this.enableGeoLocation() } }>
 								<div class="text">Find Closest Store</div>
 								<div class="icon"><img src="/img/location_icon.svg" /></div>
+								<div class={ locationSpinnerClass }>
+									<div class="spinner spinner_a"></div>
+								</div>
 							</div>
 						</div>
 					</div>
