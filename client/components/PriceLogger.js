@@ -1,24 +1,27 @@
-import React from "react"
-import { connect } from "react-redux"
-import { geolocated } from "react-geolocated"
+import React from "react";
+import { connect } from "react-redux";
+import Select from "react-select";
 
-import { fetchStoresList, saveStorePrice, getStorePrice, getClosestStore } from "../actions/storeActions"
+import { fetchStoresList, saveStorePrice, getStorePrice, getClosestStore } from "../actions/storeActions";
 
-import Error from "./Error"
-import Success from "./Success"
-import TopNav from "./TopNav"
-import SubNav from "./SubNav"
-import PageNotAuthorized from "./PageNotAuthorized"
+import Error from "./Error";
+import Success from "./Success";
+import TopNav from "./TopNav";
+import SubNav from "./SubNav";
+import PageNotAuthorized from "./PageNotAuthorized";
+import Geolocation from "./Geolocation";
 
 require( "../less/PriceLogger.less" )
+require( "../../node_modules/react-select/less/select.less" );
 @connect( ( store ) => {
 	return {
 		prices: store.storePriceReducer.price,
 		stores: store.storesListReducer.stores,
 		error: store.storesListReducer.error,
 		closest: store.storeClosestReducer.store,
-		saveError: store.saveStorePriceReducer.error,
+		saveError: store.saveStorePriceReducer.error.error,
 		saveSuccess: store.saveStorePriceReducer.success,
+		saveInProgress: store.saveStorePriceReducer.saving,
 	}
 })
 
@@ -32,17 +35,50 @@ class PriceLogger extends React.Component {
 			store: "",
 			prices: this.props.prices,
 			did_request_coords: 0,
+			menu_image: "",
+			geolocation: {},
+			loading_position: false,
 		});
 
 		this.savePrice = this.savePrice.bind( this );
 		this.setStore = this.setStore.bind( this );
+		this.takeImage = this.takeImage.bind( this );
+		this.triggerImage = this.triggerImage.bind( this );
+		this.enableGeoLocation = this.enableGeoLocation.bind( this );
+
+		this.getGeolocationInnerRef = this.getGeolocationInnerRef.bind( this );
+		this.getLocation = this.getLocation.bind( this );
+
+		this.geolocationHandler = this.geolocationHandler.bind( this );
+	}
+
+	geolocationHandler() {
+		this.setState({
+			geolocation: this.geolocationInnerRef.state,
+			loading_position: false,
+		});
+	}
+
+	geolocationInnerRef;
+	imageInputRef;
+
+	getGeolocationInnerRef( ref ) {
+		this.geolocationInnerRef = ref;
+	}
+
+	getLocation() {
+		this.setState({
+			loading_position: true,
+		}, () => {
+			this.geolocationInnerRef && this.geolocationInnerRef.getLocation();
+		});
 	}
 
 	priceInputHtml( value = "", tabindex = 0, changeHandler ) {
 		return (
 			<div class="price">
 				<div class="input">
-					<input type="number" placeholder="1.00" step="0.01" defaultValue={ value } tabIndex={ tabindex } onChange={ changeHandler } />
+					<input type="number" placeholder="0.00" step="0.01" defaultValue={ value } tabIndex={ tabindex } onChange={ changeHandler } />
 				</div>
 			</div>
 		)
@@ -52,17 +88,22 @@ class PriceLogger extends React.Component {
 		this.props.dispatch( saveStorePrice( this.props.dispatch, this.state.store, this.state.prices ) );
 	}
 
-	setStore( event ) {
-		let store_id = event.target.value;
+	setStore( select_value ) {
+		let store_id = select_value.value;
 		this.setState({
 			store: store_id,
 		})
 		this.props.dispatch( getStorePrice( this.props.dispatch, store_id ) );
 	}
 
+	enableGeoLocation() {
+		this.getLocation();
+	}
+
 	componentDidUpdate( old_props ) {
 
-		window.scrollTo( 0, 0 );
+		if ( this.props.saveSuccess !== old_props.saveSuccess || this.props.saveError !== old_props.saveError )
+			window.scrollTo( 0, 0 );
 
 		// show error
 		if ( this.props.error && this.props.error !== old_props.error ) {
@@ -70,7 +111,8 @@ class PriceLogger extends React.Component {
 		}
 
 		// user did allow geolocation
-		if ( this.props.isGeolocationAvailable && this.props.isGeolocationEnabled && this.state.did_request_coords === 0 ) {
+		if ( this.state.geolocation.isGeolocationAvailable && this.state.geolocation.isGeolocationEnabled && this.state.did_request_coords === 0 ) {
+			
 			this.setState({
 				did_request_coords: 1,
 			});
@@ -78,11 +120,10 @@ class PriceLogger extends React.Component {
 			// send geolocation request once the coordinates have been retrieved
 			let interval = setInterval( () => {
 
-
-				if ( ! this.props.coords )
+				if ( ! this.state.geolocation.coords )
 					return;
 
-				this.props.dispatch( getClosestStore( this.props.dispatch, this.props.coords.latitude, this.props.coords.longitude ) );
+				this.props.dispatch( getClosestStore( this.props.dispatch, this.state.geolocation.coords.latitude, this.state.geolocation.coords.longitude ) );
 				clearInterval( interval );
 
 			}, 300 );
@@ -96,38 +137,54 @@ class PriceLogger extends React.Component {
 		}
 	}
 
+	takeImage( event ) {
+		
+		let file = event.target.files[0];
+		let url = URL.createObjectURL( file );
+		
+		this.setState({
+			menu_image: url,
+		});
+
+	}
+
+	triggerImage() {
+		this.imageInputRef.click();
+	}
+
+	getStoresOptions() {
+
+		return this.props.stores.map( ( store ) => {
+
+			return {
+				value: store._id,
+				label: store.number + " - " + store.location.address + " (" + store.location.city + ", " + store.location.state + ")"
+			};
+		});
+	}
+
 	render() {
 
 		let tabindex = 3;
 		let errors = [];
 		let successes = [];
 
-		const { stores, error, coords, saveError, saveSuccess } = this.props;
+		const { stores, error, coords, saveError, saveSuccess, saveInProgress } = this.props;
 		const { prices } = this.state;
 
 		if ( saveError )
-			errors.push( "Failed to save Store Price ["+ saveError +"]" );
+			errors.push( "Failed to save Store Price ["+ saveError.error +"]" );
 
 		if ( saveSuccess )
 			successes.push( "Price Saved" );
 
-		if ( error ) {
-			console.log( "error", error )
-			if ( error.status === 401 ) {
-				console.log( "401" )
-				return (
-					<PageNotAuthorized returnUrl={ this.props.location.pathname } />
-				)
-			}
+		if ( error && error.status === 401 ) {
+			return (
+				<PageNotAuthorized returnUrl={ this.props.location.pathname } />
+			);
 		}
 
 		let date = new Date();
-
-		let store_select_html = stores.map( ( store ) => {
-			return (
-				<option value={ store._id } key={ store._id }>{ store.number + " - " + store.location.address + " (" + store.location.city + ", " + store.location.state + ")" }</option>
-			)
-		});
 
 		let burgers = [
 			{ name: "Double-Double", key: "double_double" },
@@ -206,26 +263,77 @@ class PriceLogger extends React.Component {
 			);
 		});
 
-		return	(
+		let camera_html;
+		if ( ! this.state.menu_image.length ) {
+			camera_html = (
+				<div class="item">
+					<div class="button" onClick={ this.triggerImage }>
+						<div class="text">Take Photo of Menu</div>
+						<div class="icon">
+							<img src="/img/camera_icon.svg" />
+						</div>
+					</div>
+				</div>
+			)
+		}
+		else {
+			camera_html = (
+				<div class="item">
+					<img src={ this.state.menu_image } />
+				</div>
+			)
+		}
+
+		let locationSpinnerClass = "spinner_wrap";
+		if ( this.state.loading_position )
+			locationSpinnerClass += " show";
+		let locationButtonClass = "button";
+		if ( this.state.geolocation.hasOwnProperty( "isGeolocationEnabled" ) && ! this.state.geolocation.isGeolocationEnabled )
+			locationButtonClass += " disabled";
+		
+		let saveSpinnerClass = "spinner_wrap";
+		if ( saveInProgress )
+			saveSpinnerClass += " show";
+		let saveButtonClass = "button";
+		if ( saveInProgress )
+			saveButtonClass += " disabled";
+
+		return (
 			<div>
+				<input class="hide" type="file" accept="image/*" capture="environment" onChange={ this.takeImage } ref={ ( imageInputRef ) => { this.imageInputRef = imageInputRef } } />
+				<Geolocation ref={ this.getGeolocationInnerRef } handler={ this.geolocationHandler } />
 				<TopNav title="Price Logger (beta)" showBackButton={ false } />
-				<Error messages={ errors }/>
-				<Success messages={ successes }/>
+				<Error messages={ errors } />
+				<Success messages={ successes } />
 				<div class="container" id="price_logger">
+					<div class="section camera">
+						{ camera_html }
+					</div>
 					<div class="section options">
 						<div class="item">
-							Date: 
+							<div class="title inline_block">
+								Date: 
+							</div>
 							<div class="input">
 								<input type="date" defaultValue={ date.toISOString().substr( 0, 10 ) } tabIndex="1" />
 							</div>
 						</div>
 						<div class="item select">
-							Store: 
-							<div class="input">
-								<select tabIndex="2" onChange={ this.setStore } value={ this.state.store }>
-									<option disabled="disabled" value="">select a store</option>
-									{ store_select_html }
-								</select>
+							<div class="title inline_block">Store: </div>
+							<Select
+								tabIndex="2"
+								value={ this.state.store }
+								onChange={ this.setStore }
+								options={ this.getStoresOptions() }
+								placeholder="select your store"
+								autosize={ false }
+							/>
+							<div class={ locationButtonClass } onClick={ () => { this.enableGeoLocation() } }>
+								<div class="text">Find Closest Store</div>
+								<div class="icon"><img src="/img/location_icon.svg" /></div>
+								<div class={ locationSpinnerClass }>
+									<div class="spinner spinner_a"></div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -254,8 +362,11 @@ class PriceLogger extends React.Component {
 					</div>
 					<div class="section options">
 						<div class="item">
-							<div class="submit" tabIndex={ ++tabindex } onClick={ this.savePrice }>
-								Save
+							<div class={ saveButtonClass } tabIndex={ ++tabindex } onClick={ this.savePrice }>
+								<div class="text">Save</div>
+								<div class={ saveSpinnerClass }>
+									<div class="spinner spinner_a"></div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -265,9 +376,4 @@ class PriceLogger extends React.Component {
 	}
 }
 
-export default geolocated({
-	positionOptions: {
-		enableHighAccuracy: false,
-	},
-	userDecisionTimeout: 5000,
-})( PriceLogger );
+export default PriceLogger;
