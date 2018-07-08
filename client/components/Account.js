@@ -89,13 +89,13 @@ export default class Account extends React.Component {
 			}
 		}
 
-		console.log( "account.settings", account.settings )
+		console.log( "this.props", this.props )
 
 		return	(
 			<div>
 				<Error messages={ [ error ] } />
 				<TopNav title="Account" showBackButton={ false } />
-				<SubNav url={ this.props.match.url } type="account" />
+				<SubNav url={ this.props.computedMatch.url } type="account" />
 				<div class="container" id="account_content">
 					<div class="section">
 						<div class="title">Tweet my:</div>
