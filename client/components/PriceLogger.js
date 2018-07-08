@@ -1,6 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import Webcam from "react-webcam";
+import Select from "react-select";
 
 import { fetchStoresList, saveStorePrice, getStorePrice, getClosestStore } from "../actions/storeActions";
 
@@ -12,6 +13,7 @@ import PageNotAuthorized from "./PageNotAuthorized";
 import Geolocation from "./Geolocation";
 
 require( "../less/PriceLogger.less" )
+require( "../../node_modules/react-select/less/select.less" );
 @connect( ( store ) => {
 	return {
 		prices: store.storePriceReducer.price,
@@ -82,8 +84,9 @@ class PriceLogger extends React.Component {
 		this.props.dispatch( saveStorePrice( this.props.dispatch, this.state.store, this.state.prices ) );
 	}
 
-	setStore( event ) {
-		let store_id = event.target.value;
+	setStore( select_value ) {
+		console.log( "select_value", select_value )
+		let store_id = select_value.value;
 		this.setState({
 			store: store_id,
 		})
@@ -91,13 +94,10 @@ class PriceLogger extends React.Component {
 	}
 
 	enableGeoLocation() {
-		console.log( "this", this )
 		this.getLocation();
 	}
 
 	componentDidUpdate( old_props ) {
-
-		console.log( "componentDidUpdate", this.props )
 
 		window.scrollTo( 0, 0 );
 
@@ -144,6 +144,15 @@ class PriceLogger extends React.Component {
 		this.webcam = webcam;
 	}
 
+	getStoresOptions() {
+		return this.props.stores.map( ( store ) => {
+			return {
+				value: store._id,
+				label: store.number + " - " + store.location.address + " (" + store.location.city + ", " + store.location.state + ")"
+			};
+		});
+	}
+
 	render() {
 
 		const videoConstraints = {
@@ -176,12 +185,6 @@ class PriceLogger extends React.Component {
 		}
 
 		let date = new Date();
-
-		let store_select_html = stores.map( ( store ) => {
-			return (
-				<option value={ store._id } key={ store._id }>{ store.number + " - " + store.location.address + " (" + store.location.city + ", " + store.location.state + ")" }</option>
-			)
-		});
 
 		let burgers = [
 			{ name: "Double-Double", key: "double_double" },
@@ -267,7 +270,7 @@ class PriceLogger extends React.Component {
 					<div class="button" onClick={ () => this.setState({ allow_camera: true }) }>
 						<div class="text">Take Photo of Menu</div>
 						<div class="icon">
-							<img src="/img/camera_icon.png" />
+							<img src="/img/camera_icon.svg" />
 						</div>
 					</div>
 				</div>
@@ -308,19 +311,26 @@ class PriceLogger extends React.Component {
 					</div>
 					<div class="section options">
 						<div class="item">
-							Date: 
+							<div class="title inline_block">
+								Date: 
+							</div>
 							<div class="input">
 								<input type="date" defaultValue={ date.toISOString().substr( 0, 10 ) } tabIndex="1" />
 							</div>
 						</div>
 						<div class="item select">
-							Store: 
-							<div class="input">
-								<select tabIndex="2" onChange={ this.setStore } value={ this.state.store }>
-									<option disabled="disabled" value="">select a store</option>
-									{ store_select_html }
-								</select>
-								<button onClick={ () => { this.enableGeoLocation() } } >Find Closest Store</button>
+							<div class="title inline_block">Store: </div>
+							<Select
+								tabIndex="2"
+								value={ this.state.store }
+								onChange={ this.setStore }
+								options={ this.getStoresOptions() }
+								placeholder="select your store"
+								autosize={ false }
+							/>
+							<div class="button" onClick={ () => { this.enableGeoLocation() } }>
+								<div class="text">Find Closest Store</div>
+								<div class="icon"><img src="/img/location_icon.svg" /></div>
 							</div>
 						</div>
 					</div>

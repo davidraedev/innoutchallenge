@@ -7,11 +7,17 @@
 	font-family: "Archivo Narrow", serif;
 	font-weight: bold;
 
+	.inline_block {
+		display: inline-block;
+	}
+
 	.button {
 		display: inline-block;
 		border: 1px solid @button_border_color;
 		border-radius: 4px;
 		cursor: pointer;
+		vertical-align: middle;
+		margin: 5px;
 
 		.text, .icon {
 			display: inline-block;
@@ -23,13 +29,28 @@
 		}
 
 		.icon {
+			width: 30px;
+			height: 30px;
 			padding: 6px 10px;
 			border-left: 1px solid lighten( @button_border_color, 10% );
 		}
 	}
 
+	.Select {
+		display: inline-block;
+		margin: 0px 10px;
+		vertical-align: middle;
+	}
+
 	.section {
 		padding: 10px 0px;
+
+		.item {
+
+			.title {
+				padding: 8px 0px;
+			}
+		}
 
 		&.options, &.camera {
 			display: flex;
@@ -39,6 +60,7 @@
 			font-size: 18px;
 
 			.item {
+				text-align: center;
 				padding: 10px;
 
 				.input {
