@@ -1,8 +1,13 @@
 @import (css) url( "https://fonts.googleapis.com/css?family=Archivo+Narrow:700" );
 @import url( "./Spinners.less" );
+@import url( "./Utils.less" );
 
 @base_red: rgb( 200,0,0 );
 @button_border_color: rgb( 180,180,180 );
+
+#image_input {
+	visibility: hidden;
+}
 
 #price_logger {
 	font-family: "Archivo Narrow", serif;
@@ -256,13 +261,14 @@
 			}
 		}
 	}
-
+/*
 	.submit {
 		cursor: pointer;
 		border: 1px solid @button_border_color;
 		border-radius: 5px;
 		padding: 6px 14px;
 	}
+*/
 }
 
 @media screen and ( max-width: 785px ) {

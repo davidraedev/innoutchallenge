@@ -26,13 +26,13 @@ const list_all = function( request, response ) {
 		.then( ( stores ) => {
 
 			if ( ! stores.length )
-				return response.status( 500 ).send({ error: "No Stores Found" });
+				return response.status( 500 ).json({ error: "No Stores Found" });
 
 			return response.json( stores );
 
 		})
 		.catch( ( error ) => {
-			response.status( 500 ).send( error );
+			response.status( 500 ).json( { error: error } );
 		});
 }
 
@@ -48,17 +48,17 @@ const get_price = function( request, response ) {
 
 		})
 		.catch( ( error ) => {
-			response.status( 500 ).send( error );
+			response.status( 500 ).json( { error: error } );
 		});
 }
 
 const save_price = function( request, response ) {
 
 	if ( ! request.body.store )
-		return response.status( 500 ).send( "Store not specified" );
+		return response.status( 500 ).json( { error: "Store not specified" } );
 
 	if ( ! request.body.prices )
-		return response.status( 500 ).send( "Prices not specified" );
+		return response.status( 500 ).json( { error: "Prices not specified" } );
 
 	let { store, prices } = request.body;
 
@@ -92,16 +92,16 @@ const save_price = function( request, response ) {
 		.then( ( store ) => {
 
 			if ( ! store )
-				return response.status( 500 ).send( "Store not found" );
+				return response.status( 500 ).json( { error: "Store not found" } );
 
 			Price.create( data )
 				.then( () => {
-					return response.json({ success: true });
+					return response.json( { success: true } );
 				});
 
 		})
 		.catch( ( error ) => {
-			response.status( 500 ).send( error );
+			response.status( 500 ).json( { error: error } );
 		});
 }
 
@@ -110,10 +110,10 @@ const closest = function( request, response ) {
 	console.log( "request.body", request.body )
 
 	if ( ! request.body.latitude )
-		return response.status( 500 ).send( "Latitude not specified" );
+		return response.status( 500 ).json( { error: "Latitude not specified" } );
 
 	if ( ! request.body.longitude )
-		return response.status( 500 ).send( "Longitude not specified" );
+		return response.status( 500 ).json( { error: "Longitude not specified" } );
 
 	let { latitude, longitude } = request.body;
 
@@ -121,13 +121,13 @@ const closest = function( request, response ) {
 		.then( ( store ) => {
 
 			if ( ! store )
-				return response.status( 500 ).send( "Store not found" );
+				return response.status( 500 ).json( { error: "Store not found" } );
 
 			return response.json( store );
 
 		})
 		.catch( ( error ) => {
-			response.status( 500 ).send( error );
+			response.status( 500 ).json( { error: error } );
 		});
 }
 

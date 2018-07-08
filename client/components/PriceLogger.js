@@ -1,6 +1,5 @@
 import React from "react";
 import { connect } from "react-redux";
-import Webcam from "react-webcam";
 import Select from "react-select";
 
 import { fetchStoresList, saveStorePrice, getStorePrice, getClosestStore } from "../actions/storeActions";
@@ -20,8 +19,9 @@ require( "../../node_modules/react-select/less/select.less" );
 		stores: store.storesListReducer.stores,
 		error: store.storesListReducer.error,
 		closest: store.storeClosestReducer.store,
-		saveError: store.saveStorePriceReducer.error,
+		saveError: store.saveStorePriceReducer.error.error,
 		saveSuccess: store.saveStorePriceReducer.success,
+		saveInProgress: store.saveStorePriceReducer.saving,
 	}
 })
 
@@ -36,15 +36,14 @@ class PriceLogger extends React.Component {
 			prices: this.props.prices,
 			did_request_coords: 0,
 			menu_image: "",
-			allow_camera: false,
 			geolocation: {},
 			loading_position: false,
 		});
 
 		this.savePrice = this.savePrice.bind( this );
 		this.setStore = this.setStore.bind( this );
-		this.capture = this.capture.bind( this );
-		this.setWebcamRef = this.setWebcamRef.bind( this );
+		this.takeImage = this.takeImage.bind( this );
+		this.triggerImage = this.triggerImage.bind( this );
 		this.enableGeoLocation = this.enableGeoLocation.bind( this );
 
 		this.getGeolocationInnerRef = this.getGeolocationInnerRef.bind( this );
@@ -54,7 +53,6 @@ class PriceLogger extends React.Component {
 	}
 
 	geolocationHandler() {
-		console.log( "geolocationHandler", this.geolocationInnerRef.state );
 		this.setState({
 			geolocation: this.geolocationInnerRef.state,
 			loading_position: false,
@@ -62,14 +60,13 @@ class PriceLogger extends React.Component {
 	}
 
 	geolocationInnerRef;
+	imageInputRef;
 
 	getGeolocationInnerRef( ref ) {
-		console.log( "ref", ref )
 		this.geolocationInnerRef = ref;
 	}
 
 	getLocation() {
-		console.log( "getLocation" );
 		this.setState({
 			loading_position: true,
 		}, () => {
@@ -92,7 +89,6 @@ class PriceLogger extends React.Component {
 	}
 
 	setStore( select_value ) {
-		console.log( "select_value", select_value )
 		let store_id = select_value.value;
 		this.setState({
 			store: store_id,
@@ -106,7 +102,8 @@ class PriceLogger extends React.Component {
 
 	componentDidUpdate( old_props ) {
 
-		window.scrollTo( 0, 0 );
+		if ( this.props.saveSuccess !== old_props.saveSuccess || this.props.saveError !== old_props.saveError )
+			window.scrollTo( 0, 0 );
 
 		// show error
 		if ( this.props.error && this.props.error !== old_props.error ) {
@@ -115,6 +112,7 @@ class PriceLogger extends React.Component {
 
 		// user did allow geolocation
 		if ( this.state.geolocation.isGeolocationAvailable && this.state.geolocation.isGeolocationEnabled && this.state.did_request_coords === 0 ) {
+			
 			this.setState({
 				did_request_coords: 1,
 			});
@@ -139,20 +137,25 @@ class PriceLogger extends React.Component {
 		}
 	}
 
-	capture() {
-		console.log( "capture" );
-		console.log( this.webcam.getScreenshot() );
+	takeImage( event ) {
+		
+		let file = event.target.files[0];
+		let url = URL.createObjectURL( file );
+		
 		this.setState({
-			menu_image: this.webcam.getScreenshot(),
+			menu_image: url,
 		});
+
 	}
 
-	setWebcamRef( webcam ) {
-		this.webcam = webcam;
+	triggerImage() {
+		this.imageInputRef.click();
 	}
 
 	getStoresOptions() {
+
 		return this.props.stores.map( ( store ) => {
+
 			return {
 				value: store._id,
 				label: store.number + " - " + store.location.address + " (" + store.location.city + ", " + store.location.state + ")"
@@ -162,33 +165,23 @@ class PriceLogger extends React.Component {
 
 	render() {
 
-		const videoConstraints = {
-			width: 1280,
-			height: 720,
-			facingMode: "environment",
-		};
-
 		let tabindex = 3;
 		let errors = [];
 		let successes = [];
 
-		const { stores, error, coords, saveError, saveSuccess } = this.props;
+		const { stores, error, coords, saveError, saveSuccess, saveInProgress } = this.props;
 		const { prices } = this.state;
 
 		if ( saveError )
-			errors.push( "Failed to save Store Price ["+ saveError +"]" );
+			errors.push( "Failed to save Store Price ["+ saveError.error +"]" );
 
 		if ( saveSuccess )
 			successes.push( "Price Saved" );
 
-		if ( error ) {
-			console.log( "error", error )
-			if ( error.status === 401 ) {
-				console.log( "401" )
-				return (
-					<PageNotAuthorized returnUrl={ this.props.location.pathname } />
-				)
-			}
+		if ( error && error.status === 401 ) {
+			return (
+				<PageNotAuthorized returnUrl={ this.props.location.pathname } />
+			);
 		}
 
 		let date = new Date();
@@ -271,10 +264,10 @@ class PriceLogger extends React.Component {
 		});
 
 		let camera_html;
-		if ( ! this.state.allow_camera ) {
+		if ( ! this.state.menu_image.length ) {
 			camera_html = (
 				<div class="item">
-					<div class="button" onClick={ () => this.setState({ allow_camera: true }) }>
+					<div class="button" onClick={ this.triggerImage }>
 						<div class="text">Take Photo of Menu</div>
 						<div class="icon">
 							<img src="/img/camera_icon.svg" />
@@ -283,22 +276,7 @@ class PriceLogger extends React.Component {
 				</div>
 			)
 		}
-		else if ( this.state.allow_camera && ! this.state.menu_image.length ) {
-			camera_html = (
-				<div class="item">
-					<Webcam
-						audio={ false }
-						height={ "auto" }
-						ref={ this.setWebcamRef }
-						screenshotFormat="image/jpeg"
-						width={ "auto" }
-						videoConstraints={ videoConstraints }
-					/>
-					<div class="button" onClick={ this.capture }><div class="text">Capture photo</div></div>
-				</div>
-			)
-		}
-		else if ( this.state.allow_camera && this.state.menu_image.length ) {
+		else {
 			camera_html = (
 				<div class="item">
 					<img src={ this.state.menu_image } />
@@ -306,17 +284,23 @@ class PriceLogger extends React.Component {
 			)
 		}
 
-		console.log( "this.state.geolocation", this.state.geolocation )
-
 		let locationSpinnerClass = "spinner_wrap";
 		if ( this.state.loading_position )
 			locationSpinnerClass += " show";
 		let locationButtonClass = "button";
 		if ( this.state.geolocation.hasOwnProperty( "isGeolocationEnabled" ) && ! this.state.geolocation.isGeolocationEnabled )
 			locationButtonClass += " disabled";
+		
+		let saveSpinnerClass = "spinner_wrap";
+		if ( saveInProgress )
+			saveSpinnerClass += " show";
+		let saveButtonClass = "button";
+		if ( saveInProgress )
+			saveButtonClass += " disabled";
 
 		return (
 			<div>
+				<input class="hide" type="file" accept="image/*" capture="environment" onChange={ this.takeImage } ref={ ( imageInputRef ) => { this.imageInputRef = imageInputRef } } />
 				<Geolocation ref={ this.getGeolocationInnerRef } handler={ this.geolocationHandler } />
 				<TopNav title="Price Logger (beta)" showBackButton={ false } />
 				<Error messages={ errors } />
@@ -378,8 +362,11 @@ class PriceLogger extends React.Component {
 					</div>
 					<div class="section options">
 						<div class="item">
-							<div class="submit" tabIndex={ ++tabindex } onClick={ this.savePrice }>
-								Save
+							<div class={ saveButtonClass } tabIndex={ ++tabindex } onClick={ this.savePrice }>
+								<div class="text">Save</div>
+								<div class={ saveSpinnerClass }>
+									<div class="spinner spinner_a"></div>
+								</div>
 							</div>
 						</div>
 					</div>
