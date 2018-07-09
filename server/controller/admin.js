@@ -8,6 +8,7 @@ const getApprovals = function() {
 		let this_receipts;
 		let this_users;
 		Receipt.find({ approved: { $in: [ 0, 2 ] } })
+			.populate( "tweet user" )
 			.then( ( receipts ) => {
 				this_receipts = receipts;
 				return User.find({ approved: { $in: [ 0 ] } });

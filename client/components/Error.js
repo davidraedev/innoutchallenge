@@ -21,14 +21,10 @@ export default class Error extends React.Component {
 
 		const errors = this.props.messages;
 
-		console.log( "<Error> errors", errors )
-
 		let new_messages = []
 		errors.forEach( ( error ) => {
 			new_messages = new_messages.concat( this.createError( error ) );
 		});
-
-		console.log( "<Error> new_messages", new_messages )
 
 		const content = new_messages.map( ( message, index ) => (
 			<div class="message" key={ index }>

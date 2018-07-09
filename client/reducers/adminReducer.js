@@ -1,7 +1,9 @@
 export default function reducer(
 	state = {
-		users: [],
-		receipts: [],
+		approvals: {
+			users: [],
+			receipts: [],
+		},
 		fetching: false,
 		fetched: false,
 		error: null,
@@ -16,7 +18,7 @@ export default function reducer(
 			return { ...state, fetching: false, error: action.payload }
 		}
 		case "FETCH_APPROVALS_FULFILLED": {
-			return { ...state, fetching: false, fetched: true, account: action.payload }
+			return { ...state, fetching: false, fetched: true, approvals: action.payload }
 		}
 	}
 

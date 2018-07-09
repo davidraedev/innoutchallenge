@@ -1,0 +1,43 @@
+#admin {
+
+	table {
+		border-collapse: collapse;
+		table-layout: fixed
+	}
+
+	thead tr {
+		border-bottom: 1px solid rgb( 200,200,200 );
+	}
+
+	tbody {
+
+		tr {
+			
+			&:nth-child( even ) {
+				background: rgb( 255,255,255 );
+			}
+
+			&:nth-child( odd ) {
+				background: rgb( 246,246,246 );
+			}
+
+			td {
+				padding: 5px;
+			}
+		}
+	}
+
+	.input {
+		padding: 5px;
+		background: rgb( 255,255,255 );
+	}
+
+	input[type="number"] {
+		width: 50px;
+		text-align: right;
+	}
+
+	.select {
+		width: 150px;
+	}
+}

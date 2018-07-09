@@ -1,162 +1,210 @@
-import React from "react"
-import { connect } from "react-redux"
-import TimeAgo from "timeago-react"
+import React from "react";
+import { connect } from "react-redux";
+import TimeAgo from "timeago-react";
+import Moment from "react-moment";
+import Select from "react-select";
 
-import { createUserTwitterLink } from "./Utils"
+import { createUserTwitterLink, createTweetLink } from "./Utils";
 
-import { fetchApprovals } from "../actions/adminActions"
+import { fetchApprovals } from "../actions/adminActions";
+import { fetchStoresList } from "../actions/storeActions";
 
-import Error from "./Error"
-import TopNav from "./TopNav"
-import PageNotFound from "./PageNotFound"
-import PageNotAuthorized from "./PageNotAuthorized"
+import Error from "./Error";
+import Success from "./Success";
+import TopNav from "./TopNav";
+import PageNotFound from "./PageNotFound";
+import PageNotAuthorized from "./PageNotAuthorized";
 
-require( "../less/Admin.less" )
+require( "../less/Admin.less" );
+require( "../less/Utils.less" );
+require( "../less/Spinners.less" );
+require( "../../node_modules/react-select/less/select.less" );
 
 @connect( ( store ) => {
 	console.log( "store", store );
 	return {
-		receipts: store.admin.receipts,
-		users: store.admin.users,
-		error: store.admin.error,
+		receipts: store.admin.approvals.receipts,
+		users: store.admin.approvals.users,
+		approvalsError: store.admin.approvals.error,
+		stores: store.storesListReducer.stores,
+		storeListError: store.storesListReducer.error,
 	}
 })
 
 export default class AdminReceipts extends React.Component {
 
 	componentWillMount() {
-		this.props.dispatch( fetchApprovals( this.props.dispatch ) )
+		this.props.dispatch( fetchApprovals( this.props.dispatch ) );
+		this.props.dispatch( fetchStoresList( this.props.dispatch ) );
+		this.setState({
+			receipts: this.props.receipts,
+			users: this.props.users,
+		});
+	}
+
+	updateReceipt( index ) {
+
+		let receipt = this.state.receipts[ index ];
+			receipt.user = receipt.user._id;
+			receipt.tweet = receipt.tweet._id;
+		if ( receipt.store )
+			receipt.store = receipt.store._id;
+
+		if ( JSON.stringify( receipt ) === JSON.stringify( this.props.receipts[ index ] ) )
+			console.log( "Receipt has not changed" );
+
+		console.log( "updateReceipt", receipt, this.props.receipts[ index ] );
+
+	}
+
+	componentDidUpdate( old_props ) {
+		if ( JSON.stringify( this.props.receipts ) !== JSON.stringify( old_props.receipts )
+			|| JSON.stringify( this.props.users ) !== JSON.stringify( old_props.users )
+		) {
+			this.setState({
+				receipts: this.props.receipts,
+				users: this.props.users,
+			}, () => {
+				console.log( "this.state", this.state )
+			});
+		}
+	}
+
+	changeReceiptNumber( index, receipt_number ) {
+		let new_state = { ...this.state };
+		new_state.receipts[ index ].number = parseInt( receipt_number, 10 );
+		this.setState( new_state );
+	}
+
+	changeReceiptStore( index, select_value ) {
+		let store_id = select_value.value || "";
+		let new_state = { ...this.state };
+		new_state.receipts[ index ].store = store_id;
+		this.setState( new_state );
+	}
+
+	changeReceiptType( index, value ) {
+		let new_state = { ...this.state };
+		new_state.receipts[ index ].type = value;
+		this.setState( new_state );
+	}
+
+	changeReceiptApproval( index, value ) {
+		let new_state = { ...this.state };
+		new_state.receipts[ index ].approved = value;
+		this.setState( new_state );
+	}
+
+	getStoresOptions() {
+
+		let stores = this.props.stores;
+			stores = stores.map( ( store ) => {
+
+				return {
+					value: store._id,
+					label: store.number + " - " + store.location.address + " (" + store.location.city + ", " + store.location.state + ")",
+				};
+			});
+			stores.unshift( { value: "", label: "--" } );
+
+		return stores;
 	}
 
 	render() {
 
-		console.log( "this.props", this.props );
-/*
-		const { receipts, users, error } = this.props;
+		let errors = [];
+		const success = "";
+		const { approvalsError, storeListError } = this.props;
+		const { receipts, users } = this.state;
 
-		let mappedTweets = []
+		if ( approvalsError ) errors.push( approvalsError );
+		if ( storeListError ) errors.push( storeListError );
 
-		if ( error ) {
-			console.log( "error", error )
-			if ( error.status === 404 ) {
-				console.log( "404" )
-				return (
-					<PageNotFound error="Page was not found yo!" />
-				)
-			}
-			else if ( error.status === 401 ) {
-				console.log( "401" )
-				return (
-					<PageNotAuthorized returnUrl={ this.props.location.pathname } />
-				)
-			}
-		}
+		const receipt_approvals_html = receipts.map( ( receipt, index ) => {
+			
+			let receipt_number = ( receipt.number ) ? receipt.number : "";
+			let store_number = ( receipt.store ) ? receipt.store.number : "";
+			let store_id = ( receipt.store ) ? receipt.store : "";
 
-		let content
-		if ( receipts.length ) {
-
-			receipts.forEach( ( receipt ) => {
-				
-				let receipt = user.drivethru[ number ];
-				let classes = [ "number", "receipt" ];
-				if ( receipt.amount > 0 )
-					classes.push( "has" );
-				if ( receipt.amount > 1 )
-					classes.push( "multiple" );
-				if ( user.latest_receipt && user.latest_receipt.number == number )
-					classes.push( "latest" );
-				mappedDriveThru.push( ( <li className={ classes.join( " " ) } key={ number }>{ number }</li> ) )
-			})
-
-			content = (
-				<div>
-					<div class="latest_tweet">
-						{ user.latest_receipt.tweet.data.text }<span class="date"> - <span title={ user.latest_receipt.date }><TimeAgo datetime={ user.latest_receipt.date } /></span></span>
-					</div>
-					<div class="section individuals">
-						<ul>
-							{ mappedDriveThru }
-						</ul>
-					</div>
-				</div>
+			return (
+				<tr key={ index }>
+					<td class="nowrap">
+						<a href={ createUserTwitterLink( receipt.tweet.data.user.screen_name ) }>{ "@" + receipt.tweet.data.user.screen_name }</a>
+					</td>
+					<td>
+						<a href={ createTweetLink( receipt.tweet.data.user.screen_name, receipt.tweet.data.id_str ) }>{ receipt.tweet.data.text }</a>
+					</td>
+					<td class="nowrap">
+						<Moment date={ receipt.date } format="MMMM Do YYYY" />
+						<br />
+						<Moment date={ receipt.date } format="h:mm:ss a" />
+					</td>
+					<td>
+						<div class="input">
+							<input type="number" min="0" value={ receipt_number } onChange={ ( event ) => { this.changeReceiptNumber( index, event.target.value ) } } />
+						</div>
+					</td>
+					<td>
+						<div class="select">
+							<Select
+								tabIndex="2"
+								value={ store_id }
+								onChange={ ( select_value ) => { this.changeReceiptStore( index, select_value ) } }
+								options={ this.getStoresOptions() }
+							/>
+						</div>
+					</td>
+					<td>
+						<select value={ receipt.type } onChange={ ( event ) => { this.changeReceiptType( index, event.target.value ) } }>
+							<option value="0">Unknown</option>
+							<option value="1">In-Store</option>
+							<option value="2">Drive-Thru</option>
+							<option value="3">Popup</option>
+							<option value="4">Test</option>
+						</select>
+					</td>
+					<td>
+						<select value={ receipt.approved } onChange={ ( event ) => { this.changeReceiptApproval( index, event.target.value ) } }>
+							<option value="0">Not Yet Approved</option>
+							<option value="1">Approved</option>
+							<option value="2">Auto Approved</option>
+							<option value="3">Admin Ignored</option>
+						</select>
+					</td>
+					<td>
+						<div class="button" onClick={ () => this.updateReceipt( index ) }>
+							Update
+						</div>
+					</td>
+				</tr>
 			)
-		}
-*/
-
-		const error = "";
+		});
 
 		return	(
 			<div>
-				<Error messages={ [ error ] } />
 				<TopNav title="Admin Approvals" />
-				<div class="container" id="main_content">
+				<Error messages={ errors } />
+				<Success messages={ [ success ] } />
+				<div class="container" id="admin">
 					<div>
 						<div class="title">Receipts</div>
-						<div class="table tweets">
-							<div class="row tweet header">
-								<div class="cell">
-									Screen Name
-								</div>
-								<div class="cell">
-									Text
-								</div>
-								<div class="cell">
-									Receipt Number
-								</div>
-								<div class="cell">
-									Store Number
-								</div>
-								<div class="cell">
-									Receipt Type
-								</div>
-								<div class="cell">
-									Approval Status
-								</div>
-								<div class="cell">
-									Submit
-								</div>
-							</div>
-							<div class="row tweet header">
-								<div class="cell">
-									<a href={ createUserTwitterLink( "@daraeman" ) }>@daraeman</a>
-								</div>
-								<div class="cell">
-									dsjf sdklfjajobgxeg ekgnz .ebnz.eg xiubvonr gvl/erknj. klrh.kb!!!!!!!!!!!!!!!
-								</div>
-								<div class="cell">
-									<div class="input">
-										<input type="number" />
-									</div>
-								</div>
-								<div class="cell">
-									<div class="input">
-										<input type="number" />
-									</div>
-								</div>
-								<div class="cell">
-									<select>
-										<option value="0">Unknown</option>
-										<option value="1">In-Store</option>
-										<option value="2">Drive-Thru</option>
-										<option value="3">Popup</option>
-										<option value="4">Test</option>
-									</select>
-								</div>
-								<div class="cell">
-									<select>
-										<option value="0">Noy Yet Approved</option>
-										<option value="1">Approved</option>
-										<option value="2">Auto Approved</option>
-										<option value="3">Admin Ignored</option>
-									</select>
-								</div>
-								<div class="cell">
-									<div class="button">
-										Submit
-									</div>
-								</div>
-							</div>
-						</div>
+						<table>
+							<thead>
+								<tr>
+									<th>Screen Name</th>
+									<th>Text</th>
+									<th>Date</th>
+									<th>Receipt</th>
+									<th>Store</th>
+									<th>Receipt Type</th>
+									<th>Approval Status</th>
+									<th>Submit</th>
+								</tr>
+							</thead>
+							<tbody>
+								{ receipt_approvals_html }
+							</tbody>
+						</table>
 					</div>
 				</div>
 			</div>
