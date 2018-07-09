@@ -377,6 +377,7 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 					receipt_data.user = this_user._id;
 					receipt_data.twitter_user = this_twitter_user._id;
 					receipt_data.date = tweet.data.created_at;
+					// user is regular approved, or admin
 					receipt_data.approved = ( this_user.state === 1 || this_user.state === 4 ) ? 2 : 0;
 
 					if ( store ) {
