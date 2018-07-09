@@ -12,7 +12,7 @@ var UserSchema = new Schema({
 		0 = not approved
 		1 = approved
 		2 = banned
-		3 = temp_ignored
+		3 = temp_ignored (usual people who tweeted the hashtag but weren't intending it for the challenge)
 		4 = admin_account
 		5 = app_account
 	*/
