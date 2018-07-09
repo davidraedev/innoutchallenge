@@ -13,6 +13,7 @@ import storesListReducer from "./storesListReducer"
 import storePriceReducer from "./storePriceReducer"
 import saveStorePriceReducer from "./saveStorePriceReducer"
 import storeClosestReducer from "./storeClosestReducer"
+import adminUpdateReceiptReducer from "./adminUpdateReceiptReducer"
 
 export default combineReducers({
 	account,
@@ -28,4 +29,5 @@ export default combineReducers({
 	storePriceReducer,
 	saveStorePriceReducer,
 	storeClosestReducer,
+	adminUpdateReceiptReducer,
 })

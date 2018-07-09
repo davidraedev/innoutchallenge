@@ -6,7 +6,7 @@ import Select from "react-select";
 
 import { createUserTwitterLink, createTweetLink } from "./Utils";
 
-import { fetchApprovals } from "../actions/adminActions";
+import { fetchApprovals, updateReceipt } from "../actions/adminActions";
 import { fetchStoresList } from "../actions/storeActions";
 
 import Error from "./Error";
@@ -55,7 +55,7 @@ export default class AdminReceipts extends React.Component {
 		if ( receipt.store )
 			data.store = receipt.store;
 
-		console.log( "updateReceipt", id, data );
+		this.props.dispatch( updateReceipt( this.props.dispatch, id, data ) );
 
 	}
 

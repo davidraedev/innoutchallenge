@@ -41,11 +41,11 @@ const updateReceipt = function( id, data ) {
 
 					if ( ! data.hasOwnProperty( key ) )
 						continue;
-					
+
 					receipt[ key ] = data[ key ];
 				}
 
-				return receipt.save;
+				return receipt.save();
 			})
 			.then( ( receipt ) => {
 				return resolve( receipt );

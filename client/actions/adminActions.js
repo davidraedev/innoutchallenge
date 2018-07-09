@@ -19,3 +19,29 @@ export function fetchApprovals( dispatch ) {
 			});
 	}
 }
+
+export function updateReceipt( dispatch, id, data ) {
+
+	dispatch({ type: "ADMIN_UPDATE_RECEIPT_PENDING" })
+	return function ( dispatch ) {
+
+		let request_body = {
+			id: id,
+			receipt: data,
+		};
+
+		axios( process.env.REACT_APP_BACKEND_URL + "/api/admin/receipt/update", { method: "post", withCredentials: true, data: request_body } )
+			.then( ( response ) => {
+				dispatch({ type: "ADMIN_UPDATE_RECEIPT_FULFILLED", payload: response.data })
+			})
+			.catch( ( error ) => {
+
+				let data = {
+					error: error.response.data,
+					status: error.response.status
+				}
+
+				dispatch({ type: "ADMIN_UPDATE_RECEIPT_REJECTED", payload: data })
+			});
+	}
+}

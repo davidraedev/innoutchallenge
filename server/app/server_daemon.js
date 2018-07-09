@@ -385,6 +385,7 @@ app.post( "/auth/check", checkAuthenticationEndpoint );
 
 // admin
 app.post( "/api/admin/approvals/get", checkAuthenticationApiAdmin, admin_controller.get_approvals );
+app.post( "/api/admin/receipt/update", checkAuthenticationApiAdmin, jsonParser, admin_controller.update_receipt );
 
 // account
 app.post( "/api/account/get", checkAuthenticationApi, account_controller.get_account );

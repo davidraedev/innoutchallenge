@@ -21,8 +21,8 @@ const update_receipt = function( request, response ) {
 	let id = request.body.id;
 
 	adminController.updateReceipt( id, data )
-		.then( () => {
-			response.json({ success: true });
+		.then( ( updated_receipt ) => {
+			response.json({ success: true, receipt: updated_receipt });
 		})
 		.catch( ( error ) => {
 			console.log( "error [%s]", error );
