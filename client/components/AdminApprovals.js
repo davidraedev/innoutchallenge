@@ -45,15 +45,17 @@ export default class AdminReceipts extends React.Component {
 	updateReceipt( index ) {
 
 		let receipt = this.state.receipts[ index ];
-			receipt.user = receipt.user._id;
-			receipt.tweet = receipt.tweet._id;
+
+		let id = receipt._id;
+		let data = {
+			approved: receipt.approved,
+			type: receipt.type,
+			number: receipt.number,
+		};
 		if ( receipt.store )
-			receipt.store = receipt.store._id;
+			data.store = receipt.store;
 
-		if ( JSON.stringify( receipt ) === JSON.stringify( this.props.receipts[ index ] ) )
-			console.log( "Receipt has not changed" );
-
-		console.log( "updateReceipt", receipt, this.props.receipts[ index ] );
+		console.log( "updateReceipt", id, data );
 
 	}
 
@@ -71,25 +73,30 @@ export default class AdminReceipts extends React.Component {
 	}
 
 	changeReceiptNumber( index, receipt_number ) {
+		console.log( "changeReceiptNumber" )
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].number = parseInt( receipt_number, 10 );
 		this.setState( new_state );
 	}
 
 	changeReceiptStore( index, select_value ) {
+		console.log( "changeReceiptStore" )
 		let store_id = select_value.value || "";
+		console.log( "store_id", store_id )
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].store = store_id;
 		this.setState( new_state );
 	}
 
 	changeReceiptType( index, value ) {
+		console.log( "changeReceiptType" )
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].type = value;
 		this.setState( new_state );
 	}
 
 	changeReceiptApproval( index, value ) {
+		console.log( "changeReceiptApproval" )
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].approved = value;
 		this.setState( new_state );
@@ -104,7 +111,9 @@ export default class AdminReceipts extends React.Component {
 					value: store._id,
 					label: store.number + " - " + store.location.address + " (" + store.location.city + ", " + store.location.state + ")",
 				};
+
 			});
+
 			stores.unshift( { value: "", label: "--" } );
 
 		return stores;

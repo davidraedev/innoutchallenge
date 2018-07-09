@@ -27,4 +27,35 @@ const getApprovals = function() {
 
 };
 
+const updateReceipt = function( id, data ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		Receipt.findOne({ _id: id })
+			.then( ( receipt ) => {
+
+				if ( ! receipt )
+					throw new Error( "Receipt does nto exist" );
+
+				for ( let key in data ) {
+
+					if ( ! data.hasOwnProperty( key ) )
+						continue;
+					
+					receipt[ key ] = data[ key ];
+				}
+
+				return receipt.save;
+			})
+			.then( ( receipt ) => {
+				return resolve( receipt );
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
+	});
+
+};
+
 module.exports.getApprovals = getApprovals;
+module.exports.updateReceipt = updateReceipt;
