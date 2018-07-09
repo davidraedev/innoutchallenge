@@ -56,14 +56,14 @@ export default class TopNav extends React.Component {
 
 	render() {
 
-		let { authenticated, adminAuthenticated, searchText, title, showFullMenu, lastChallengersPage } = this.props
+		let { authenticated, adminAuthenticated, searchText, title, showFullMenu, lastChallengersPage } = this.props;
 
-		let authLinks
-		let adminLinks
+		let authLinks;
+		let adminLinks;
 
 		if ( adminAuthenticated ) {
 			adminLinks = (
-				<li><a href="/admin/approvals" onClick={ this.sidebarToggle }>Approvals</a></li>
+				<li><a href="/admin" onClick={ this.sidebarToggle }>Admin</a></li>
 			)
 		}
 
@@ -79,7 +79,7 @@ export default class TopNav extends React.Component {
 		else {
 			authLinks = (
 				<div class="group">
-					<li><a href={ process.env.REACT_APP_BACKEND_URL + "/signin" } onClick={ this.sidebarToggle }>Sign In</a></li>
+					<li><a href={ process.env.REACT_APP_BACKEND_URL + "/signin" }>Sign In</a></li>
 				</div>
 			)
 		}

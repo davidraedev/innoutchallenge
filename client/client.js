@@ -51,6 +51,7 @@ ReactDOM.render(
 						<Route path="/challengers" component={ Users } exact />
 						<Route path="/signin" exact component={ UserAuth } />
 						<PrivateRoute path="/admin/approvals" exact component={ AdminApprovals } admin={ true } />
+						<Redirect from="/admin" to="/admin/approvals" exact />
 						<Route path="/admin/signin" exact component={ AdminAuth } />
 						<Route path="/admin/signin/return/:returnUrl" exact component={ BackendPassThru } />
 						<Route path="/admin/signout" exact component={ BackendPassThru } />

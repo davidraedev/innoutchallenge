@@ -12,6 +12,7 @@ import { fetchStoresList } from "../actions/storeActions";
 import Error from "./Error";
 import Success from "./Success";
 import TopNav from "./TopNav";
+import SubNav from "./SubNav";
 import PageNotFound from "./PageNotFound";
 import PageNotAuthorized from "./PageNotAuthorized";
 
@@ -191,7 +192,8 @@ export default class AdminReceipts extends React.Component {
 
 		return	(
 			<div>
-				<TopNav title="Admin Approvals" />
+				<TopNav title="Admin" />
+				<SubNav url={ this.props.computedMatch.url } type="admin" />
 				<Error messages={ errors } />
 				<Success messages={ [ success ] } />
 				<div class="container" id="admin">
