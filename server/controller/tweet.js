@@ -300,9 +300,11 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 		tweet.parsed = true;
 		tweet.data.created_at = new Date( tweet.data.created_at );
 
+		// see if we already have this twitter user
 		return TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str } )
 			.then( ( twitter_user ) => {
 
+				// create it if not
 				if ( ! twitter_user ) {
 					return TwitterUser.create({
 						data: {
@@ -317,10 +319,12 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 			})
 			.then( ( twitter_user ) => {
 				this_twitter_user = twitter_user;
-				// state 3 is temp_ignored, like if someone tweeted the hashtag for something else
-				return User.findOne( { twitter_user: twitter_user._id, state: { $ne: 3 } } );
+				// find user
+				return User.findOne( { twitter_user: twitter_user._id } );
 			})
 			.then( ( user ) => {
+
+				// if there is no user, create one
 				if ( ! user ) {
 					is_new_user = true;
 					return User.create({
@@ -328,6 +332,11 @@ const parseTweet = function( tweet, do_new_user_tweet, do_new_receipt_tweet ) {
 						twitter_user: this_twitter_user._id,
 						state: 0,
 					});
+				}
+				// if the user was ignored previously, reset it to not approved
+				else if ( user.state === 3 ) {
+					user.state = 0;
+					return user.save();
 				}
 				else {
 					return user;
