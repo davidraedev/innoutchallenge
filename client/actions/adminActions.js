@@ -45,3 +45,29 @@ export function updateReceipt( dispatch, id, data ) {
 			});
 	}
 }
+
+export function updateUser( dispatch, id, data ) {
+
+	dispatch({ type: "ADMIN_UPDATE_USER_PENDING" })
+	return function ( dispatch ) {
+
+		let request_body = {
+			id: id,
+			user: data,
+		};
+
+		axios( process.env.REACT_APP_BACKEND_URL + "/api/admin/user/update", { method: "post", withCredentials: true, data: request_body } )
+			.then( ( response ) => {
+				dispatch({ type: "ADMIN_UPDATE_USER_FULFILLED", payload: response.data })
+			})
+			.catch( ( error ) => {
+
+				let data = {
+					error: error.response.data,
+					status: error.response.status
+				}
+
+				dispatch({ type: "ADMIN_UPDATE_USER_REJECTED", payload: data })
+			});
+	}
+}

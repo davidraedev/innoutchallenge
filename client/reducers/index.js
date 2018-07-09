@@ -6,14 +6,15 @@ import users from "./usersReducer"
 import userReceipts from "./userReceiptsReducer"
 import userStores from "./userStoresReducer"
 import userDriveThru from "./userDriveThruReducer"
-import admin from "./adminReducer"
+import adminFetchApprovals from "./adminFetchApprovalsReducer"
 import overlayStore from "./storeReducer"
 import userMapStores from "./userMapStoresReducer"
-import storesListReducer from "./storesListReducer"
-import storePriceReducer from "./storePriceReducer"
-import saveStorePriceReducer from "./saveStorePriceReducer"
-import storeClosestReducer from "./storeClosestReducer"
-import adminUpdateReceiptReducer from "./adminUpdateReceiptReducer"
+import storesList from "./storesListReducer"
+import storePrice from "./storePriceReducer"
+import saveStorePrice from "./saveStorePriceReducer"
+import storeClosest from "./storeClosestReducer"
+import adminUpdateReceipt from "./adminUpdateReceiptReducer"
+import adminUpdateUser from "./adminUpdateUserReducer"
 
 export default combineReducers({
 	account,
@@ -22,12 +23,13 @@ export default combineReducers({
 	userReceipts,
 	userStores,
 	userDriveThru,
-	admin,
+	adminFetchApprovals,
 	overlayStore,
 	userMapStores,
-	storesListReducer,
-	storePriceReducer,
-	saveStorePriceReducer,
-	storeClosestReducer,
-	adminUpdateReceiptReducer,
+	storesList,
+	storePrice,
+	saveStorePrice,
+	storeClosest,
+	adminUpdateReceipt,
+	adminUpdateUser,
 })

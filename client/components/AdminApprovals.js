@@ -6,7 +6,7 @@ import Select from "react-select";
 
 import { createUserTwitterLink, createTweetLink } from "./Utils";
 
-import { fetchApprovals, updateReceipt } from "../actions/adminActions";
+import { fetchApprovals, updateReceipt, updateUser } from "../actions/adminActions";
 import { fetchStoresList } from "../actions/storeActions";
 
 import Error from "./Error";
@@ -24,11 +24,13 @@ require( "../../node_modules/react-select/less/select.less" );
 @connect( ( store ) => {
 	console.log( "store", store );
 	return {
-		receipts: store.admin.approvals.receipts,
-		users: store.admin.approvals.users,
-		approvalsError: store.admin.approvals.error,
-		stores: store.storesListReducer.stores,
-		storeListError: store.storesListReducer.error,
+		receipts: store.adminFetchApprovals.approvals.receipts,
+		users: store.adminFetchApprovals.approvals.users,
+		approvalsError: store.adminFetchApprovals.approvals.error,
+		stores: store.storesList.stores,
+		storeListError: store.storesList.error,
+		receiptIsSubmitting: store.adminUpdateReceipt.saving,
+		userIsSubmitting: store.adminUpdateUser.saving,
 	}
 })
 
@@ -43,7 +45,7 @@ export default class AdminReceipts extends React.Component {
 		});
 	}
 
-	updateReceipt( index ) {
+	updateReceiptData( index ) {
 
 		let receipt = this.state.receipts[ index ];
 
@@ -57,6 +59,19 @@ export default class AdminReceipts extends React.Component {
 			data.store = receipt.store;
 
 		this.props.dispatch( updateReceipt( this.props.dispatch, id, data ) );
+
+	}
+
+	updateUserData( index ) {
+
+		let user = this.state.users[ index ];
+
+		let id = user._id;
+		let data = {
+			state: user.state,
+		};
+
+		this.props.dispatch( updateUser( this.props.dispatch, id, data ) );
 
 	}
 
@@ -120,6 +135,27 @@ export default class AdminReceipts extends React.Component {
 		return stores;
 	}
 
+	getUserStateOptions() {
+
+		const options = [
+			{ value: 0, label: "not approved" },
+			{ value: 1, label: "approved" },
+			{ value: 2, label: "banned" },
+			{ value: 3, label: "temp_ignored" },
+			{ value: 4, label: "admin" },
+			{ value: 5, label: "app" },
+		];
+
+		return options;
+	}
+
+	changeUserState( index, user_state ) {
+		console.log( "changeUserState", user_state )
+		let new_state = { ...this.state };
+		new_state.users[ index ].state = user_state.value;
+		this.setState( new_state );
+	}
+
 	render() {
 
 		let errors = [];
@@ -127,8 +163,10 @@ export default class AdminReceipts extends React.Component {
 		const { approvalsError, storeListError } = this.props;
 		const { receipts, users } = this.state;
 
-		if ( approvalsError ) errors.push( approvalsError );
-		if ( storeListError ) errors.push( storeListError );
+		if ( approvalsError )
+			errors.push( approvalsError );
+		if ( storeListError )
+			errors.push( storeListError );
 
 		const receipt_approvals_html = receipts.map( ( receipt, index ) => {
 			
@@ -136,18 +174,33 @@ export default class AdminReceipts extends React.Component {
 			let store_number = ( receipt.store ) ? receipt.store.number : "";
 			let store_id = ( receipt.store ) ? receipt.store : "";
 
+			let submitButtonClass = "button relative";
+			if ( this.props.receiptIsSubmitting )
+				submitButtonClass += " disabled";
+			let submitSpinnerClass = "spinner_wrap";
+			if ( this.props.receiptIsSubmitting )
+				submitSpinnerClass += " show";
+
+			let geo = ( receipt.tweet.data.coordinates ) ? receipt.tweet.data.coordinates.coordinates.reverse().join( "\n" ) : ( receipt.tweet.data.place ) ? receipt.tweet.data.place.full_name : "";
+			let geo_url = ( receipt.tweet.data.coordinates ) ? "https://www.google.com/maps/?q=" + receipt.tweet.data.coordinates.coordinates.join( "," ) : ( receipt.tweet.data.place ) ? receipt.tweet.data.place.url : "";
+
 			return (
 				<tr key={ index }>
 					<td class="nowrap">
-						<a href={ createUserTwitterLink( receipt.tweet.data.user.screen_name ) }>{ "@" + receipt.tweet.data.user.screen_name }</a>
+						<a href={ createUserTwitterLink( receipt.tweet.data.user.screen_name ) } target="_blank">{ "@" + receipt.tweet.data.user.screen_name }</a>
 					</td>
 					<td>
-						<a href={ createTweetLink( receipt.tweet.data.user.screen_name, receipt.tweet.data.id_str ) }>{ receipt.tweet.data.text }</a>
+						<a href={ createTweetLink( receipt.tweet.data.user.screen_name, receipt.tweet.data.id_str ) } target="_blank">{ receipt.tweet.data.text }</a>
 					</td>
 					<td class="nowrap">
 						<Moment date={ receipt.date } format="MMMM Do YYYY" />
 						<br />
 						<Moment date={ receipt.date } format="h:mm:ss a" />
+					</td>
+					<td>
+						<a href={ geo_url } target="_blank">
+							{ geo }
+						</a>
 					</td>
 					<td>
 						<div class="input">
@@ -157,7 +210,6 @@ export default class AdminReceipts extends React.Component {
 					<td>
 						<div class="select">
 							<Select
-								tabIndex="2"
 								value={ store_id }
 								onChange={ ( select_value ) => { this.changeReceiptStore( index, select_value ) } }
 								options={ this.getStoresOptions() }
@@ -182,8 +234,46 @@ export default class AdminReceipts extends React.Component {
 						</select>
 					</td>
 					<td>
-						<div class="button" onClick={ () => this.updateReceipt( index ) }>
+						<div class={ submitButtonClass } onClick={ () => this.updateReceiptData( index ) }>
 							Update
+							<div class={ submitSpinnerClass }>
+								<div class="spinner spinner_a"></div>
+							</div>
+						</div>
+					</td>
+				</tr>
+			)
+		});
+
+		const user_approvals_html = users.map( ( user, index ) => {
+
+			let submitButtonClass = "button relative";
+			if ( this.props.userIsSubmitting )
+				submitButtonClass += " disabled";
+			let submitSpinnerClass = "spinner_wrap";
+			if ( this.props.userIsSubmitting )
+				submitSpinnerClass += " show";
+
+			return (
+				<tr key={ index }>
+					<td class="nowrap">
+						<a href={ createUserTwitterLink( user.twitter_user.data.screen_name ) } target="_blank">{ "@" + user.twitter_user.data.screen_name }</a>
+					</td>
+					<td>
+						<div class="select">
+							<Select
+								value={ user.state }
+								onChange={ ( select_value ) => { this.changeUserState( index, select_value ) } }
+								options={ this.getUserStateOptions() }
+							/>
+						</div>
+					</td>
+					<td>
+						<div class={ submitButtonClass } onClick={ () => this.updateUserData( index ) }>
+							Update
+							<div class={ submitSpinnerClass }>
+								<div class="spinner spinner_a"></div>
+							</div>
 						</div>
 					</td>
 				</tr>
@@ -199,12 +289,13 @@ export default class AdminReceipts extends React.Component {
 				<div class="container" id="admin">
 					<div>
 						<div class="title">Receipts</div>
-						<table>
+						<table class="approval_table">
 							<thead>
 								<tr>
 									<th>Screen Name</th>
 									<th>Text</th>
 									<th>Date</th>
+									<th>Geo</th>
 									<th>Receipt</th>
 									<th>Store</th>
 									<th>Receipt Type</th>
@@ -214,6 +305,21 @@ export default class AdminReceipts extends React.Component {
 							</thead>
 							<tbody>
 								{ receipt_approvals_html }
+							</tbody>
+						</table>
+					</div>
+					<div>
+						<div class="title">Users</div>
+						<table class="approval_table">
+							<thead>
+								<tr>
+									<th>Screen Name</th>
+									<th>State</th>
+									<th>Submit</th>
+								</tr>
+							</thead>
+							<tbody>
+								{ user_approvals_html }
 							</tbody>
 						</table>
 					</div>

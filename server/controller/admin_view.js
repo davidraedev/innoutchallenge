@@ -30,5 +30,24 @@ const update_receipt = function( request, response ) {
 		});
 };
 
+const update_user = function( request, response ) {
+
+	if ( ! request.body.id || ! request.body.user )
+		return response.status( 500 ).send({ error: "Invalid Data" });
+
+	let data = request.body.user;
+	let id = request.body.id;
+
+	adminController.updateUser( id, data )
+		.then( ( updated_user ) => {
+			response.json({ success: true, user: updated_user });
+		})
+		.catch( ( error ) => {
+			console.log( "error [%s]", error );
+			response.status( 500 ).send( error );
+		});
+};
+
 module.exports.get_approvals = get_approvals;
 module.exports.update_receipt = update_receipt;
+module.exports.update_user = update_user;

@@ -11,7 +11,8 @@ const getApprovals = function() {
 			.populate( "tweet user" )
 			.then( ( receipts ) => {
 				this_receipts = receipts;
-				return User.find({ approved: { $in: [ 0 ] } });
+				return User.find({ state: { $in: [ 0, 2, 3 ] } })
+							.populate( "twitter_user" );
 			})
 			.then( ( users ) => {
 				this_users = users;
@@ -57,5 +58,36 @@ const updateReceipt = function( id, data ) {
 
 };
 
+const updateUser = function( id, data ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		User.findOne({ _id: id })
+			.then( ( user ) => {
+
+				if ( ! user )
+					throw new Error( "User does nto exist" );
+
+				for ( let key in data ) {
+
+					if ( ! data.hasOwnProperty( key ) )
+						continue;
+
+					user[ key ] = data[ key ];
+				}
+
+				return user.save();
+			})
+			.then( ( user ) => {
+				return resolve( user );
+			})
+			.catch( ( error ) => {
+				reject( error );
+			});
+	});
+
+};
+
 module.exports.getApprovals = getApprovals;
 module.exports.updateReceipt = updateReceipt;
+module.exports.updateUser = updateUser;

@@ -15,13 +15,13 @@ require( "../less/PriceLogger.less" )
 require( "../../node_modules/react-select/less/select.less" );
 @connect( ( store ) => {
 	return {
-		prices: store.storePriceReducer.price,
-		stores: store.storesListReducer.stores,
-		error: store.storesListReducer.error,
-		closest: store.storeClosestReducer.store,
-		saveError: store.saveStorePriceReducer.error.error,
-		saveSuccess: store.saveStorePriceReducer.success,
-		saveInProgress: store.saveStorePriceReducer.saving,
+		prices: store.storePrice.price,
+		stores: store.storesList.stores,
+		error: store.storesList.error,
+		closest: store.storeClosest.store,
+		saveError: store.saveStorePrice.error.error,
+		saveSuccess: store.saveStorePrice.success,
+		saveInProgress: store.saveStorePrice.saving,
 	}
 })
 
