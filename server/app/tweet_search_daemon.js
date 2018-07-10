@@ -25,13 +25,14 @@ function callback() {
 			})
 			.then( ( tweets_parsed ) => {
 				if ( tweets_parsed )
-					log.info( tweets_parsed +" tweets parsed" );
+					log.info( tweets_parsed + " tweets parsed" );
 				resolve();
 				db.close();
 			})
 			.catch( ( error ) => {
 				log.error( error );
 				db.close();
+				// if we are having trouble connecting to the database, wait a bit and try again
 				if ( error.name === "MongoError" || error.name === "MongooseError" )
 					resolve( 1000 * 5 );
 				else

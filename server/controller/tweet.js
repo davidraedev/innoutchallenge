@@ -16,6 +16,45 @@ const utils = require( "./utils" );
 const PromiseBreakError = require( "./PromiseBreakError" );
 const PromiseEndError = require( "./PromiseEndError" );
 
+const twitterSearchRequest = function( search_params, app_only_auth, user_token, user_secret ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+		if ( ! search_params )
+			return reject( "empty params" );
+
+		let auth_params = {
+			consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
+			consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
+		};
+
+		if ( app_only_auth ) {
+			console.log( "app_only_auth" )
+			auth_params.bearer_token = process.env.TWITTER_BEARER_TOKEN_USER;
+		}
+		else {
+			console.log( "user auth" )
+			// auth_params. = user_token;
+			// auth_params. = user_secret;
+		}
+
+		console.log( "auth_params", auth_params )
+
+		const client = new Twitter( auth_params );
+
+		client.get( "search/tweets", search_params, function( error, tweets ) {
+
+			if ( error )
+				return reject( error );
+			else
+				return resolve( tweets );
+
+		});
+
+	});
+
+};
+
 const getTweetsFromSearchApp = function( search_string ) {
 
 	search_string = search_string || "#innoutchallenge";
@@ -30,66 +69,58 @@ const getTweetsFromSearchApp = function( search_string ) {
 				if ( last_tweet )
 					search_params.since_id = last_tweet.data.id_str;
 
-				let client = new Twitter({
-					consumer_key: process.env.TWITTER_CONSUMER_KEY_USER,
-					consumer_secret: process.env.TWITTER_CONSUMER_SECRET_USER,
-					bearer_token: process.env.TWITTER_BEARER_TOKEN_USER,
+				return twitterSearchRequest( search_params, true );
+			})
+			.then( ( tweets ) => {
+
+				if ( ! tweets || ! tweets.statuses || ! tweets.statuses.length )
+					return resolve();
+
+				let remaining = tweets.statuses.length;
+				// we want to save to the db starting with the oldest,
+				// just in case it fails. So we don't miss earlier
+				// ones when we refetch with the latest created_at date
+				tweets.statuses.sort( ( a, b ) => {
+					return ( new Date( a.created_at ) - new Date( b.created_at ) );
 				});
 
-				client.get( "search/tweets", search_params, function( error, tweets ) {
+				let stop = false;
+				tweets.statuses.forEach( ( tweet_data ) => {
 
-					if ( error )
-						throw error;
+					if ( stop )
+						return;
 
-					if ( ! tweets || ! tweets.statuses || ! tweets.statuses.length )
-						return resolve();
+					remaining--;
 
-					let remaining = tweets.statuses.length;
-					// we want to save to the db starting with the oldest,
-					// just in case it fails. So we don't miss earlier
-					// ones when we refetch with the latest created_at date
-					tweets.statuses.sort( ( a, b ) => {
-						return ( new Date( a.created_at ) - new Date( b.created_at ) );
-					});
+					Tweet.findOne({ "data.id_str": tweet_data.id_str })
+						.then( ( tweet ) => {
 
-					let stop = false;
-					tweets.statuses.forEach( ( tweet_data ) => {
+							if ( tweet === null ) {
 
-						if ( stop )
-							return;
+								createTweet( { data: tweet_data, source: 1, fetched: true, fetch_date: new Date() } )
+									.then( () => {
 
-						remaining--;
+										if ( remaining <= 0 )
+											return resolve();
 
-						Tweet.findOne({ "data.id_str": tweet_data.id_str })
-							.then( ( tweet ) => {
-
-								if ( tweet === null ) {
-
-									createTweet( { data: tweet_data, source: 1, fetched: true, fetch_date: new Date() } )
-										.then( () => {
-
-											if ( remaining <= 0 )
-												return resolve();
-
-										})
-										.catch( ( error ) => {
-											throw error;
-										});
-								}
-								else if ( remaining <= 0 ) {
-									return resolve();
-								}
-							})
-							.catch( ( error ) => {
-								stop = true;
-								throw error;
-							});
-
-						if ( remaining <= 0 ) {
+									})
+									.catch( ( error ) => {
+										throw error;
+									});
+							}
+							else if ( remaining <= 0 ) {
+								return resolve();
+							}
+						})
+						.catch( ( error ) => {
 							stop = true;
-							return resolve();
-						}
-					});
+							throw error;
+						});
+
+					if ( remaining <= 0 ) {
+						stop = true;
+						return resolve();
+					}
 				});
 			})
 			.catch( ( error ) => {
@@ -1048,3 +1079,4 @@ module.exports.hasIgnoreFlag = hasIgnoreFlag;
 module.exports.isIgnoredUser = isIgnoredUser;
 module.exports.parseForInStoreDigits = parseForInStoreDigits;
 module.exports.parseForDriveThruDigits = parseForDriveThruDigits;
+module.exports.twitterSearchRequest = twitterSearchRequest;
