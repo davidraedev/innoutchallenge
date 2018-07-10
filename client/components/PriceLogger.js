@@ -279,7 +279,7 @@ class PriceLogger extends React.Component {
 		else {
 			camera_html = (
 				<div class="item">
-					<img src={ this.state.menu_image } />
+					<img src={ this.state.menu_image } class="image" />
 				</div>
 			)
 		}
