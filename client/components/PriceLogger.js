@@ -287,19 +287,9 @@ class PriceLogger extends React.Component {
 		});
 
 		let camera_html;
-		if ( ! this.state.menu_image_url.length ) {
-			camera_html = (
-				<div class="item">
-					<div class="button" onClick={ this.triggerImage }>
-						<div class="text">Take Photo of Menu</div>
-						<div class="icon">
-							<img src="/img/camera_icon.svg" />
-						</div>
-					</div>
-				</div>
-			)
-		}
-		else {
+		let photo_button_text = "Take";
+		if ( this.state.menu_image_url.length ) {
+			photo_button_text = "Retake";
 			camera_html = (
 				<div class="item">
 					<img src={ this.state.menu_image_url } class="image" />
@@ -331,6 +321,14 @@ class PriceLogger extends React.Component {
 				<div class="container" id="price_logger">
 					<div class="section camera">
 						{ camera_html }
+						<div class="item">
+							<div class="button" onClick={ this.triggerImage }>
+								<div class="text">{ photo_button_text } Photo of Menu</div>
+								<div class="icon">
+									<img src="/img/camera_icon.svg" />
+								</div>
+							</div>
+						</div>
 					</div>
 					<div class="section options">
 						<div class="item">
