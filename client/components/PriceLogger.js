@@ -41,8 +41,10 @@ class PriceLogger extends React.Component {
 		});
 
 		this.savePrice = this.savePrice.bind( this );
+		this.savePriceWithImage = this.savePriceWithImage.bind( this );
 		this.setStore = this.setStore.bind( this );
 		this.takeImage = this.takeImage.bind( this );
+		this.createImage = this.createImage.bind( this );
 		this.triggerImage = this.triggerImage.bind( this );
 		this.enableGeoLocation = this.enableGeoLocation.bind( this );
 
@@ -86,6 +88,25 @@ class PriceLogger extends React.Component {
 
 	savePrice() {
 		this.props.dispatch( saveStorePrice( this.props.dispatch, this.state.store, this.state.prices ) );
+	}
+
+	createImage( callback ) {
+
+		let reader = new FileReader();
+
+		console.log( "reader", reader )
+
+		reader.addEventListener( "load", function () {
+			callback( reader.result );
+		}, false );
+		
+		reader.readAsDataURL( this.state.menu_image );
+	}
+
+	savePriceWithImage() {
+		this.createImage( ( data_url ) => {
+			this.props.dispatch( saveStorePrice( this.props.dispatch, this.state.store, this.state.prices, data_url ) );
+		});
 	}
 
 	setStore( select_value ) {
@@ -140,10 +161,10 @@ class PriceLogger extends React.Component {
 	takeImage( event ) {
 		
 		let file = event.target.files[0];
-		let url = URL.createObjectURL( file );
+		//let url = URL.createObjectURL( file );
 		
 		this.setState({
-			menu_image: url,
+			menu_image: file,
 		});
 
 	}
@@ -364,6 +385,14 @@ class PriceLogger extends React.Component {
 						<div class="item">
 							<div class={ saveButtonClass } tabIndex={ ++tabindex } onClick={ this.savePrice }>
 								<div class="text">Save</div>
+								<div class={ saveSpinnerClass }>
+									<div class="spinner spinner_a"></div>
+								</div>
+							</div>
+						</div>
+						<div class="item">
+							<div class={ saveButtonClass } tabIndex={ ++tabindex } onClick={ this.savePriceWithImage }>
+								<div class="text">Save w/Image</div>
 								<div class={ saveSpinnerClass }>
 									<div class="spinner spinner_a"></div>
 								</div>

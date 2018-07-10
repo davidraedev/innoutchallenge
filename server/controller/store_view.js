@@ -62,6 +62,10 @@ const save_price = function( request, response ) {
 
 	let { store, prices } = request.body;
 
+	let image = null;
+	if ( request.body.image )
+		image = request.body.image;
+
 	let search = {
 		_id: store,
 	};
@@ -87,6 +91,9 @@ const save_price = function( request, response ) {
 			cocoa: prices.other_drinks.cocoa,
 		},
 	};
+
+	if ( image )
+		data.image = image;
 
 	Store.findOne( search, null, { sort: { date: -1 } } )
 		.then( ( store ) => {

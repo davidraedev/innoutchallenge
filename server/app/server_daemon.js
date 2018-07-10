@@ -18,7 +18,7 @@ const user_controller = require( "../controller/user_view" );
 const account_controller = require( "../controller/account_view" );
 const admin_controller = require( "../controller/admin_view" );
 const store_controller = require( "../controller/store_view" );
-const jsonParser = bodyParser.json();
+const jsonParser = bodyParser.json({ limit: "50mb" });
 const path = require( "path" );
 const log = require( "../controller/log" )( path.resolve( __dirname, "../../log/web_server.log" ) );
 

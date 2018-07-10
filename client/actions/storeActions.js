@@ -94,17 +94,22 @@ export function getStorePrice( dispatch, store_id ) {
 	}
 }
 
-export function saveStorePrice( dispatch, store_id, prices ) {
+export function saveStorePrice( dispatch, store_id, prices, image = null ) {
 
 	dispatch({ type: "SAVE_STORE_PRICE_PENDING" })
+
+	let data = {
+		store: store_id,
+		prices: prices,
+	};
+	
+	if ( image )
+		data.image = image;
 
 	return function ( dispatch ) {
 		axios( process.env.REACT_APP_BACKEND_URL + "/api/store/price/save", {
 					method: "post",
-					data: {
-						store: store_id,
-						prices: prices,
-					},
+					data: data,
 				})
 				.then( ( response ) => {
 					dispatch({ type: "SAVE_STORE_PRICE_FULFILLED", payload: response.data })

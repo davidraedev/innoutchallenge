@@ -27,7 +27,7 @@ const PriceSchema = new Schema({
 	},
 	tax: { type: Number, default: null },
 	other: { type: Array, default: [] },
-
+	image: { type: String, default: null },
 });
 
 module.exports = mongoose.model( "Price", PriceSchema );
