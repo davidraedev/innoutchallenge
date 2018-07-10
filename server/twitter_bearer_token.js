@@ -2,8 +2,8 @@ var OAuth2 = require( "OAuth" ).OAuth2;
 require( "dotenv" ).config();
 
 var oauth2 = new OAuth2(
-	process.env.TWITTER_CONSUMER_KEY_ADMIN,
-	process.env.TWITTER_CONSUMER_SECRET_ADMIN,
+	process.env.TWITTER_CONSUMER_KEY_USER,
+	process.env.TWITTER_CONSUMER_SECRET_USER,
 	"https://api.twitter.com/",
 	null,
 	"oauth2/token",

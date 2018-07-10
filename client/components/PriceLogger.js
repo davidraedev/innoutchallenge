@@ -36,6 +36,7 @@ class PriceLogger extends React.Component {
 			prices: this.props.prices,
 			did_request_coords: 0,
 			menu_image: "",
+			menu_image_url: "",
 			geolocation: {},
 			loading_position: false,
 		});
@@ -161,10 +162,11 @@ class PriceLogger extends React.Component {
 	takeImage( event ) {
 		
 		let file = event.target.files[0];
-		//let url = URL.createObjectURL( file );
+		let url = URL.createObjectURL( file );
 		
 		this.setState({
 			menu_image: file,
+			menu_image_url: url,
 		});
 
 	}
@@ -285,7 +287,7 @@ class PriceLogger extends React.Component {
 		});
 
 		let camera_html;
-		if ( ! this.state.menu_image.length ) {
+		if ( ! this.state.menu_image_url.length ) {
 			camera_html = (
 				<div class="item">
 					<div class="button" onClick={ this.triggerImage }>
@@ -300,7 +302,7 @@ class PriceLogger extends React.Component {
 		else {
 			camera_html = (
 				<div class="item">
-					<img src={ this.state.menu_image } class="image" />
+					<img src={ this.state.menu_image_url } class="image" />
 				</div>
 			)
 		}
