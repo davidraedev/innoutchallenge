@@ -1,3 +1,32 @@
 #main_content {
 	height: 500px;
+
+	/* For some reason the store overlay is acting differently on this page, styles to remedy that issue */
+	.store_overlay {
+
+		.number_container {
+			width: 215px;
+
+			.number {
+				margin-left: -54px;
+			}
+		}
+	}
+}
+
+@media only screen and ( max-width: 618px ) {
+
+	#main_content {
+
+		.store_overlay {
+
+			.number_container {
+				margin-left: -87px;
+
+				.number {
+					margin-left: -54px;
+				}
+			}
+		}
+	}
 }
