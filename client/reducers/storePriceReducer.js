@@ -28,13 +28,13 @@ export default function reducer(
 	action
 ) {
 	switch ( action.type ) {
-		case "FETCH_STORE_INFO_PENDING": {
+		case "FETCH_STORE_PRICE_PENDING": {
 			return { ...state, fetching: true }
 		}
-		case "FETCH_STORE_INFO_REJECTED": {
+		case "FETCH_STORE_PRICE_REJECTED": {
 			return { ...state, fetching: false, error: action.payload }
 		}
-		case "FETCH_STORE_INFO_FULFILLED": {
+		case "FETCH_STORE_PRICE_FULFILLED": {
 			return { ...state, fetching: false, fetched: true, price: action.payload }
 		}
 	}

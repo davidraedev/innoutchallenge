@@ -30,7 +30,7 @@ class PriceLogger extends React.Component {
 	componentWillMount() {
 
 		this.props.dispatch( fetchStoresList( this.props.dispatch ) );
-		this.props.dispatch( getStorePrice( this.props.dispatch, null ) );
+		//this.props.dispatch( getStorePrice( this.props.dispatch, null ) );
 		this.setState({
 			store: "",
 			prices: this.props.prices,
@@ -78,10 +78,21 @@ class PriceLogger extends React.Component {
 	}
 
 	priceInputHtml( value = "", tabindex = 0, changeHandler ) {
+		console.log( "priceInputHtml", value )
+
+		if ( value !== null ) {
+			value = value.toString();
+			if ( value.length === 1 )
+				value += ".00";
+			else
+				value += new Array( 4 - value.length ).fill( 0 ).join( "" );
+		}
+		
+
 		return (
 			<div class="price">
 				<div class="input">
-					<input type="number" placeholder="0.00" step="0.01" defaultValue={ value } tabIndex={ tabindex } onChange={ changeHandler } />
+					<input type="number" placeholder="0.00" step="0.01" value={ value } tabIndex={ tabindex } onChange={ changeHandler } />
 				</div>
 			</div>
 		)
@@ -157,6 +168,17 @@ class PriceLogger extends React.Component {
 				store: this.props.closest._id,
 			});
 		}
+
+		console.log( "old_props.prices", old_props.prices )
+		console.log( "this.props.prices", this.props.prices )
+		console.log( "this.props", this.props )
+
+		// set store prices
+		if ( JSON.stringify( old_props.prices ) !== JSON.stringify( this.props.prices ) ) {
+			this.setState({
+				prices: this.props.prices,
+			});
+		}
 	}
 
 	takeImage( event ) {
@@ -195,6 +217,8 @@ class PriceLogger extends React.Component {
 		const { stores, error, coords, saveError, saveSuccess, saveInProgress } = this.props;
 		const { prices } = this.state;
 
+		console.log( "this.state.prices", this.state.prices )
+
 		if ( saveError )
 			errors.push( "Failed to save Store Price ["+ saveError.error +"]" );
 
@@ -221,7 +245,7 @@ class PriceLogger extends React.Component {
 					<div class="title">{ burger.name.toUpperCase() }</div>
 					{ this.priceInputHtml( prices.burgers[ burger.key ], tabindex++, ( event ) => {
 						let new_state = { ...this.state };
-							new_state.prices.burgers[ burger.key ] = event.target.value;
+							new_state.prices.burgers[ burger.key ] = parseFloat( event.target.value );
 						this.setState( new_state );
 					} ) }
 				</div>
@@ -260,7 +284,7 @@ class PriceLogger extends React.Component {
 					<div class="title">{ soda_price.name }</div>
 					{ this.priceInputHtml( prices.sodas[ soda_price.key ], tabindex++, ( event ) => {
 						let new_state = { ...this.state };
-							new_state.prices.sodas[ soda_price.key ] = event.target.value;
+							new_state.prices.sodas[ soda_price.key ] = parseFloat( event.target.value );
 						this.setState( new_state );
 					} ) }
 				</div>
@@ -279,7 +303,7 @@ class PriceLogger extends React.Component {
 					<div class="title">{ other_drink.name.toUpperCase() }</div>
 					{ this.priceInputHtml( prices.other_drinks[ other_drink.key ], tabindex++, ( event ) => {
 						let new_state = { ...this.state };
-							new_state.prices.other_drinks[ other_drink.key ] = event.target.value;
+							new_state.prices.other_drinks[ other_drink.key ] = parseFloat( event.target.value );
 						this.setState( new_state );
 					} ) }
 				</div>

@@ -41,14 +41,12 @@ const get_price = function( request, response ) {
 	let store = request.body.store || null;
 	let search = ( store ) ? { store: store } : {};
 
-	Price.findOne( search, null, { sort: { date: -1 } } )
+	Price.findOne( search, null, { sort: { date: -1 } } ).lean()
 		.then( ( price ) => {
-
-			return response.json( price | {} );
-
+			return response.json( price );
 		})
 		.catch( ( error ) => {
-			response.status( 500 ).json( { error: error } );
+			response.status( 500 ).json( { error: error.toString() } );
 		});
 }
 
@@ -61,7 +59,7 @@ const save_price = function( request, response ) {
 		return response.status( 500 ).json( { error: "Prices not specified" } );
 
 	let user_id = response.locals.user_id || false;
-	
+
 	let { store, prices } = request.body;
 
 	let image = null;
