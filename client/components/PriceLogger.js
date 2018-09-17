@@ -270,8 +270,8 @@ class PriceLogger extends React.Component {
 		let other_drinks = [
 			{ name: "Shakes", key: "shake" },
 			{ name: "Milk", key: "milk" },
-			{ name: "Coffee", key: "coffee" },
 			{ name: "Hot Cocoa", key: "cocoa" },
+			{ name: "Coffee", key: "coffee" },
 		];
 		let other_drinks_html = other_drinks.map( ( other_drink, index ) => {
 			return (
