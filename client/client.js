@@ -28,6 +28,14 @@ require( "./less/main.less" )
 
 const app = document.getElementById( "app" );
 
+function resolveUrlPath( url, append ) {
+	if ( url.substr( -1 ) === "/" )
+		url = url.substr( 0, url.length - 1 );
+	if ( append[0] === "/" )
+		append = append.substr( 1, append.length );
+	return url + "/" + append;
+}
+
 ReactDOM.render(
 	<div>
 		<Provider store={ store }>
@@ -39,7 +47,7 @@ ReactDOM.render(
 						<Route path="/@:user(\w+)/receipts" exact component={ UserReceipts } />
 						<Route path="/@:user(\w+)/drivethru" exact component={ UserDriveThru } />
 						<Route path="/@:user(\w+)/map" exact component={ Map } />
-						<Redirect from="/@:user(\w+)" to={ document.location.pathname + "/receipts" } exact />
+						<Redirect from="/@:user(\w+)" to={ resolveUrlPath( document.location.pathname, "/receipts" ) } exact />
 						<PrivateRoute path="/account/settings" component={ Account } exact />
 						<PrivateRoute path="/account/receipts" component={ AccountReceipts } exact />
 						<Redirect from="/account" to="/account/settings" exact />
