@@ -60,6 +60,8 @@ const save_price = function( request, response ) {
 	if ( ! request.body.prices )
 		return response.status( 500 ).json( { error: "Prices not specified" } );
 
+	let user_id = response.locals.user_id || false;
+	
 	let { store, prices } = request.body;
 
 	let image = null;
@@ -69,6 +71,7 @@ const save_price = function( request, response ) {
 	let search = {
 		_id: store,
 	};
+
 	let data = {
 		store: store,
 		date: prices.date,
@@ -94,6 +97,9 @@ const save_price = function( request, response ) {
 
 	if ( image )
 		data.image = image;
+
+	if ( user_id )
+		data.user = user_id;
 
 	Store.findOne( search, null, { sort: { date: -1 } } )
 		.then( ( store ) => {
