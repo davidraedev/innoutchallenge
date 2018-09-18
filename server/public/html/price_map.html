@@ -1,0 +1,261 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0">
+	<title></title>
+	<link href="" rel="stylesheet">
+		<style>
+
+		.land {
+			fill: #ddd;
+		}
+
+		.state-borders {
+			fill: none;
+			stroke: #fff;
+		}
+
+		.airport:hover {
+			stroke: #f00;
+		}
+
+		.airport-cell {
+			fill: none;
+			stroke: #000;
+			stroke-opacity: 0.1;
+			pointer-events: all;
+		}
+
+		.airport-dots {
+			opacity: 0.5;
+		}
+
+		.airport-dots.hover {
+			opacity: 1;
+		}
+
+		.tooltip {
+			display: none;
+			position: absolute;
+			background: rgb( 255,255,255 );
+			border-radius: 6px;
+			padding: 10px;
+		}
+
+	</style>
+</head>
+<body>
+
+	<svg width="960" height="600"></svg>
+	<div></div>
+
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script src="https://d3js.org/topojson.v1.min.js"></script>
+	<script>
+
+		const svg = d3.select( "svg" )
+						.call(
+							d3.zoom()
+								.scaleExtent( [ 1, 40 ] )
+								.on( "zoom", ( ) => {
+									current_transform = d3.event.transform.k;
+									zoom();
+									scaleSvg();
+								})
+						);
+
+		const width = +svg.attr( "width" ),
+			height = +svg.attr( "height" );
+
+		const projection = d3.geoAlbers()
+				.translate( [ width / 2, height / 2 ] )
+				.scale( 1280 );
+
+		const radius = d3.scaleSqrt()
+				.domain( [ 0, 100 ] )
+				.range( [ 0, 14 ] );
+
+		const path = d3.geoPath()
+				.projection( projection )
+				.pointRadius( 2.5 );
+
+		const voronoi = d3.voronoi()
+				.extent( [ [ -1, -1 ], [ width + 1, height + 1 ] ] );
+
+		const tooltip = d3.select( "body" ).append( "div" )	
+							.attr( "class", "tooltip" );
+/*
+		// zoom box
+			svg.append( "rect" )
+				.attr( "fill", "none" )
+				.style( "pointer-events", "all" )
+				.attr( "width", width )
+				.attr( "height", height )
+				.call(
+					d3.zoom()
+						.scaleExtent( [ 1, 40 ] )
+						.on( "zoom", ( ) => {
+							current_transform = d3.event.transform.k;
+							zoom();
+							scaleSvg();
+						})
+				);
+*/
+		const g = svg.append( "g" )
+						.style( "pointer-events", "all" );
+
+		let current_transform = 1;
+		const dot_width = 2;
+		const voronoi_width = 1;
+		const state_border_width = 1;
+
+		d3.queue()
+			.defer( d3.json, "/json/us.json" )
+			.defer( d3.json, "/api/stores/pricemap" )
+			.await( ready);
+
+		let airport;
+
+		function ready( error, us, airports ) {
+
+			if ( error )
+				throw error;
+
+			airports = airports.map( ( d ) => {
+				d.iata = ( typeof d.iata === "number" ) ? d.iata.toString() : d.iata;
+				d.coords = [
+					+d.longitude,
+					+d.latitude,
+				];
+				return d;
+			});
+
+			let voronoi_data = voronoi.polygons( airports.map( d => { return d.coords } ).map( projection ) );
+
+			airports = airports.map( ( d, i ) => {
+				d.voronoi = voronoi_data[ i ];
+				return d;
+			});
+
+			console.log( "extent", d3.extent( airports, ( d ) => { return ( d.price ) ? d.price.burgers.hamburger : null } ) );
+
+			const voronoi_color = d3.scaleLinear()
+									.domain( d3.extent( airports, ( d ) => { return ( d.price ) ? d.price.burgers.hamburger : null } ) )
+									.interpolate( d3.interpolateRgb )
+									.range( [ "green", "red" ] )
+
+			let airportByIata = d3.map( airports, function( d ) { return d.iata; });
+
+			// state land
+			g.append( "path" )
+					.datum( topojson.feature( us, us.objects.land ) )
+					.attr( "class", "land" )
+					.attr( "d", path );
+
+			// state borders
+			g.append( "path" )
+					.datum( topojson.mesh( us, us.objects.states, function( a, b ) { return a !== b; } ) )
+					.attr( "class", "state-borders" )
+					.attr( "d", path )
+					.attr( "stroke-width", () => { return state_border_width * ( 1 / current_transform ) } );
+
+			airport = g.selectAll( ".airport" )
+				.data( airports )
+				.enter().append( "g" )
+					.attr( "class", "airport" );
+
+			airport.append( "title" )
+					.text( function( d ) { return d.iata } );
+
+			// price colors
+			airport.append( "path" )
+					.attr( "class", "airport-cell" )
+					.attr( "d", function( d, i ) { return ( d && d.voronoi ) ? "M" + d.voronoi.join( "L" ) + "Z" : null; } )
+					.attr( "stroke-width", () => { return voronoi_width * ( 1 / current_transform ) } )
+					.style( "fill", ( d ) => { return ( d.price ) ? voronoi_color( d.price.burgers.hamburger ) : "transparent"; } );
+
+			// store dots
+			g.selectAll( ".airport-dots" )
+				.data( airports )
+				.enter().append( "circle" )
+					.attr( "class", "airport-dots" )
+					.attr( "r", () => { return dot_width * ( 1 / current_transform ) } )
+					.attr( "cx", ( d ) => { return ( projection( d.coords )[0] ); } )
+					.attr( "cy", ( d ) => { return ( projection( d.coords )[1] ); } )
+					.style( "cursor", "pointer" )
+					.style( "pointer-events", "all" )
+					.on( "mouseover", function( d ) {
+
+						d3.select( this ).classed( "hover", true );
+
+						let text = "Store " + d.iata;
+						if ( d.price ) {
+							let price = d.price.burgers.hamburger.toString();
+							if ( price.length < 4 )
+								price = d.price.burgers.hamburger + new Array( 4 - price.length ).fill( 0 ).join( "" );
+							text += "<br>$" + price;
+						}
+
+						tooltip.html( text )	
+							.style( "left", ( d3.event.pageX + 10 ) + "px" )		
+							.style( "top", ( d3.event.pageY - 38 ) + "px" )
+							.style( "display", "block" );
+					})
+					.on( "mouseout", function() {
+
+						d3.select( this ).classed( "hover", false );
+
+						tooltip.style( "display", "none" );
+					});
+
+/*
+
+color scale testing
+currrently not working for red -> yellow -> green
+just working for the first two specified colors
+
+			let extent = d3.extent( airports, ( d ) => { return ( d.price ) ? d.price.burgers.hamburger : null } );
+			let diff = extent[1] - extent[0];
+			let diff_integer = Math.round( diff / 0.01 );
+			console.log( "extent", extent )
+			console.log( "diff", diff )
+			console.log( "diff_integer", diff_integer )
+
+			let arr = [];
+			let step = 0.01;
+			for ( let i = extent[0]; i < ( extent[1] + step ); i += step ) {
+				arr.push( i );
+			}
+
+			d3.select( "div" )
+				.selectAll( ".test" )
+					.data( arr )
+					.enter().append( "div" )
+						.attr( "class", "test" )
+						.style( "width", "100px" )
+						.style( "height", "100px" )
+						.style( "background", ( d ) => { console.log( "d", d ); return voronoi_color( d ) } );
+*/
+		}
+
+		function zoom() {
+			g.attr( "transform", d3.event.transform );
+		}
+
+		function scaleSvg() {
+
+			g.selectAll( ".state-borders" )
+				.attr( "stroke-width", () => { return state_border_width * ( 1 / current_transform ) } );
+
+			g.selectAll( ".airport-dots" )
+				.attr( "r", () => { return dot_width * ( 1 / current_transform ) } );
+
+			airport.selectAll( ".airport-cell" )
+				.attr( "stroke-width", () => { return voronoi_width * ( 1 / current_transform ) } );
+		}
+
+	</script>
+
+</body>
+</html>

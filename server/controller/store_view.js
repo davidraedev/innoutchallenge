@@ -1,6 +1,7 @@
 const store_controller = require( "./store" );
 const Store = require( "../model/store" );
 const Price = require( "../model/price" );
+const path = require( "path" );
 
 const info = function( request, response ) {
 
@@ -142,8 +143,42 @@ const closest = function( request, response ) {
 		});
 }
 
+const price_map = function( request, response ) {
+	response.sendFile( path.resolve( "server/public/html/price_map.html" ) );
+}
+
+const price_map_json = function( request, response ) {
+	Store.find({})
+		.then( ( stores ) => {
+
+			Promise.all( stores.map( ( store ) => {
+					return Price.findOne( { store: store._id }, null, { sort: { date: -1 } } );
+				}) )
+				.then( ( price_data ) => {
+
+					let data = stores.map( ( store, index ) => {
+						return {
+							iata: store.number,
+							name: store.name,
+							city: store.location.city,
+							state: store.location.state,
+							country: store.location.country,
+							latitude: store.location.latitude,
+							longitude: store.location.longitude,
+							price: price_data[ index ],
+						};
+					});
+
+					return response.json( data );
+
+				});
+		});
+}
+
 module.exports.info = info;
 module.exports.list_all = list_all;
 module.exports.get_price = get_price;
 module.exports.save_price = save_price;
 module.exports.closest = closest;
+module.exports.price_map = price_map;
+module.exports.price_map_json = price_map_json;

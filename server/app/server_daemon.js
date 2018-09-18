@@ -33,6 +33,8 @@ app.disable( "x-powered-by" );
 
 app.use( "/img", express.static( process.env.BASE + "/server/public/img", { maxage: "1y" } ) );
 app.use( "/font", express.static( process.env.BASE + "/server/public/font", { maxage: "1y" } ) );
+app.use( "/json", express.static( process.env.BASE + "/server/public/json" ) );
+app.use( "/data", express.static( process.env.BASE + "/server/public/data" ) );
 
 var MongoDBStore = require( "connect-mongodb-session" )( session );
 
@@ -288,18 +290,6 @@ app.get( "/admin/auth/twitter/callback",
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 function checkAuthenticationView( request, response, next ) {
 	response.locals.authenticated = ( request.isAuthenticated() ) ? true : false;
 	next();
@@ -383,6 +373,9 @@ function checkAuthenticationEndpoint( request, response ) {
 		});
 }
 
+// static pages
+app.get( "/pricemap", store_controller.price_map );
+
 // frontend
 app.post( "/api/users/list", jsonParser, user_controller.users_list );
 app.post( "/api/user/receipts", jsonParser, user_controller.user_instore_receipts );
@@ -394,6 +387,7 @@ app.post( "/api/store/price/get", jsonParser, store_controller.get_price );
 app.post( "/api/store/price/save", checkAuthenticationApiPassthrough, jsonParser, store_controller.save_price );
 app.post( "/api/store/closest", jsonParser, store_controller.closest );
 app.post( "/api/stores/list", store_controller.list_all );
+app.get( "/api/stores/pricemap", store_controller.price_map_json );
 
 // authentication
 app.post( "/auth/check", checkAuthenticationEndpoint );
