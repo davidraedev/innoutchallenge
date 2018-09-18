@@ -144,7 +144,7 @@ const closest = function( request, response ) {
 }
 
 const price_map = function( request, response ) {
-	response.sendFile( path.resolve( "server/public/html/price_map.html" ) );
+	response.sendFile( path.resolve( __dirname, "../public/html/price_map.html" ) )
 }
 
 const price_map_json = function( request, response ) {
