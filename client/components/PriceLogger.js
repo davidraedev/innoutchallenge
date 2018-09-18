@@ -317,11 +317,7 @@ class PriceLogger extends React.Component {
 		});
 
 		let camera_html;
-		let input_button_text = "Upload";
-		let photo_button_text = "Take";
 		if ( this.state.menu_image_url.length ) {
-			photo_button_text = "Retake";
-			input_button_text = "Upload Different";
 			camera_html = (
 				<div class="item">
 					<img src={ this.state.menu_image_url } class="image" />
@@ -356,7 +352,7 @@ class PriceLogger extends React.Component {
 						{ camera_html }
 						<div class="item">
 							<div class="button" onClick={ this.triggerImage }>
-								<div class="text">{ photo_button_text } Photo of Menu</div>
+								<div class="text">Menu Photo</div>
 								<div class="icon" onClick={ this.triggerImage }>
 									<img src="/img/camera_icon.svg" />
 								</div>
