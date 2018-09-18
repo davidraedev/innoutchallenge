@@ -45,10 +45,9 @@ class PriceLogger extends React.Component {
 		this.savePriceWithImage = this.savePriceWithImage.bind( this );
 		this.setStore = this.setStore.bind( this );
 		this.takeImage = this.takeImage.bind( this );
-		this.uploadImage = this.uploadImage.bind( this );
 		this.createImage = this.createImage.bind( this );
 		this.triggerImage = this.triggerImage.bind( this );
-		this.triggerUpload = this.triggerUpload.bind( this );
+		this.triggerImageUpload = this.triggerImageUpload.bind( this );
 		this.enableGeoLocation = this.enableGeoLocation.bind( this );
 
 		this.getGeolocationInnerRef = this.getGeolocationInnerRef.bind( this );
@@ -66,7 +65,7 @@ class PriceLogger extends React.Component {
 
 	geolocationInnerRef;
 	imageInputRef;
-	uploadInputRef;
+	imageInputUploadRef;
 
 	getGeolocationInnerRef( ref ) {
 		this.geolocationInnerRef = ref;
@@ -196,24 +195,12 @@ class PriceLogger extends React.Component {
 
 	}
 
-	uploadImage( event ) {
-		
-		let file = event.target.files[0];
-		let url = URL.createObjectURL( file );
-		
-		this.setState({
-			menu_image: file,
-			menu_image_url: url,
-		});
-
-	}
-
 	triggerImage() {
 		this.imageInputRef.click();
 	}
-
-	triggerUpload() {
-		this.uploadInputRef.click();
+	triggerImageUpload( event ) {
+		event.stopPropagation();
+		this.imageInputUploadRef.click();
 	}
 
 	getStoresOptions() {
@@ -359,7 +346,7 @@ class PriceLogger extends React.Component {
 		return (
 			<div>
 				<input class="hide" type="file" accept="image/*" capture="environment" onChange={ this.takeImage } ref={ ( imageInputRef ) => { this.imageInputRef = imageInputRef } } />
-				<input class="hide" type="file" accept="image/*" onChange={ this.uploadImage } ref={ ( uploadInputRef ) => { this.uploadInputRef = uploadInputRef } } />
+				<input class="hide" type="file" accept="image/*" onChange={ this.takeImage } ref={ ( imageInputUploadRef ) => { this.imageInputUploadRef = imageInputUploadRef } } />
 				<Geolocation ref={ this.getGeolocationInnerRef } handler={ this.geolocationHandler } />
 				<TopNav title="Price Logger (beta)" showBackButton={ false } />
 				<Error messages={ errors } />
@@ -370,13 +357,10 @@ class PriceLogger extends React.Component {
 						<div class="item">
 							<div class="button" onClick={ this.triggerImage }>
 								<div class="text">{ photo_button_text } Photo of Menu</div>
-								<div class="icon">
+								<div class="icon" onClick={ this.triggerImage }>
 									<img src="/img/camera_icon.svg" />
 								</div>
-							</div>
-							<div class="button" onClick={ this.triggerUpload }>
-								<div class="text">{ input_button_text } Photo of Menu</div>
-								<div class="icon">
+								<div class="icon" onClick={ this.triggerImageUpload }>
 									<img src="/img/upload_icon.svg" />
 								</div>
 							</div>
