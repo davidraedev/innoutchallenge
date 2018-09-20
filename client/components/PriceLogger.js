@@ -180,7 +180,7 @@ class PriceLogger extends React.Component {
 		console.log( "this.props", this.props )
 
 		// set store prices
-		if ( JSON.stringify( old_props.prices ) !== JSON.stringify( this.props.prices ) ) {
+		if ( JSON.stringify( old_props.prices ) !== JSON.stringify( this.props.prices ) && this.props.prices !== null ) {
 			this.setState({
 				prices: this.props.prices,
 			});
