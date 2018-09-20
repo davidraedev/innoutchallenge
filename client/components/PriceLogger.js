@@ -220,6 +220,31 @@ class PriceLogger extends React.Component {
 		});
 	}
 
+	clearPrices() {
+		this.setState({
+			prices: {
+				burgers: {
+					double_double: null,
+					cheeseburger: null,
+					hamburger: null,
+					fries: null,
+				},
+				sodas: {
+					small: null,
+					medium: null,
+					large: null,
+					xlarge: null,
+				},
+				other_drinks: {
+					shake: null,
+					milk: null,
+					cocoa: null,
+					coffee: null,
+				},
+			},
+		})
+	}
+
 	render() {
 
 		let tabindex = 3;
@@ -396,23 +421,28 @@ class PriceLogger extends React.Component {
 					</div>
 					<div class="section">
 						<div class="ino_menu">
-							<div class="burgers">
-								{ burgers_html }
+							<div class="row right">
+								<div class="clear_button"onClick={ () => { this.clearPrices() } }>clear</div>
 							</div>
-							<div class="drinks">
-								<div class="sodas">
-									<div class="names_wrap">
-										<div class="names">
-											<div class="column">{ sodas_row_1 }</div>
-											<div class="column">{ sodas_row_2 }</div>
-										</div>
-										<div class="prices">
-											{ soda_prices_html }
+							<div class="row menu_border">
+								<div class="burgers">
+									{ burgers_html }
+								</div>
+								<div class="drinks">
+									<div class="sodas">
+										<div class="names_wrap">
+											<div class="names">
+												<div class="column">{ sodas_row_1 }</div>
+												<div class="column">{ sodas_row_2 }</div>
+											</div>
+											<div class="prices">
+												{ soda_prices_html }
+											</div>
 										</div>
 									</div>
-								</div>
-								<div class="other_drinks">
-									{ other_drinks_html }
+									<div class="other_drinks">
+										{ other_drinks_html }
+									</div>
 								</div>
 							</div>
 						</div>

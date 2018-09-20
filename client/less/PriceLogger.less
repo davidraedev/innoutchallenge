@@ -99,12 +99,34 @@
 
 	.ino_menu {
 		display: flex;
-		flex-direction: row;
-		border: 10px solid @base_red;
+		flex-direction: column;
 		color: @base_red;
 		font-size: 25px;
 		max-width: 802px;
 		margin: 0 auto;
+
+		.row {
+			display: flex;
+			flex-direction: row;
+
+			&.right {
+				justify-content: right;
+			}
+
+			&.menu_border {
+				border: 10px solid @base_red;
+			}
+		}
+
+		.clear_button {
+			font-size: 15px;
+			padding: 10px;
+			cursor: pointer;
+
+			&:hover {
+				color: lighten( @base_red, 10% );
+			}
+		}
 
 		.burgers, .drinks {
 			border: 10px solid @base_red;
