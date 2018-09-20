@@ -83,11 +83,12 @@ class PriceLogger extends React.Component {
 		console.log( "priceInputHtml", value )
 
 		if ( value !== null ) {
-			value = value.toString();
-			if ( value.length === 1 )
-				value += ".00";
-			else
-				value += new Array( 4 - value.length ).fill( 0 ).join( "" );
+			//value = value.toString();
+			//value = value.replace( /[^\d?\.?(?:\d+)?]/, "" );
+			//if ( value.toString().length === 2 &&  )
+			//	value += 0.00;
+			//else
+			//	value += new Array( 4 - value.length ).fill( 0 ).join( "" );
 		}
 		else {
 			value = "";
@@ -253,6 +254,8 @@ class PriceLogger extends React.Component {
 				<div class="item" key={ index }>
 					<div class="title">{ burger.name.toUpperCase() }</div>
 					{ this.priceInputHtml( prices.burgers[ burger.key ], tabindex++, ( event ) => {
+						console.log( "event.target.value", event.target.value )
+						console.log( "parseFloat( event.target.value )", parseFloat( event.target.value ) )
 						let new_state = { ...this.state };
 							new_state.prices.burgers[ burger.key ] = parseFloat( event.target.value );
 						this.setState( new_state );
