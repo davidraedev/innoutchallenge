@@ -90,7 +90,6 @@ class PriceLogger extends React.Component {
 	}
 */
 	priceInputHtml( value = "", tabindex = 0, changeHandler ) {
-		console.log( "priceInputHtml", value )
 
 		if ( value === null ) {
 			value = "";
@@ -112,8 +111,6 @@ class PriceLogger extends React.Component {
 	createImage( callback ) {
 
 		let reader = new FileReader();
-
-		console.log( "reader", reader )
 
 		reader.addEventListener( "load", function () {
 			callback( reader.result );
@@ -178,10 +175,6 @@ class PriceLogger extends React.Component {
 			});
 		}
 
-		console.log( "prevProps.prices", prevProps.prices )
-		console.log( "this.props.prices", this.props.prices )
-		console.log( "this.props", this.props )
-
 		// set store prices
 		if ( JSON.stringify( prevProps.prices ) !== JSON.stringify( this.props.prices ) && this.props.prices !== null ) {
 			this.setState({
@@ -236,8 +229,6 @@ class PriceLogger extends React.Component {
 		const { stores, error, coords, saveError, saveSuccess, saveInProgress } = this.props;
 		const { prices } = this.state;
 
-		console.log( "this.state.prices", this.state.prices )
-
 		if ( saveError )
 			errors.push( "Failed to save Store Price ["+ saveError.error +"]" );
 
@@ -263,8 +254,6 @@ class PriceLogger extends React.Component {
 				<div class="item" key={ index }>
 					<div class="title">{ burger.name.toUpperCase() }</div>
 					{ this.priceInputHtml( prices.burgers[ burger.key ], tabindex++, ( event ) => {
-						console.log( "event.target.value", event.target.value )
-						console.log( "parseFloat( event.target.value )", parseFloat( event.target.value ) )
 						let new_state = { ...this.state };
 							new_state.prices.burgers[ burger.key ] = parseFloat( event.target.value );
 						this.setState( new_state );
