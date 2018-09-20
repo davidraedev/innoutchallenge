@@ -89,6 +89,9 @@ class PriceLogger extends React.Component {
 			else
 				value += new Array( 4 - value.length ).fill( 0 ).join( "" );
 		}
+		else {
+			value = "";
+		}
 		
 
 		return (
