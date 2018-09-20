@@ -30,7 +30,6 @@ class PriceLogger extends React.Component {
 	componentWillMount() {
 
 		this.props.dispatch( fetchStoresList( this.props.dispatch ) );
-		//this.props.dispatch( getStorePrice( this.props.dispatch, null ) );
 		this.setState({
 			store: "",
 			prices: this.props.prices,
@@ -39,6 +38,7 @@ class PriceLogger extends React.Component {
 			menu_image_url: "",
 			geolocation: {},
 			loading_position: false,
+			get_store_prices_next: false,
 		});
 
 		this.savePrice = this.savePrice.bind( this );
@@ -78,22 +78,23 @@ class PriceLogger extends React.Component {
 			this.geolocationInnerRef && this.geolocationInnerRef.getLocation();
 		});
 	}
-
+/*
+	formatPrices() {
+		value = value.toString();
+		// 1
+		if ( value.toString().length === 1 )
+			value += ".00";
+		// 1.6
+		else if ( value.toString().length === 3 )
+			value += "0";
+	}
+*/
 	priceInputHtml( value = "", tabindex = 0, changeHandler ) {
 		console.log( "priceInputHtml", value )
 
-		if ( value !== null ) {
-			//value = value.toString();
-			//value = value.replace( /[^\d?\.?(?:\d+)?]/, "" );
-			//if ( value.toString().length === 2 &&  )
-			//	value += 0.00;
-			//else
-			//	value += new Array( 4 - value.length ).fill( 0 ).join( "" );
-		}
-		else {
+		if ( value === null ) {
 			value = "";
 		}
-		
 
 		return (
 			<div class="price">
@@ -139,13 +140,13 @@ class PriceLogger extends React.Component {
 		this.getLocation();
 	}
 
-	componentDidUpdate( old_props ) {
+	componentDidUpdate( prevProps, prevState ) {
 
-		if ( this.props.saveSuccess !== old_props.saveSuccess || this.props.saveError !== old_props.saveError )
+		if ( this.props.saveSuccess !== prevProps.saveSuccess || this.props.saveError !== prevProps.saveError )
 			window.scrollTo( 0, 0 );
 
 		// show error
-		if ( this.props.error && this.props.error !== old_props.error ) {
+		if ( this.props.error && this.props.error !== prevProps.error ) {
 			console.error( this.props.error );
 		}
 
@@ -162,6 +163,8 @@ class PriceLogger extends React.Component {
 				if ( ! this.state.geolocation.coords )
 					return;
 
+				this.state.get_store_prices_next = true;
+
 				this.props.dispatch( getClosestStore( this.props.dispatch, this.state.geolocation.coords.latitude, this.state.geolocation.coords.longitude ) );
 				clearInterval( interval );
 
@@ -169,21 +172,27 @@ class PriceLogger extends React.Component {
 		}
 
 		// geolocation request returned, set store dynamically
-		if ( ! old_props.closest._id && this.props.closest._id ) {
+		if ( ! prevProps.closest._id && this.props.closest._id ) {
 			this.setState({
 				store: this.props.closest._id,
 			});
 		}
 
-		console.log( "old_props.prices", old_props.prices )
+		console.log( "prevProps.prices", prevProps.prices )
 		console.log( "this.props.prices", this.props.prices )
 		console.log( "this.props", this.props )
 
 		// set store prices
-		if ( JSON.stringify( old_props.prices ) !== JSON.stringify( this.props.prices ) && this.props.prices !== null ) {
+		if ( JSON.stringify( prevProps.prices ) !== JSON.stringify( this.props.prices ) && this.props.prices !== null ) {
 			this.setState({
 				prices: this.props.prices,
+				get_store_prices_next: false,
 			});
+		}
+
+		// handle setting our prices when the store was found via geolocation
+		if ( this.state.get_store_prices_next === true && prevState.store !== this.state.store && this.state.store ) {
+			this.props.dispatch( getStorePrice( this.props.dispatch, this.state.store ) );
 		}
 	}
 
