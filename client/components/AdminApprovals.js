@@ -30,6 +30,7 @@ require( "../../node_modules/react-select/less/select.less" );
 		storeListError: store.storesList.error,
 		receiptIsSubmitting: store.adminUpdateReceipt.saving,
 		userIsSubmitting: store.adminUpdateUser.saving,
+		tweetIsSubmitting: store.adminTweetUser.saving,
 	}
 })
 
@@ -41,6 +42,7 @@ export default class AdminReceipts extends React.Component {
 		this.setState({
 			receipts: this.props.receipts,
 			users: this.props.users,
+			tweet_text: [],
 		});
 	}
 
@@ -150,6 +152,11 @@ export default class AdminReceipts extends React.Component {
 			if ( typeof callback === "function" )
 				callback();
 		});
+	}
+
+	tweetUser( user_id, text, tweet_id ) {
+		console.log( "sending tweet to", user_id, text, tweet_id );
+		//this.dispatch( sendTweet( this.props.dispatch, user_id, text, tweet_id ) );
 	}
 
 	render() {
@@ -265,6 +272,9 @@ export default class AdminReceipts extends React.Component {
 			let submitSpinnerClass = "spinner_wrap";
 			if ( this.props.userIsSubmitting )
 				submitSpinnerClass += " show";
+			let sendTweetSpinnerClass = "spinner_wrap";
+			if ( this.props.tweetSendIsSubmitting )
+				sendTweetSpinnerClass += " show";
 
 			return (
 				<tr key={ index }>
@@ -289,6 +299,22 @@ export default class AdminReceipts extends React.Component {
 					</td>
 					<td>
 						{ tweet_html }
+					</td>
+					<td>
+						<textarea onChange={ ( event ) => {
+
+							let new_state = [ ...this.state.tweet_text ];
+								new_state[ index ] = event.target.value;
+
+							this.setState({
+								tweet_text: new_state,
+							});
+
+						}} value={ this.state.tweet_text[ index ].text }></textarea>
+						<button onClick={ this.tweetUser( user, this.state.tweet_text[ index ].text, this.state.tweet_text[ index ].tweet_id ) }>Tweet</button>
+						<div class={ sendTweetSpinnerClass }>
+							<div class="spinner spinner_a"></div>
+						</div>
 					</td>
 				</tr>
 			)
@@ -330,6 +356,9 @@ export default class AdminReceipts extends React.Component {
 									<th>Screen Name</th>
 									<th>State</th>
 									<th>Tweets</th>
+									<th>Approve</th>
+									<th>Tweet</th>
+									{ tweet_header_html }
 								</tr>
 							</thead>
 							<tbody>

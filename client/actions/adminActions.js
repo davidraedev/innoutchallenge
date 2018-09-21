@@ -71,3 +71,30 @@ export function updateUser( dispatch, id, data ) {
 			});
 	}
 }
+
+export function tweetUser( dispatch, user_id, text, tweet_id ) {
+
+	dispatch({ type: "ADMIN_TWEET_USER_PENDING" })
+	return function ( dispatch ) {
+
+		let request_body = {
+			user_id: user_id,
+			text: text,
+			tweet_id: tweet_id,
+		};
+
+		axios( process.env.REACT_APP_BACKEND_URL + "/api/admin/user/tweet", { method: "post", withCredentials: true, data: request_body } )
+			.then( ( response ) => {
+				dispatch({ type: "ADMIN_TWEET_USER_FULFILLED", payload: response.data })
+			})
+			.catch( ( error ) => {
+
+				let data = {
+					error: error.response.data,
+					status: error.response.status
+				}
+
+				dispatch({ type: "ADMIN_TWEET_USER_REJECTED", payload: data })
+			});
+	}
+}
