@@ -26,6 +26,10 @@ const createUserTwitterLink = function( screen_name ) {
 	return "https://twitter.com/"+ screen_name.replace( "@", "" );
 }
 
+const createUserTwitterSearchLink = function( screen_name, search ) {
+	return "https://twitter.com/search?q=from%3A" + encodeURIComponent( screen_name ) + "%20" + encodeURIComponent( search ) + "&src=typd";
+}
+
 const createTweetLink = function( screen_name, tweet_id ) {
 	return createUserTwitterLink( screen_name ) +"/status/"+ tweet_id;
 }

@@ -4,7 +4,7 @@ import TimeAgo from "timeago-react";
 import Moment from "react-moment";
 import Select from "react-select";
 
-import { createUserTwitterLink, createTweetLink } from "./Utils";
+import { createUserTwitterLink, createTweetLink, createUserTwitterSearchLink } from "./Utils";
 
 import { fetchApprovals, updateReceipt, updateUser } from "../actions/adminActions";
 import { fetchStoresList } from "../actions/storeActions";
@@ -187,7 +187,7 @@ export default class AdminReceipts extends React.Component {
 			return (
 				<tr key={ index }>
 					<td class="nowrap">
-						<a href={ createUserTwitterLink( receipt.tweet.data.user.screen_name ) } target="_blank">{ "@" + receipt.tweet.data.user.screen_name }</a>
+						<a href={ createUserTwitterSearchLink( receipt.tweet.data.user.screen_name, "innoutchallenge" ) } target="_blank">{ "@" + receipt.tweet.data.user.screen_name }</a>
 					</td>
 					<td>
 						<a href={ createTweetLink( receipt.tweet.data.user.screen_name, receipt.tweet.data.id_str ) } target="_blank">{ receipt.tweet.data.text }</a>
