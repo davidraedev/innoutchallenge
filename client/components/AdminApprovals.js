@@ -247,6 +247,9 @@ export default class AdminReceipts extends React.Component {
 
 		const user_approvals_html = users.map( ( user, index ) => {
 
+			if ( user.state === 3 )
+				return;
+
 			let submitButtonClass = "button relative";
 			if ( this.props.userIsSubmitting )
 				submitButtonClass += " disabled";
