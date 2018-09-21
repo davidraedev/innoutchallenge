@@ -41,7 +41,6 @@ class PriceLogger extends React.Component {
 			get_store_prices_next: false,
 		});
 
-		this.savePrice = this.savePrice.bind( this );
 		this.savePriceWithImage = this.savePriceWithImage.bind( this );
 		this.setStore = this.setStore.bind( this );
 		this.takeImage = this.takeImage.bind( this );
@@ -102,10 +101,6 @@ class PriceLogger extends React.Component {
 				</div>
 			</div>
 		)
-	}
-
-	savePrice() {
-		this.props.dispatch( saveStorePrice( this.props.dispatch, this.state.store, this.state.prices ) );
 	}
 
 	createImage( callback ) {
@@ -449,16 +444,8 @@ class PriceLogger extends React.Component {
 					</div>
 					<div class="section options">
 						<div class="item">
-							<div class={ saveButtonClass } tabIndex={ ++tabindex } onClick={ this.savePrice }>
-								<div class="text">Save</div>
-								<div class={ saveSpinnerClass }>
-									<div class="spinner spinner_a"></div>
-								</div>
-							</div>
-						</div>
-						<div class="item">
 							<div class={ saveButtonClass } tabIndex={ ++tabindex } onClick={ this.savePriceWithImage }>
-								<div class="text">Save w/Image</div>
+								<div class="text">Save</div>
 								<div class={ saveSpinnerClass }>
 									<div class="spinner spinner_a"></div>
 								</div>
