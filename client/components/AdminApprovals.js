@@ -149,11 +149,15 @@ export default class AdminReceipts extends React.Component {
 		return options;
 	}
 
-	changeUserState( index, user_state ) {
-		console.log( "changeUserState", user_state )
+	changeUserState( index, user_state, callback ) {
+
 		let new_state = { ...this.state };
-		new_state.users[ index ].state = user_state.value;
-		this.setState( new_state );
+			new_state.users[ index ].state = user_state.value;
+
+		this.setState( new_state, () => {
+			if ( typeof callback === "function" )
+				callback();
+		});
 	}
 
 	render() {
@@ -266,14 +270,13 @@ export default class AdminReceipts extends React.Component {
 						<div class="select">
 							<Select
 								value={ user.state }
-								onChange={ ( select_value ) => { this.changeUserState( index, select_value ) } }
+								onChange={ ( select_value ) => {
+									this.changeUserState( index, select_value, ( ) =>{
+										this.updateUserData( index );
+									})
+								}}
 								options={ this.getUserStateOptions() }
 							/>
-						</div>
-					</td>
-					<td>
-						<div class={ submitButtonClass } onClick={ () => this.updateUserData( index ) }>
-							Update
 							<div class={ submitSpinnerClass }>
 								<div class="spinner spinner_a"></div>
 							</div>
