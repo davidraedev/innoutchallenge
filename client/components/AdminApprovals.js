@@ -257,7 +257,7 @@ export default class AdminReceipts extends React.Component {
 			return (
 				<tr key={ index }>
 					<td class="nowrap">
-						<a href={ createUserTwitterLink( user.twitter_user.data.screen_name ) } target="_blank">{ "@" + user.twitter_user.data.screen_name }</a>
+						<a href={ createUserTwitterSearchLink( user.twitter_user.data.screen_name, "innoutchallenge" ) } target="_blank">{ "@" + user.twitter_user.data.screen_name }</a>
 					</td>
 					<td>
 						<div class="select">
