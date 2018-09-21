@@ -43,3 +43,4 @@ module.exports.formatCircleNumber = formatCircleNumber
 module.exports.createUserTwitterLink = createUserTwitterLink
 module.exports.createTweetLink = createTweetLink
 module.exports.createGoogleMapsLink = createGoogleMapsLink
+module.exports.createUserTwitterSearchLink = createUserTwitterSearchLink
