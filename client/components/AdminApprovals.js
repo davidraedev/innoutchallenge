@@ -329,7 +329,7 @@ export default class AdminReceipts extends React.Component {
 								<tr>
 									<th>Screen Name</th>
 									<th>State</th>
-									<th>Submit</th>
+									<th>Tweets</th>
 								</tr>
 							</thead>
 							<tbody>
