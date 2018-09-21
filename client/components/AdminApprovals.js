@@ -22,7 +22,6 @@ require( "../less/Spinners.less" );
 require( "../../node_modules/react-select/less/select.less" );
 
 @connect( ( store ) => {
-	console.log( "store", store );
 	return {
 		receipts: store.adminFetchApprovals.approvals.receipts,
 		users: store.adminFetchApprovals.approvals.users,
@@ -82,37 +81,30 @@ export default class AdminReceipts extends React.Component {
 			this.setState({
 				receipts: this.props.receipts,
 				users: this.props.users,
-			}, () => {
-				console.log( "this.state", this.state )
 			});
 		}
 	}
 
 	changeReceiptNumber( index, receipt_number ) {
-		console.log( "changeReceiptNumber" )
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].number = parseInt( receipt_number, 10 );
 		this.setState( new_state );
 	}
 
 	changeReceiptStore( index, select_value ) {
-		console.log( "changeReceiptStore" )
 		let store_id = select_value.value || "";
-		console.log( "store_id", store_id )
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].store = store_id;
 		this.setState( new_state );
 	}
 
 	changeReceiptType( index, value ) {
-		console.log( "changeReceiptType" )
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].type = value;
 		this.setState( new_state );
 	}
 
 	changeReceiptApproval( index, value ) {
-		console.log( "changeReceiptApproval" )
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].approved = value;
 		this.setState( new_state );
@@ -254,6 +246,19 @@ export default class AdminReceipts extends React.Component {
 			if ( user.state === 3 )
 				return;
 
+			let tweet_html = receipts.filter( ( receipt ) => {
+				return receipt.tweet.data.user.id_str === user.twitter_user.data.id_str;
+			}).map( ( receipt ) => {
+				return (
+					<div class="tweet">
+						{ receipt.tweet.data.text }
+						<div class="date">
+							{ receipt.tweet.data.created_at }
+						</div>
+					</div>
+				);
+			});
+
 			let submitButtonClass = "button relative";
 			if ( this.props.userIsSubmitting )
 				submitButtonClass += " disabled";
@@ -281,6 +286,9 @@ export default class AdminReceipts extends React.Component {
 								<div class="spinner spinner_a"></div>
 							</div>
 						</div>
+					</td>
+					<td>
+						{ tweet_html }
 					</td>
 				</tr>
 			)
