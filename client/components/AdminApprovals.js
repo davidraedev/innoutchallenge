@@ -4,7 +4,7 @@ import TimeAgo from "timeago-react";
 import Moment from "react-moment";
 import Select from "react-select";
 
-import { createUserTwitterLink, createTweetLink, createUserTwitterSearchLink } from "./Utils";
+import { createUserTwitterLink, createTweetLink, createUserTwitterSearchLink, createNewReceiptText, createNewUserText } from "./Utils";
 
 import { fetchApprovals, updateReceipt, updateUser } from "../actions/adminActions";
 import { fetchStoresList } from "../actions/storeActions";
@@ -80,9 +80,21 @@ export default class AdminReceipts extends React.Component {
 		if ( JSON.stringify( this.props.receipts ) !== JSON.stringify( old_props.receipts )
 			|| JSON.stringify( this.props.users ) !== JSON.stringify( old_props.users )
 		) {
+
+			console.log( "this.props.receipts", this.props.receipts )
+			console.log( "this.props.users", this.props.users )
+
+			let tweet_text = this.props.users.map( ( user ) => {
+				return {
+					text: "test",
+					tweet_id: "?",
+				};
+			});
+
 			this.setState({
 				receipts: this.props.receipts,
 				users: this.props.users,
+				tweet_text: tweet_text,
 			});
 		}
 	}
@@ -276,6 +288,8 @@ export default class AdminReceipts extends React.Component {
 			if ( this.props.tweetSendIsSubmitting )
 				sendTweetSpinnerClass += " show";
 
+			console.log( "this.state.tweet_text", this.state.tweet_text )
+
 			return (
 				<tr key={ index }>
 					<td class="nowrap">
@@ -358,7 +372,7 @@ export default class AdminReceipts extends React.Component {
 									<th>Tweets</th>
 									<th>Approve</th>
 									<th>Tweet</th>
-									{ tweet_header_html }
+									
 								</tr>
 							</thead>
 							<tbody>

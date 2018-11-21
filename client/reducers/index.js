@@ -15,6 +15,7 @@ import saveStorePrice from "./saveStorePriceReducer"
 import storeClosest from "./storeClosestReducer"
 import adminUpdateReceipt from "./adminUpdateReceiptReducer"
 import adminUpdateUser from "./adminUpdateUserReducer"
+import adminTweetUser from "./adminTweetUserReducer"
 
 export default combineReducers({
 	account,
@@ -32,4 +33,5 @@ export default combineReducers({
 	storeClosest,
 	adminUpdateReceipt,
 	adminUpdateUser,
+	adminTweetUser,
 })
