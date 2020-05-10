@@ -6,7 +6,7 @@ import Select from "react-select";
 
 import { createUserTwitterLink, createTweetLink, createUserTwitterSearchLink, createNewReceiptText, createNewUserText } from "./Utils";
 
-import { fetchApprovals, updateReceipt, updateUser } from "../actions/adminActions";
+import { fetchApprovals, updateReceipt, updateUser, sendTweet } from "../actions/adminActions";
 import { fetchStoresList } from "../actions/storeActions";
 
 import Error from "./Error";
@@ -161,14 +161,15 @@ export default class AdminReceipts extends React.Component {
 			new_state.users[ index ].state = user_state.value;
 
 		this.setState( new_state, () => {
-			if ( typeof callback === "function" )
+			if ( typeof callback === "function" ) {
 				callback();
+			}
 		});
 	}
 
 	tweetUser( user_id, text, tweet_id ) {
 		console.log( "sending tweet to", user_id, text, tweet_id );
-		//this.dispatch( sendTweet( this.props.dispatch, user_id, text, tweet_id ) );
+		this.dispatch( tweetUser( this.props.dispatch, user_id, text, tweet_id ) );
 	}
 
 	render() {
@@ -178,10 +179,12 @@ export default class AdminReceipts extends React.Component {
 		const { approvalsError, storeListError } = this.props;
 		const { receipts, users } = this.state;
 
-		if ( approvalsError )
+		if ( approvalsError ) {
 			errors.push( approvalsError );
-		if ( storeListError )
+		}
+		if ( storeListError ) {
 			errors.push( storeListError );
+		}
 
 		const receipt_approvals_html = receipts.map( ( receipt, index ) => {
 			
@@ -262,8 +265,9 @@ export default class AdminReceipts extends React.Component {
 
 		const user_approvals_html = users.map( ( user, index ) => {
 
-			if ( user.state === 3 )
+			if ( user.state === 3 ) {
 				return;
+			}
 
 			let tweet_html = receipts.filter( ( receipt ) => {
 				return receipt.tweet.data.user.id_str === user.twitter_user.data.id_str;

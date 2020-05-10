@@ -38,6 +38,10 @@ const createNewReceiptText = function( screen_name, number, left ) {
 	return "test";
 }
 
+const createNewUserText = function( screen_name, number, left ) {
+	return "test";
+}
+
 const createGoogleMapsLink = function( address ) {
 	return "https://www.google.com/maps/place/" + encodeURIComponent( address );
 }
