@@ -36,19 +36,30 @@ const updateReceipt = function( id, data ) {
 			.then( ( receipt ) => {
 
 				if ( ! receipt ) {
-					throw new Error( "Receipt does nto exist" );
+					throw new Error( "Receipt does not exist" );
 				}
 
-				for ( let key in data ) {
+				if ( data
+					&& parseInt( data.approved ) === 4
+				) {
+					return receipt.remove();
+				}
+				else {
 
-					if ( ! data.hasOwnProperty( key ) ) {
-						continue;
+					for ( let key in data ) {
+
+						if ( ! data.hasOwnProperty( key ) ) {
+							continue;
+						}
+
+						receipt[ key ] = data[ key ];
 					}
 
-					receipt[ key ] = data[ key ];
+					return receipt.save();
+
 				}
 
-				return receipt.save();
+				
 			})
 			.then( ( receipt ) => {
 				return resolve( receipt );
@@ -68,7 +79,7 @@ const updateUser = function( id, data ) {
 			.then( ( user ) => {
 
 				if ( ! user ) {
-					throw new Error( "User does nto exist" );
+					throw new Error( "User does not exist" );
 				}
 
 				for ( let key in data ) {

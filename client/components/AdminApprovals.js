@@ -259,6 +259,7 @@ export default class AdminReceipts extends React.Component {
 							<option value="1">Approved</option>
 							<option value="2">Auto Approved</option>
 							<option value="3">Admin Ignored</option>
+							<option value="4">Mark For Deletion</option>
 						</select>
 					</td>
 					<td>
@@ -267,6 +268,11 @@ export default class AdminReceipts extends React.Component {
 							<div class={ submitSpinnerClass }>
 								<div class="spinner spinner_a"></div>
 							</div>
+						</div>
+					</td>
+					<td>
+						<div>
+							ObjectId( "{ receipt._id }" )
 						</div>
 					</td>
 				</tr>
@@ -369,6 +375,7 @@ export default class AdminReceipts extends React.Component {
 									<th>Receipt Type</th>
 									<th>Approval Status</th>
 									<th>Submit</th>
+									<th>Mongo Id</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -409,9 +416,9 @@ export default class AdminReceipts extends React.Component {
 									});
 
 								}}
-								value={ add_tweet_url }
+								value={ this.state.add_tweet_url }
 							/>
-							<button onClick={ this.addTweetFromUrl( add_tweet_url ) }>Add From Url</button>
+							<button onClick={ this.addTweetFromUrl( this.state.add_tweet_url ) }>Add From Url</button>
 						</div>
 						<div>
 							Tweet JSON:
@@ -425,7 +432,7 @@ export default class AdminReceipts extends React.Component {
 								});
 
 							}} value={ this.state.add_tweet_json }></textarea>
-							<button onClick={ this.addTweetFromJson( add_tweet_json ) }>Add From JSON</button>
+							<button onClick={ this.addTweetFromJson( this.state.add_tweet_json ) }>Add From JSON</button>
 						</div>
 					</div>
 				</div>

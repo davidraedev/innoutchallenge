@@ -390,317 +390,313 @@ const parseTweet = function(
 	do_new_receipt_tweet
 ) {
 
-	return new Promise( ( resolve, reject ) => {
+	return new Promise( async ( resolve, reject ) => {
 
-		let this_twitter_user,
-			this_user,
-			this_receipt,
-			this_totals,
-			this_store,
-			receipt_data = {},
-			is_new_in_store = false,
-			is_new_drive_thru = false,
-			is_new_store = false,
-			is_new_user = false,
-			message_type = 0;
+		try {
 
-		tweet.parsed = true;
-		tweet.data.created_at = new Date( tweet.data.created_at );
+			let this_twitter_user,
+				this_user,
+				this_receipt,
+				this_totals,
+				this_store,
+				receipt_data = {},
+				is_new_in_store = false,
+				is_new_drive_thru = false,
+				is_new_store = false,
+				is_new_user = false,
+				message_type = 0;
 
-		if ( ! parseTextForAllowedParts( tweet.data.text ) ) {
+			tweet.parsed = true;
+			tweet.data.created_at = new Date( tweet.data.created_at );
 
-			tweet.save()
-				.then(() => {
-					return resolve();
-				})
-				.catch( ( error ) => {
-					throw error;
-				});
-		}
-		else {
+			if ( ! parseTextForAllowedParts( tweet.data.text ) ) {
 
-			// see if we already have this twitter user
-			return TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str } )
-				.then( ( twitter_user ) => {
+				tweet.save()
+					.then(() => {
+						return resolve();
+					})
+					.catch( ( error ) => {
+						throw error;
+					});
+			}
+			else {
 
-					// create it if not
-					if ( ! twitter_user ) {
-						return TwitterUser.create({
-							data: {
-								id_str: tweet.data.user.id_str,
-								screen_name: tweet.data.user.screen_name,
-							},
-						});
+				// see if we already have this twitter user
+				let twitter_user = await TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str } )
+
+				// create it if not
+				if ( ! twitter_user ) {
+					twitter_user = await TwitterUser.create({
+						data: {
+							id_str: tweet.data.user.id_str,
+							screen_name: tweet.data.user.screen_name,
+						},
+					});
+				}
+
+				this_twitter_user = twitter_user;
+
+				let user = await User.findOne( {
+					twitter_user: twitter_user._id
+				} );
+
+				// if there is no user, create one
+				if ( ! user ) {
+
+					is_new_user = true;
+					user = await User.create({
+						name: this_twitter_user.data.screen_name,
+						twitter_user: this_twitter_user._id,
+						state: 0,
+					});
+				}
+				// if the user was ignored previously, reset it to not approved
+				else if ( user.state === 3 ) {
+					user.state = 0;
+					await user.save();
+				}
+
+				this_user = user;
+
+				let store = await storeController.parseTweetForStore( tweet );
+
+				this_store = store;
+				let receipt;
+				if ( isRetweet( tweet )
+					|| hasIgnoreFlag( tweet )
+					|| isIgnoredUser( tweet )
+				) {
+					throw new PromiseEndError();
+				}
+				else {
+					let in_store_number = parseForInStoreReceipt( tweet.data.text );
+
+					if ( in_store_number ) {
+						receipt_data.type = 1;
+						receipt_data.number = in_store_number;
 					}
 					else {
-						return twitter_user;
-					}
-				})
-				.then( ( twitter_user ) => {
-					this_twitter_user = twitter_user;
-					// find user
-					return User.findOne( { twitter_user: twitter_user._id } );
-				})
-				.then( ( user ) => {
-
-					// if there is no user, create one
-					if ( ! user ) {
-						is_new_user = true;
-						return User.create({
-							name: this_twitter_user.data.screen_name,
-							twitter_user: this_twitter_user._id,
-							state: 0,
-						});
-					}
-					// if the user was ignored previously, reset it to not approved
-					else if ( user.state === 3 ) {
-						user.state = 0;
-						return user.save();
-					}
-					else {
-						return user;
-					}
-				})
-				.then( ( user ) => {
-					this_user = user;
-					return storeController.parseTweetForStore( tweet );
-				})
-				.then( ( store ) => {
-					this_store = store;
-					if ( isRetweet( tweet )
-						|| hasIgnoreFlag( tweet )
-						|| isIgnoredUser( tweet )
-					) {
-						throw new PromiseEndError();
-					}
-					else {
-						let in_store_number = parseForInStoreReceipt( tweet.data.text );
-
-						if ( in_store_number ) {
-							receipt_data.type = 1;
-							receipt_data.number = in_store_number;
+						let drive_thru_number = parseForDriveThruReceipt( tweet.data.text );
+						if ( drive_thru_number ) {
+							receipt_data.type = 2;
+							receipt_data.number = drive_thru_number;
 						}
 						else {
-							let drive_thru_number = parseForDriveThruReceipt( tweet.data.text );
-							if ( drive_thru_number ) {
-								receipt_data.type = 2;
-								receipt_data.number = drive_thru_number;
-							}
-							else {
-								throw new PromiseBreakError( "invalid number" );
-							}
+							throw new PromiseBreakError( "invalid number" );
 						}
-
-						let search = {
-							tweet: tweet._id
-						};
-
-						receipt_data.tweet = tweet._id;
-						receipt_data.user = this_user._id;
-						receipt_data.twitter_user = this_twitter_user._id;
-						receipt_data.date = tweet.data.created_at;
-						// user is regular approved, or admin
-						receipt_data.approved = ( this_user.state === 1 || this_user.state === 4 ) ? 2 : 0;
-
-						if ( store ) {
-							receipt_data.store = this_store._id;
-						}
-
-						return Receipt.findOne( search ); 
 					}
-				})
-				.then( ( receipt ) => {
 
-					if ( receipt ) {
+					let search = {
+						tweet: tweet._id
+					};
 
-						if ( receipt_data.store && ! receipt.store ) {
+					receipt_data.tweet = tweet._id;
+					receipt_data.user = this_user._id;
+					receipt_data.twitter_user = this_twitter_user._id;
+					receipt_data.date = tweet.data.created_at;
+					// user is regular approved, or admin
+					receipt_data.approved = ( this_user.state === 1 || this_user.state === 4 ) ? 2 : 0;
 
-							return new Promise( ( resolve, reject ) => {
-								receipt.store = receipt_data.store;
-								receipt.save()
-									.then( () => {
-										resolve( "break" );
-									})
-									.catch( ( error ) => {
-										reject( error );
-									});
-							});
-						}
+					if ( store ) {
+						receipt_data.store = this_store._id;
+					}
+
+					receipt = await Receipt.findOne( search ); 
+				}
+
+				if ( receipt ) {
+
+					if ( receipt_data.store
+						&& ! receipt.store
+					) {
+
+						await new Promise( ( resolve, reject ) => {
+							receipt.store = receipt_data.store;
+							receipt.save()
+								.then( () => {
+									resolve( "break" );
+								})
+								.catch( ( error ) => {
+									reject( error );
+								});
+						});
+
 						throw new PromiseBreakError( "receipt exists" );
+
 					}
 					else {
-						return Receipt.create( receipt_data );
-					}
-				})
-				.then( ( receipt ) => {
-					if ( receipt === "break" ) {
 						throw new PromiseBreakError( "receipt exists" );
 					}
-					this_receipt = receipt;
+				}
+				else {
+					receipt = Receipt.create( receipt_data );
+				}
+
+				this_receipt = receipt;
+				let search = {
+					number: this_receipt.number,
+					user: this_user._id,
+					date: this_receipt.date,
+					_id: { $ne: this_receipt._id }
+				};
+
+				if ( this_receipt.tweet ) {
+					search.tweet = this_receipt.tweet;
+				}
+				
+				let existing_number_receipt = await Receipt.findOne( search );
+
+
+				if ( ! existing_number_receipt ) {
+
+					if ( this_receipt.type === 1 )  {
+						is_new_in_store = true;
+					}
+					else if ( this_receipt.type === 2 )  {
+						is_new_drive_thru = true;
+					}
+				}
+
+				let existing_store_receipt;
+				if ( this_receipt.store ) {
+					
 					let search = {
-						number: this_receipt.number,
+						store: this_receipt.store,
 						user: this_user._id,
-						date: this_receipt.date,
-						_id: { $ne: this_receipt._id }
+						_id: { $ne: this_receipt._id.toString() }
 					};
 
 					if ( this_receipt.tweet ) {
 						search.tweet = this_receipt.tweet;
 					}
-					
-					return Receipt.findOne( search );
-				})
-				.then( ( existing_number_receipt ) => {
 
-					if ( ! existing_number_receipt ) {
+					existing_store_receipt = await Receipt.findOne( search );
+				}
+				else {
+					existing_store_receipt = false;
+				}
 
-						if ( this_receipt.type === 1 )  {
-							is_new_in_store = true;
-						}
-						else if ( this_receipt.type === 2 )  {
-							is_new_drive_thru = true;
-						}
-					}
+				if ( ! existing_store_receipt
+					&& this_receipt.store
+				) {
+					is_new_store = true;
+				}
 
-					if ( this_receipt.store ) {
-						
-						let search = {
-							store: this_receipt.store,
-							user: this_user._id,
-							_id: { $ne: this_receipt._id.toString() }
-						};
+				await this_receipt.save();
 
-						if ( this_receipt.tweet ) {
-							search.tweet = this_receipt.tweet;
-						}
+				const totals = await userController.updateUserTotals( this_user );
 
-						return Receipt.findOne( search );
-					}
+				this_totals = totals;
+				const tweet_queue = await tweetQueueController.findQueue( {
+					user: this_user._id,
+					type: { $in: [ 1, 2 ] }
+				} );
 
-					return false;
-				})
-				.then( ( existing_store_receipt ) => {
 
-					if ( ! existing_store_receipt
-						&& this_receipt.store
-					) {
-						is_new_store = true;
-					}
+				let params;
+				if ( ! tweet_queue
+					&& do_new_receipt_tweet
+					&& this_receipt.approved === 2
+				) {
 
-					return this_receipt.save();
-				})
-				.then( () => {
-					return userController.updateUserTotals( this_user );
-				})
-				.then( ( totals ) => {
-					this_totals = totals;
-					return tweetQueueController.findQueue( { user: this_user._id, type: { $in: [ 1, 2 ] } } );
-				})
-				.then( ( tweet_queue ) => {
+					let store_number = ( this_store ) ? this_store.number : null;
 
-					if ( ! tweet_queue
-						&& do_new_receipt_tweet
-						&& this_receipt.approved === 2
-					) {
-
-						let store_number = ( this_store ) ? this_store.number : null;
-
-						let data = {
-							is_new_in_store: is_new_in_store,
-							in_store_receipt_number: this_receipt.number,
-							in_store_receipts_remaining: this_totals.receipts.remaining,
-							is_new_drive_thru: is_new_drive_thru,
-							drive_thru_receipt_number: this_receipt.number,
-							drive_thru_receipts_remaining: this_totals.drivethru.remaining,
-							is_new_store: is_new_store,
-							store_number: store_number,
-							stores_remaining: this_totals.stores.remaining,
-						};
+					let data = {
+						is_new_in_store: is_new_in_store,
+						in_store_receipt_number: this_receipt.number,
+						in_store_receipts_remaining: this_totals.receipts.remaining,
+						is_new_drive_thru: is_new_drive_thru,
+						drive_thru_receipt_number: this_receipt.number,
+						drive_thru_receipts_remaining: this_totals.drivethru.remaining,
+						is_new_store: is_new_store,
+						store_number: store_number,
+						stores_remaining: this_totals.stores.remaining,
+					};
 	/*
-		// we don't want to auto-tweet new users, because people use the hashtag without truly understanding the consequences
-		
-						if ( is_new_user ) {
-							if ( this_twitter_user.data.protected ) {
-								message_type = 2;
-								return createNewUserDMParams( this_twitter_user.data.screen_name );
-							}
-							else {
-								message_type = 1;
-								return createNewUserTweetParams( this_twitter_user.data.screen_name, tweet );
-							}
-						}
-	*/
-						if ( is_new_in_store ) {
-							if ( this_user.settings.tweet.unique_numbers ) {
-								message_type = 1;
-								return createNewReceiptTweetParams( this_twitter_user.data.screen_name, tweet, data );
-							}
-							else if ( this_user.settings.dm.unique_numbers ) {
-								message_type = 2;
-								return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
-							}
-						}
-						else if ( is_new_drive_thru ) {
-							if ( this_user.settings.dm.drive_thrus ) {
-								message_type = 2;
-								return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
-							}
-							else {
-								return;
-							}
-						}
-						else if ( is_new_store ) {
-							if ( this_user.settings.dm.stores ) {
-								message_type = 2;
-								return createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
-							}
-							else {
-								return;
-							}
+	// we don't want to auto-tweet new users, because people use the hashtag without truly understanding the consequences
+
+					if ( is_new_user ) {
+						if ( this_twitter_user.data.protected ) {
+							message_type = 2;
+							return createNewUserDMParams( this_twitter_user.data.screen_name );
 						}
 						else {
-							return;
+							message_type = 1;
+							return createNewUserTweetParams( this_twitter_user.data.screen_name, tweet );
 						}
 					}
-					else {
-						return;
-					}
-				})
-				.then( ( params ) => {
-					if ( params ) {
-						return tweetQueueController.addTweetToQueue( params, this_user._id, 2, null, message_type );
-					}
-				})
-				.then( () => {
+	*/
+					if ( is_new_in_store ) {
 
-					tweet.save()
-						.then(() => {
-							resolve();
-						})
-						.catch( ( error ) => {
-							throw error;
-						});
-				})
-				.catch( ( error ) => {
-					if ( error instanceof PromiseBreakError || error instanceof PromiseEndError ) {
-						tweet.save()
-							.then(() => {
-								resolve();
-							})
-							.catch(( error ) => {
-								if ( error instanceof PromiseEndError ) {
-									resolve();
-								}
-								else {
-									reject( error );
-								}
-							});
+						if ( this_user.settings.tweet.unique_numbers ) {
+							message_type = 1;
+							params = createNewReceiptTweetParams( this_twitter_user.data.screen_name, tweet, data );
+						}
+						else if ( this_user.settings.dm.unique_numbers ) {
+							message_type = 2;
+							params = createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
+						}
 					}
-					else {
-						reject( error );
+					else if ( is_new_drive_thru ) {
+
+						if ( this_user.settings.dm.drive_thrus ) {
+							message_type = 2;
+							params = createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
+						}
+
 					}
-				});
+					else if ( is_new_store ) {
+
+						if ( this_user.settings.dm.stores ) {
+							message_type = 2;
+							params = createNewReceiptDMParams( this_twitter_user.data.screen_name, data );
+						}
+
+					}
+
+				}
+
+				if ( params ) {
+					await tweetQueueController.addTweetToQueue(
+						params,
+						this_user._id,
+						2,
+						null,
+						message_type
+					);
+				}
+
+				tweet.save()
+					.then(() => {
+						resolve();
+					})
+					.catch( ( error ) => {
+						throw error;
+					});
+
+			}
 		}
+		catch ( error ) {
+
+			if ( error instanceof PromiseBreakError || error instanceof PromiseEndError ) {
+				tweet.save()
+					.then(() => {
+						resolve();
+					})
+					.catch(( error ) => {
+						if ( error instanceof PromiseEndError ) {
+							resolve();
+						}
+						else {
+							reject( error );
+						}
+					});
+			}
+			else {
+				reject( error );
+			}
+		}
+		
 	});
 };
 
@@ -708,8 +704,11 @@ const sendTweet = function( twitter_user, tweet ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		if ( ! twitter_user.oauth_token_admin || ! twitter_user.oauth_secret_admin )
+		if ( ! twitter_user.oauth_token_admin
+			|| ! twitter_user.oauth_secret_admin
+		) {
 			return reject( "Invalid credentials" );
+		}
 
 		let client = new Twitter({
 			consumer_key: process.env.TWITTER_CONSUMER_KEY_ADMIN,
@@ -720,8 +719,9 @@ const sendTweet = function( twitter_user, tweet ) {
 
 		client.post( "statuses/update", tweet, ( error, response ) => {
 
-			if ( error )
+			if ( error ) {
 				return reject( error );
+			}
 
 			return resolve( response );
 		});
@@ -732,8 +732,11 @@ const sendDM = function( twitter_user, dm ) {
 
 	return new Promise( ( resolve, reject ) => {
 
-		if ( ! twitter_user.oauth_token_admin || ! twitter_user.oauth_secret_admin )
+		if ( ! twitter_user.oauth_token_admin
+			|| ! twitter_user.oauth_secret_admin
+		) {
 			return reject( "Invalid credentials" );
+		}
 
 		let client = new Twitter({
 			consumer_key: process.env.TWITTER_CONSUMER_KEY_ADMIN,
@@ -744,8 +747,9 @@ const sendDM = function( twitter_user, dm ) {
 
 		client.post( "direct_messages/new", dm, ( error, response ) => {
 
-			if ( error )
+			if ( error ) {
 				return reject( error );
+			}
 
 			return resolve( response );
 		});
@@ -890,8 +894,9 @@ const createNewReceiptTweetParams = function( screen_name, originating_tweet, da
 			Store.findOne( { number: data.store_number } )
 				.then( ( store ) => {
 
-					if ( ! store )
+					if ( ! store ) {
 						return resolve( params );
+					}
 
 					params.lat = store.location.latitude;
 					params.long = store.location.longitude;
@@ -900,11 +905,13 @@ const createNewReceiptTweetParams = function( screen_name, originating_tweet, da
 
 						TwitterPlace.findOne( { _id: store.location.twitter_place }, ( error, twitter_place ) => {
 
-							if ( error )
+							if ( error ) {
 								return;
+							}
 
-							if ( ! twitter_place )
+							if ( ! twitter_place ) {
 								return resolve( params );
+							}
 
 							params.place = twitter_place.data.id;
 
@@ -1013,11 +1020,13 @@ const createNewUserTweetParams = function( screen_name, originating_tweet ) {
 		if ( originating_tweet.store ) {
 			Store.findOne( { _id: originating_tweet.store }, ( error, store ) => {
 
-				if ( error )
+				if ( error ) {
 					return;
+				}
 
-				if ( ! store )
+				if ( ! store ) {
 					return;
+				}
 
 				params.lat = store.location.latitude;
 				params.long = store.location.longitude;
