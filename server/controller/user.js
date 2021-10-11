@@ -100,7 +100,7 @@ const findOrCreateUser = function( query, data ) {
 
 const updateUserTotals = function( user ) {
 
-	return new Promise( ( resolve, reject ) => {
+	return new Promise( async ( resolve, reject ) => {
 
 		let totals = {
 			receipts: {
@@ -126,106 +126,105 @@ const updateUserTotals = function( user ) {
 		// in-store and drivethru totals
 		let stores_list = {};
 		let user_id = user._id.toString();
-		let query = { user: user_id, type: { $in: [ 1, 2 ] }, approved: { $in: [ 1, 2 ] } };
-		Receipt.find( query )
-			.then( ( receipts ) => {
+		let query = {
+			user: user_id,
+			type: { $in: [ 1, 2 ] },
+			approved: { $in: [ 1, 2 ] }
+		};
+		const receipts = await Receipt.find( query );
 
-				if ( ! receipts.length ) {
-					console.log( "no receipts found [%s]", user.name );
-					return;
+		if ( ! receipts.length ) {
+			console.log( "no receipts found [%s]", user.name );
+			return resolve();
+		}
+
+		let receipts_list = {};
+		let drive_thru_list = {};
+		for ( let i = 1; i <= 99; i++ ) {
+			if ( i !== 69 ) {
+				receipts_list[ i ] = { amount: 0 };
+			}
+		}
+
+		receipts.forEach( ( receipt ) => {
+
+			// in_store
+			if ( receipt.type === 1 ) {
+			
+				if ( receipts_list[ receipt.number ].amount === 0 ) {
+					totals.receipts.unique++;
+					totals.receipts.remaining--;
+				}
+				totals.receipts.total++;
+				receipts_list[ receipt.number ].amount++;
+
+			}
+
+			// drive_thru
+			else if ( receipt.type === 2 ) {
+			
+				if ( ! drive_thru_list[ receipt.number ] ) {
+					drive_thru_list[ receipt.number ] = { amount: 0 };
+					totals.drivethru.unique++;
+					totals.drivethru.remaining--;
+				}
+				totals.drivethru.total++;
+				drive_thru_list[ receipt.number ].amount++;
+
+			}
+
+		});
+
+		const stores = await storeController.findStores( {}, true );
+
+		if ( ! stores.length ) {
+			console.log( "No Stores found" );
+			stores = [];
+		}
+
+		totals.stores.remaining = stores.length;
+
+		stores.forEach( ( store ) => {
+			stores_list[ store._id.toString() ] = { amount: 0 };
+		});
+
+		// if we vet our data input correctly, we can take out the store/popup check and rely only on the { type } check
+		const store_receipts = await Receipt.find( {
+			user: user._id,
+			approved: 1,
+			store: { $ne: null },
+			type: { $in: [ 1, 2, 3 ] },
+		} );
+
+		store_receipts.forEach( ( receipt ) => {
+
+			// popups
+			if ( receipt.popup ) {
+				totals.popups.total++;
+			}
+
+			// stores
+			else {
+
+				if ( stores_list[ receipt.store ].amount === 0 ) {
+					totals.stores.unique++;
+					totals.stores.remaining--;
 				}
 
-				let receipts_list = {};
-				let drive_thru_list = {};
-				for ( let i = 1; i <= 99; i++ ) {
-					if ( i !== 69 )
-						receipts_list[ i ] = { amount: 0 };
-				}
+				totals.stores.total++;
+				stores_list[ receipt.store ].amount++;
+			}
 
-				receipts.forEach( ( receipt ) => {
+		});
 
-					// in_store
-					if ( receipt.type === 1 ) {
-					
-						if ( receipts_list[ receipt.number ].amount === 0 ) {
-							totals.receipts.unique++;
-							totals.receipts.remaining--;
-						}
-						totals.receipts.total++;
-						receipts_list[ receipt.number ].amount++;
+		user.totals = totals;
+		user.save( ( error ) => {
+			if ( error ) {
+				throw error;
+			}
+			resolve( user.totals );
+		});
 
-					}
-
-					// drive_thru
-					if ( receipt.type === 2 ) {
-					
-						if ( ! drive_thru_list[ receipt.number ] ) {
-							drive_thru_list[ receipt.number ] = { amount: 0 };
-							totals.drivethru.unique++;
-							totals.drivethru.remaining--;
-						}
-						totals.drivethru.total++;
-						drive_thru_list[ receipt.number ].amount++;
-
-					}
-
-				});
-
-				return;
-
-			})
-			.then( () => {
-				return storeController.findStores( {}, true );
-			})
-			.then( ( stores ) => {
-
-				if ( ! stores.length ) {
-					console.log( "No Stores found" );
-					return [];
-				}
-
-				totals.stores.remaining = stores.length;
-
-				stores.forEach( ( store ) => {
-					stores_list[ store._id.toString() ] = { amount: 0 };
-				});
-
-				// if we vet our data input correctly, we can take out the store/popup check and rely only on the { type } check
-				return Receipt.find( { user: user._id, approved: 1, store: { $ne: null }, type: { $in: [ 1, 2, 3 ] } } );
-			})
-			.then( ( receipts ) => {
-
-				receipts.forEach( ( receipt ) => {
-
-					// popups
-					if ( receipt.popup ) {
-						totals.popups.total++;
-					}
-
-					// stores
-					else {
-						if ( stores_list[ receipt.store ].amount === 0 ) {
-							totals.stores.unique++;
-							totals.stores.remaining--;
-						}
-
-						totals.stores.total++;
-						stores_list[ receipt.store ].amount++;
-					}
-
-				});
-
-				user.totals = totals;
-				user.save( ( error ) => {
-					if ( error )
-						throw error;
-					resolve( user.totals );
-				});
-
-			})
-			.catch( ( error ) => {
-				reject( error );
-			});
 	});
 };
 

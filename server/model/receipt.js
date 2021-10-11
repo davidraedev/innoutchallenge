@@ -8,12 +8,13 @@ const ReceiptSchema = new Schema({
 	store: { type: ObjectId, ref: "Store" },
 	tweet: { type: ObjectId, ref: "Tweet" },
 	user: { type: ObjectId, ref: "User" },
-	approved: { type: Number, default: 0, min: 0, max: 5 },
+	approved: { type: Number, default: 0, min: 0, max: 4 },
 	/*
 		0: not yet approved,
 		1: approved,
 		2: auto approved, ( for accounts in good standing )
-		5: admin ignored
+		3: admin ignored
+		4: marked for deletion
 	*/
 	type: { type: Number, default: 0, min: 0, max: 4 },
 	/*
