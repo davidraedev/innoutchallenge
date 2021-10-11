@@ -421,29 +421,8 @@ const parseTweet = function(
 			}
 			else {
 
-<<<<<<< HEAD
 				// see if we already have this twitter user
 				let twitter_user = await TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str } )
-=======
-		let this_twitter_user,
-			this_user,
-			this_receipt,
-			this_totals,
-			this_store,
-			receipt_data = {},
-			is_new_in_store = false,
-			is_new_drive_thru = false,
-			is_new_store = false,
-			is_new_user = false,
-			message_type = 0;
-
-		tweet.parsed = true;
-		tweet.data.created_at = new Date( tweet.data.created_at );
-
-		// see if we already have this twitter user
-		TwitterUser.findOne( { "data.id_str": tweet.data.user.id_str } )
-			.then( ( twitter_user ) => {
->>>>>>> a24443db027ea0d840deea119ce81a0630869076
 
 				// create it if not
 				if ( ! twitter_user ) {
@@ -839,15 +818,14 @@ const createNewReceiptTweetText = function( screen_name, data ) {
 		return "@"+ screen_name +" "+ intro +"! You just got "+ data.drive_thru_receipt_number +" and store "+ data.store_number +". Now you only have "+ data.stores_remaining +" stores to go!";
 	else if ( data.is_new_in_store && data.is_new_store )
 		return "@"+ screen_name +" "+ intro +"! You just got "+ data.in_store_receipt_number +" and store "+ data.store_number +". Now you only have "+ data.in_store_receipts_remaining +" receipts and "+ data.stores_remaining +" stores to go!";
-	// no drive thru tweets
-	//else if ( data.is_new_drive_thru )
-	//	return "@"+ screen_name +" "+ intro +"! You just got "+ data.drive_thru_receipt_number +".";
+	else if ( data.is_new_drive_thru )
+		return "@"+ screen_name +" "+ intro +"! You just got drive-thru "+ data.drive_thru_receipt_number +".";
 	else if ( data.is_new_in_store )
 		return "@"+ screen_name +" "+ intro +"! You just got "+ data.in_store_receipt_number +". Now you only have "+ data.in_store_receipts_remaining +" to go!";
 	else if ( data.is_new_store )
 		return "@"+ screen_name +" "+ intro +"! You just got store "+ data.store_number +". Now you only have "+ data.stores_remaining +" to go!";
 
-	return false;
+	return;
 };
 
 const createNewReceiptDMText = function( screen_name, data ) {
