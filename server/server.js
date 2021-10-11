@@ -72,6 +72,15 @@ function stop_all() {
 	});
 }
 
+async function restart_all() {
+	for ( name in apps ) {
+		await stop( name );
+	}
+	for ( name in apps ) {
+		await start( name );
+	}
+}
+
 const app_string = Object.keys( apps ).join( "|" );
 const regex = new RegExp( "^("+ app_string +")$" );
 
@@ -87,6 +96,8 @@ function init( action, name ) {
 		status_all();
 	else if ( action === "stop_all" )
 		stop_all();
+	else if ( action === "restart_all" )
+		restart_all();
 	else if ( action === "start" && isValidApp( name ) )
 		start( name );
 	else if ( action === "status" && isValidApp( name ) )

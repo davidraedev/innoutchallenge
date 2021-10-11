@@ -24,8 +24,9 @@ function callback() {
 				return tweetController.parseTweets( true, true );
 			})
 			.then( ( tweets_parsed ) => {
-				if ( tweets_parsed )
+				if ( tweets_parsed ) {
 					log.info( tweets_parsed + " tweets parsed" );
+				}
 				resolve();
 				db.close();
 			})
@@ -33,10 +34,14 @@ function callback() {
 				log.error( error );
 				db.close();
 				// if we are having trouble connecting to the database, wait a bit and try again
-				if ( error.name === "MongoError" || error.name === "MongooseError" )
+				if ( error.name === "MongoError"
+					|| error.name === "MongooseError"
+				) {
 					resolve( 1000 * 5 );
-				else
+				}
+				else {
 					reject( error );
+				}
 			});
 	});
 

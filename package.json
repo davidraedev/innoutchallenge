@@ -7,8 +7,9 @@
   "scripts": {
     "setup": "node --trace-warnings server/app/setup.js;",
     "setup_dev": "node --trace-warnings server/app/setup.js;",
-    "start_all": "npm run start_server && npm run start_fetch_tweets && npm run start_tweet_queue && npm run start_fetch_stores && npm run start_update_twitter_users",
+    "start_all": "node server/server.js start_all",
     "start_server": "node server/server.js start http_server",
+    "restart_all": "node server/server.js restart_all",
     "status_server": "node server/server.js status http_server",
     "start_server_dev": "nodemon --trace-warnings server/app/server_daemon.js",
     "stop_server": "node server/server.js stop http_server",
@@ -36,7 +37,7 @@
   "author": "David Rae",
   "license": "Apache-2.0",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.4",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
