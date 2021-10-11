@@ -43,6 +43,8 @@ export default class AdminReceipts extends React.Component {
 			receipts: this.props.receipts,
 			users: this.props.users,
 			tweet_text: [],
+			add_tweet_url: "",
+			add_tweet_json: "",
 		});
 	}
 
@@ -122,6 +124,14 @@ export default class AdminReceipts extends React.Component {
 		let new_state = { ...this.state };
 		new_state.receipts[ index ].approved = value;
 		this.setState( new_state );
+	}
+
+	addTweetFromUrl() {
+		console.log( "Add Tweet From Url", this.add_tweet_url )
+	}
+
+	addTweetFromJson() {
+		console.log( "Add Tweet From Url", this.add_tweet_json )
 	}
 
 	getStoresOptions() {
@@ -383,6 +393,40 @@ export default class AdminReceipts extends React.Component {
 								{ user_approvals_html }
 							</tbody>
 						</table>
+					</div>
+					<div>
+						<div class="title">Manually Add Tweets</div>
+						<div>
+							Tweet Url:
+							<input type="text"
+								onChange={ ( event ) => {
+
+									let new_state = [ ...this.state.add_tweet_url ];
+										new_state[ index ] = event.target.value;
+
+									this.setState({
+										add_tweet_url: new_state,
+									});
+
+								}}
+								value={ add_tweet_url }
+							/>
+							<button onClick={ this.addTweetFromUrl( add_tweet_url ) }>Add From Url</button>
+						</div>
+						<div>
+							Tweet JSON:
+							<textarea onChange={ ( event ) => {
+
+								let new_state = [ ...this.state.add_tweet_json ];
+									new_state[ index ] = event.target.value;
+
+								this.setState({
+									add_tweet_json: new_state,
+								});
+
+							}} value={ this.state.add_tweet_json }></textarea>
+							<button onClick={ this.addTweetFromJson( add_tweet_json ) }>Add From JSON</button>
+						</div>
 					</div>
 				</div>
 			</div>

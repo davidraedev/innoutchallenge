@@ -35,13 +35,15 @@ const updateReceipt = function( id, data ) {
 		Receipt.findOne({ _id: id })
 			.then( ( receipt ) => {
 
-				if ( ! receipt )
+				if ( ! receipt ) {
 					throw new Error( "Receipt does nto exist" );
+				}
 
 				for ( let key in data ) {
 
-					if ( ! data.hasOwnProperty( key ) )
+					if ( ! data.hasOwnProperty( key ) ) {
 						continue;
+					}
 
 					receipt[ key ] = data[ key ];
 				}
@@ -65,13 +67,15 @@ const updateUser = function( id, data ) {
 		User.findOne({ _id: id })
 			.then( ( user ) => {
 
-				if ( ! user )
+				if ( ! user ) {
 					throw new Error( "User does nto exist" );
+				}
 
 				for ( let key in data ) {
 
-					if ( ! data.hasOwnProperty( key ) )
+					if ( ! data.hasOwnProperty( key ) ) {
 						continue;
+					}
 
 					user[ key ] = data[ key ];
 				}
